@@ -1,0 +1,107 @@
+--
+--  File Name:         PcieInterfacePkg.vhd
+--  Design Unit Name:  PcieInterfacePkg
+--  Revision:          OSVVM MODELS STANDARD VERSION
+--
+--  Maintainer:        Simon Southwell      email:  simon.southwell@gmail.com
+--  Contributor(s):
+--     Jim Lewis      simon.southwell@gmail.com
+--
+--
+--  Description:
+--      Defines types, constants, and subprograms to support the PCie interface to DUT
+--      These are currently only intended for testbench models.
+--
+--  Revision History:
+--    Date      Version    Description
+--    09/2025   2025.??       Initial revision
+--
+--
+--  This file is part of OSVVM.
+--
+--  Copyright (c) 2025 by [OSVVM Authors](../../../AUTHORS.md).
+--
+--  Licensed under the Apache License, Version 2.0 (the "License");
+--  you may not use this file except in compliance with the License.
+--  You may obtain a copy of the License at
+--
+--      https://www.apache.org/licenses/LICENSE-2.0
+--
+--  Unless required by applicable law or agreed to in writing, software
+--  distributed under the License is distributed on an "AS IS" BASIS,
+--  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+--  See the License for the specific language governing permissions and
+--  limitations under the License.
+--
+
+library ieee ;
+  use ieee.std_logic_1164.all ;
+  use ieee.numeric_std.all ;
+  use ieee.numeric_std_unsigned.all ;
+
+package PcieInterfacePkg is
+
+  constant LINKADDR0       : integer :=  0 ;
+  constant LINKADDR1       : integer :=  1 ;
+  constant LINKADDR2       : integer :=  2 ;
+  constant LINKADDR3       : integer :=  3 ;
+  constant LINKADDR4       : integer :=  4 ;
+  constant LINKADDR5       : integer :=  5 ;
+  constant LINKADDR6       : integer :=  6 ;
+  constant LINKADDR7       : integer :=  7 ;
+  constant LINKADDR8       : integer :=  8 ;
+  constant LINKADDR9       : integer :=  9 ;
+  constant LINKADDR10      : integer := 10 ;
+  constant LINKADDR11      : integer := 11 ;
+  constant LINKADDR12      : integer := 12 ;
+  constant LINKADDR13      : integer := 13 ;
+  constant LINKADDR14      : integer := 14 ;
+  constant LINKADDR15      : integer := 15 ;
+
+  constant NODENUMADDR     : integer := 200 ;
+  constant LANESADDR       : integer := 201 ;
+  constant PVH_INVERT      : integer := 202 ;
+  constant EP_ADDR         : integer := 203 ;
+  constant CLK_COUNT       : integer := 204 ;
+  constant LINK_STATE      : integer := 205 ;
+  constant RESET_STATE     : integer := 206 ;
+  
+  constant REQID_ADDR      : integer := 300 ;
+  constant PIPE_ADDR       : integer := 301 ;
+  constant EN_ECRC_ADDR    : integer := 302 ;
+
+  constant PVH_STOP        : integer := -3 ;
+  constant PVH_FINISH      : integer := -2 ;
+  constant PVH_FATAL       : integer := -1 ;
+
+  constant MAXLINKWIDTH    : integer := 16 ;
+
+  type LinkType is array (natural range <>) of std_logic_vector ;
+
+  type PcieRecType is record
+    LinkOut       : LinkType ;
+    LinkIn        : LinkType ;
+  end record PcieRecType;
+
+  function has_an_x (vec : std_logic_vector) return boolean ;
+
+end package PcieInterfacePkg ;
+
+package body PcieInterfacePkg is
+
+  function has_an_x (vec : std_logic_vector) return boolean is
+  begin
+
+    for idx in vec'range loop
+      case vec(idx) is
+        when 'U' | 'X' | 'Z' | 'W' | '-' => return true ;
+        when others                      => null ;
+      end case;
+    end loop;
+
+    return false ;
+
+  end function has_an_x ;
+
+end package body PcieInterfacePkg ;
+
