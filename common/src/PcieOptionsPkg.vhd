@@ -22,10 +22,10 @@ package PcieOptionsPkg is
     -- Enables even, disables odd
     ENABLE_FC,
     DISABLE_FC,
-    
+
     ENABLE_ACK,
     DISABLE_ACK,
-    
+
     ENABLE_MEM,
     DISABLE_MEM,
 
@@ -59,13 +59,72 @@ package PcieOptionsPkg is
     --- Enables even, disables odd
     DISABLE_SCRAMBLING,
     ENABLE_SCRAMBLING,
-    
+
     DISABLE_8B10B,
     ENABLE_8B10B,
-    
+
     DISABLE_ECRC_CMPL,
     ENABLE_ECRC_CMPL
 
   ) ;
-  
+
+  type PcieUnresolvedOptionsVectorType is array (natural range <>) of PcieUnresolvedOptionsType ;
+  function resolved_max(A : PcieUnresolvedOptionsVectorType) return PcieUnresolvedOptionsType ;
+
+  subtype PcieOptionsType is resolved_max PcieUnresolvedOptionsType ;
+
+  ------------------------------------------------------------
+  procedure SetPcieOptions (
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+    constant Option         : In    PcieOptionsType ;
+    constant OptVal         : In    integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure GetPcieOptions (
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+    constant Option         : In    PcieOptionsType ;
+    variable OptVal         : Out   integer
+  ) ;
+
  end package PcieOptionsPkg ;
+
+-- /////////////////////////////////////////////////////////////////////////////////////////
+-- /////////////////////////////////////////////////////////////////////////////////////////
+-- /////////////////////////////////////////////////////////////////////////////////////////
+-- /////////////////////////////////////////////////////////////////////////////////////////
+-- /////////////////////////////////////////////////////////////////////////////////////////
+-- /////////////////////////////////////////////////////////////////////////////////////////
+
+ package body PcieOptionsPkg is
+
+  function resolved_max(A : PcieUnresolvedOptionsVectorType) return PcieUnresolvedOptionsType is
+  begin
+    return maximum(A) ;
+  end function resolved_max ;
+
+   ------------------------------------------------------------
+  procedure SetPcieOptions (
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+    constant Option         : In    PcieOptionsType ;
+    constant OptVal         : In    integer
+  ) is
+  begin
+    SetModelOptions(TransactionRec, PcieOptionsType'POS(Option), OptVal) ;
+  end procedure SetPcieOptions ;
+
+   ------------------------------------------------------------
+  procedure GetPcieOptions (
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+    constant Option         : In    PcieOptionsType ;
+    variable OptVal         : Out   integer
+  ) is
+  begin
+    GetModelOptions(TransactionRec, PcieOptionsType'POS(Option), OptVal) ;
+  end procedure GetPcieOptions ;
+
+ end package body PcieOptionsPkg ;
