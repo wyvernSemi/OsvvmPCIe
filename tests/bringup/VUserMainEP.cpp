@@ -40,9 +40,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "OsvvmCosim.h"
 #include "pcieModelClass.h"
-
-static unsigned node = 1;
 
 //-------------------------------------------------------------
 // VUserInput_1()
@@ -220,7 +219,7 @@ static void ConfigureType0PcieCfg (pcieModelClass* pcie)
 //
 //-------------------------------------------------------------
 
-extern "C" void VUserMain1()
+extern "C" void VUserMain63(int node)
 {
     // Create an API object for this node
     pcieModelClass* pcie = new pcieModelClass(node);

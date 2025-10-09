@@ -1,6 +1,6 @@
 // =========================================================================
 //
-//  File Name:         VUserMain0.cpp
+//  File Name:         VUserMainRC.cpp
 //  Design Unit Name:
 //  Revision:          OSVVM MODELS STANDARD VERSION
 //
@@ -40,9 +40,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "OsvvmCosim.h"
 #include "pcieModelClass.h"
-
-static unsigned node = 0;
 
 //-------------------------------------------------------------
 // VUserInput_0()
@@ -95,7 +94,7 @@ static void VUserInput_0(pPkt_t pkt, int status, void* usrptr)
 }
 
 //-------------------------------------------------------------
-// VUserMain0()
+// VUserMain62()
 //
 // Test program to generate all sorts of TL, DL and PL
 // patterns. Where appropriate, node 1 pcieVHost will
@@ -104,7 +103,7 @@ static void VUserInput_0(pPkt_t pkt, int status, void* usrptr)
 //
 //-------------------------------------------------------------
 
-extern "C" void VUserMain0()
+extern "C" void VUserMain62(int node)
 {
     int idx;
     PktData_t buff[4096];

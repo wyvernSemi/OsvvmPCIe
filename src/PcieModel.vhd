@@ -37,7 +37,7 @@ library ieee ;
   use ieee.numeric_std.all ;
   use ieee.numeric_std_unsigned.all ;
   use ieee.math_real.all ;
-  
+
 library std;
 use std.env.all;
 
@@ -55,12 +55,12 @@ library osvvm_cosim ;
 entity PcieModel is
 generic (
   MODEL_ID_NAME     : string  := "" ;    -- Model name
-  NODE_NUM          : integer := 8 ;     -- CoSim node number. Must be unique from all other CoSom elements
+  NODE_NUM          : integer := 8 ;     -- CoSim node number. Must be unique from all other CoSim elements
   ENDPOINT          : boolean := false ; -- true to enable endpoint features
   REQ_ID            : integer := 0 ;     -- Requester ID (completer ID when issuing completions)
   EN_TLP_REQ_DIGEST : boolean := false ; -- Enable ECRC on TLP requests (completions will add in response to req with ECRC---can be disabled)
-  PIPE              : boolean := false   -- true if output PIPE compatible (no scrambling or 8b10b encoding; lane width is 9 bits instead of 10)
-
+  PIPE              : boolean := false ; -- true if output PIPE compatible (no scrambling or 8b10b encoding; lane width is 9 bits instead of 10)
+  ENABLE_INIT_PHY   : boolean := true    -- true if PHY layer link training is enabled
 ) ;
 port (
   -- Globals
@@ -68,7 +68,7 @@ port (
   nReset      : in   std_logic ;
 
   -- Testbench Transaction Interface
-  -- TransRec    : inout AddressBusRecType ;
+  TransRec    : inout AddressBusRecType ;
 
   -- PCIe downstream port Functional Interface
   PcieLinkOut : out  LinkType ;
@@ -124,8 +124,14 @@ begin
   --  Initialise
   ------------------------------------------------------------
   Initialise : process
+  variable ID   : AlertLogIDType ;
   variable Node : integer := NODE_NUM ;
   begin
+    -- Alerts
+    ID                      := NewID(MODEL_INSTANCE_NAME) ;
+    ModelID                 <= ID ;
+    
+    -- Co-simulation 
     CoSimInit(Node);
     Initialised  <= true;
     wait ;
@@ -137,7 +143,7 @@ begin
   TransactionDispatcher : process
 
     variable VPData            : integer := 0 ;
-    variable UnusedVPDataHi    : integer := 0 ;
+    variable VPDataHi          : integer := 0 ;
     variable UnusedVPDataWidth : integer := 0 ;
     variable VPAddr            : integer := 0 ;
     variable UnusedVPAddrHi    : integer := 0 ;
@@ -158,7 +164,8 @@ begin
     variable LinkOffset        : integer               := 0;
     variable DataLoBits        : unsigned (3 downto 0) := (others => '0');
 
-    variable RdData            : std_logic_vector (31 downto 0) := (others => '0');
+    variable RdData            : std_logic_vector (63 downto 0) := (others => '0');
+    variable WrData            : std_logic_vector (63 downto 0) := (others => '0');
 
   begin
 
@@ -167,10 +174,12 @@ begin
     DispatchLoop : loop
 
       -- Get the read data from the last loop iteration
-      VPData := to_integer(signed(RdData)) ;
+      VPData   := to_integer(signed(RdData(31 downto  0))) ;
+      VPDataHi := to_integer(signed(RdData(63 downto 32))) ;
 
+      -- Fetch the next transaction from the model
       VTrans (NODE_NUM,     UnusedIntReq,      UnusedVPStatus,  UnusedVPCount, UnusedCount,
-              VPData,       UnusedVPDataHi,    UnusedVPDataWidth,
+              VPData,       VPDataHi,          UnusedVPDataWidth,
               VPAddr,       UnusedVPAddrHi,    UnusedVPAddrWidth,
               VPOp,         UnusedVPBurstSize, UnusedVPTicks,
               VPDone,       VPError,           UnusedVPParam) ;
@@ -183,14 +192,31 @@ begin
 
       case VPAddr is
 
-        when NODENUMADDR  => RdData := std_logic_vector(to_unsigned(NODE_NUM,   32)) ;
-        when LANESADDR    => RdData := std_logic_vector(to_unsigned(LINKWIDTH, 32)) ;
-        when EP_ADDR      => RdData := 32x"00000001" when ENDPOINT else 32x"00000000";
-        when CLK_COUNT    => RdData := std_logic_vector(to_unsigned(ClkCount, 32)) ;
-        when RESET_STATE  => RdData := 31x"00000000" & not nReset ;
-        when REQID_ADDR   => RdData := std_logic_vector(to_unsigned(REQ_ID, 32)) ;
-        when PIPE_ADDR    => RdData := 32x"00000001" when PIPE else 32x"00000000";
-        when EN_ECRC_ADDR => RdData := 32x"00000001" when EN_TLP_REQ_DIGEST else 32x"00000000";
+        -- -----------------------------------------------------
+        -- -----------------------------------------------------
+
+        -- -----------------------------------------------------
+        -- Process parameters
+        -- -----------------------------------------------------
+
+        when NODENUMADDR  => RdData := std_logic_vector(to_unsigned(NODE_NUM, RdData'length)) ;
+        when LANESADDR    => RdData := std_logic_vector(to_unsigned(LINKWIDTH, RdData'length)) ;
+        when EP_ADDR      => RdData := 64x"00000001" when ENDPOINT else 64x"00000000";
+        when REQID_ADDR   => RdData := std_logic_vector(to_unsigned(REQ_ID, RdData'length)) ;
+        when PIPE_ADDR    => RdData := 64x"00000001" when PIPE else 64x"00000000";
+        when EN_ECRC_ADDR => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
+        when INITPHY_ADDR => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
+
+        -- -----------------------------------------------------
+        -- Process global state
+        -- -----------------------------------------------------
+
+        when RESET_STATE  => RdData := 63x"00000000" & not nReset ;
+        when CLK_COUNT    => RdData := std_logic_vector(to_unsigned(ClkCount, RdData'length)) ;
+
+        -- -----------------------------------------------------
+        -- Process PCIe port signalling
+        -- -----------------------------------------------------
 
         when LINKADDR0  | LINKADDR1  | LINKADDR2  | LINKADDR3  |
              LINKADDR4  | LINKADDR5  | LINKADDR6  | LINKADDR7  |
@@ -203,40 +229,113 @@ begin
               LinkOutVec(LinkOffset) <= std_logic_vector(to_signed(VPData, LANEWIDTH)) xor InvertOutVec ;
             end if;
 
-            RdData := 22x"000000" & (LinkInVec(LinkOffset) xor InvertInVec) ;
+            RdData := 54x"000000" & (LinkInVec(LinkOffset) xor InvertInVec) ;
 
         when LINK_STATE  =>
-        
+
           if WE then
             ElecIdleOut <= std_logic_vector(to_unsigned(VPData, LINKWIDTH)) ;
           end if;
-        
+
            RdData                                 := (others=> '0') ;
            RdData(ElecIdleIn'length-1  downto  0) := ElecIdleIn;  -- lower half of word
            RdData(RxDetect'length+15   downto 16) := RxDetect;    -- upper half of word
-        
+
         when PVH_INVERT =>
-        
+
           DataLoBits     := to_unsigned(VPData, 4) ;
-        
+
           if WE then
             ReverseOut   <= '1' when DataLoBits(3) = '1' else '0' ;
             ReverseIn    <= '1' when DataLoBits(2) = '1' else '0' ;
             InvertOut    <= '1' when DataLoBits(1) = '1' else '0' ;
             InvertIn     <= '1' when DataLoBits(0) = '1' else '0' ;
           end if;
-        
+
           RdData := (3 => ReverseOut, 2 => ReverseIn, 1 => InvertOut, 0 => InvertIn, others => '0');
+
+        -- -----------------------------------------------------
+        -- Process simulation control
+        -- -----------------------------------------------------
 
         when PVH_STOP   => if WE then stop; end if;
         when PVH_FINISH => if WE then finish; end if;
-        when PVH_FATAL  => if WE then report "Fatal issued by VProc" severity error; end if;
+        when PVH_FATAL  =>
+          if WE then
+            assert false report "Fatal issued by VProc" severity error;
+            finish;
+          end if;
 
+        -- -----------------------------------------------------
+        -- Access transaction interface values
+        -- -----------------------------------------------------
+
+        when GETNEXTTRANS =>
+
+          RdData := std_logic_vector(to_unsigned(AddressBusOperationType'pos(TransRec.Operation), RdData'length)) ;
+
+        when GETINTTOMODEL =>
+
+          RdData := std_logic_vector(to_signed(TransRec.IntToModel, RdData'length)) ;
+
+        when GETBOOLTOMODEL =>
+
+          if TransRec.BoolToModel then
+            RdData := 64x"00000001" ;
+          else
+            RdData := 64x"00000000" ;
+          end if ;
+
+        when GETADDRESS =>
+
+          RdData := SafeResize(TransRec.Address, RdData'length) ;
+
+        when GETADDRESSWIDTH =>
+
+          RdData := std_logic_vector(to_signed(TransRec.AddrWidth, RdData'length)) ;
+
+        when GETDATATOMODEL =>
+
+          RdData := SafeResize(TransRec.DataToModel, RdData'length) ;
+
+        when GETDATAWIDTH =>
+
+          RdData := std_logic_vector(to_signed(TransRec.DataWidth, RdData'length));
+
+        when GETPARAMS =>
+
+          RdData := std_logic_vector(to_signed(TransRec.Params.ID, RdData'length)) ;
+
+        when GETOPTIONS =>
+
+          RdData := std_logic_vector(to_signed(TransRec.Options, RdData'length)) ;
+
+        when SETDATAFROMMODEL =>
+
+          WrData(31 downto  0)   := std_logic_vector(to_signed(VPData,   32)) ;
+          WrData(63 downto 32)   := std_logic_vector(to_signed(VPDataHi, 32)) ;
+
+          TransRec.DataFromModel <= SafeResize(WrData, TransRec.DataFromModel'length) ;
+
+        when ACKTRANS =>
+
+          if WE then
+            WaitForTransaction(
+               Clk      => Clk,
+               Rdy      => TransRec.Rdy,
+               Ack      => TransRec.Ack
+            ) ;
+          end if ;
+
+        -- -----------------------------------------------------
+        -- Process unhandled  accesses
+        -- -----------------------------------------------------
         when others =>
           Alert(ModelID, "VTrans co-sim procedure issued invalid address = " & to_string(VPaddr), FAILURE) ;
 
       end case;
 
+      -- If not a delta access, wait for next clock edge, else loop round immediately
       if not Delta then
         wait until rising_edge(Clk) ;
       end if ;

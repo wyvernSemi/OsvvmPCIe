@@ -41,40 +41,75 @@ library ieee ;
 
 package PcieInterfacePkg is
 
-  constant LINKADDR0       : integer :=  0 ;
-  constant LINKADDR1       : integer :=  1 ;
-  constant LINKADDR2       : integer :=  2 ;
-  constant LINKADDR3       : integer :=  3 ;
-  constant LINKADDR4       : integer :=  4 ;
-  constant LINKADDR5       : integer :=  5 ;
-  constant LINKADDR6       : integer :=  6 ;
-  constant LINKADDR7       : integer :=  7 ;
-  constant LINKADDR8       : integer :=  8 ;
-  constant LINKADDR9       : integer :=  9 ;
-  constant LINKADDR10      : integer := 10 ;
-  constant LINKADDR11      : integer := 11 ;
-  constant LINKADDR12      : integer := 12 ;
-  constant LINKADDR13      : integer := 13 ;
-  constant LINKADDR14      : integer := 14 ;
-  constant LINKADDR15      : integer := 15 ;
-
-  constant NODENUMADDR     : integer := 200 ;
-  constant LANESADDR       : integer := 201 ;
-  constant PVH_INVERT      : integer := 202 ;
-  constant EP_ADDR         : integer := 203 ;
-  constant CLK_COUNT       : integer := 204 ;
-  constant LINK_STATE      : integer := 205 ;
-  constant RESET_STATE     : integer := 206 ;
+  -- **** If the below values change, also update ../../code/pcieVcInterface.h ****
+  constant LINKADDR0           : integer :=  0 ;
+  constant LINKADDR1           : integer :=  1 ;
+  constant LINKADDR2           : integer :=  2 ;
+  constant LINKADDR3           : integer :=  3 ;
+  constant LINKADDR4           : integer :=  4 ;
+  constant LINKADDR5           : integer :=  5 ;
+  constant LINKADDR6           : integer :=  6 ;
+  constant LINKADDR7           : integer :=  7 ;
+  constant LINKADDR8           : integer :=  8 ;
+  constant LINKADDR9           : integer :=  9 ;
+  constant LINKADDR10          : integer := 10 ;
+  constant LINKADDR11          : integer := 11 ;
+  constant LINKADDR12          : integer := 12 ;
+  constant LINKADDR13          : integer := 13 ;
+  constant LINKADDR14          : integer := 14 ;
+  constant LINKADDR15          : integer := 15 ;
+                               
+  constant NODENUMADDR         : integer := 200 ;
+  constant LANESADDR           : integer := 201 ;
+  constant PVH_INVERT          : integer := 202 ;
+  constant EP_ADDR             : integer := 203 ;
+  constant CLK_COUNT           : integer := 204 ;
+  constant LINK_STATE          : integer := 205 ;
+  constant RESET_STATE         : integer := 206 ;
+                               
+  constant REQID_ADDR          : integer := 300 ;
+  constant PIPE_ADDR           : integer := 301 ;
+  constant EN_ECRC_ADDR        : integer := 302 ;
+  constant INITPHY_ADDR        : integer := 303 ;
+                               
+  constant GETNEXTTRANS        : integer := 400 ;
+  constant GETINTTOMODEL       : integer := 401 ;
+  constant GETBOOLTOMODEL      : integer := 402 ;
+  constant GETTIMETOMODEL      : integer := 403 ;
+  constant GETADDRESS          : integer := 404 ;
+  constant GETADDRESSWIDTH     : integer := 405 ;
+  constant GETDATATOMODEL      : integer := 406 ;
+  constant GETDATAWIDTH        : integer := 407 ;
+  constant GETPARAMS           : integer := 408 ;
+  constant GETOPTIONS          : integer := 409 ;
+  constant ACKTRANS            : integer := 410 ;
+  constant SETDATAFROMMODEL    : integer := 411 ;
+                               
+  constant PVH_STOP            : integer := -3 ;
+  constant PVH_FINISH          : integer := -2 ;
+  constant PVH_FATAL           : integer := -1 ;
+ 
+  -- SetModelOptions for PCIe VC
+  constant NULLOPTVALUE        : integer := -1 ;
+  constant VCOPTIONSTART       : integer :=  1000 ;
+  constant ENDMODELRUN         : integer :=  VCOPTIONSTART ;
+  constant SETTRANSMODE        : integer :=  1001 ;
+  constant INITDLL             : integer :=  1002 ;
+  constant INITPHY             : integer :=  1003 ;
   
-  constant REQID_ADDR      : integer := 300 ;
-  constant PIPE_ADDR       : integer := 301 ;
-  constant EN_ECRC_ADDR    : integer := 302 ;
-
-  constant PVH_STOP        : integer := -3 ;
-  constant PVH_FINISH      : integer := -2 ;
-  constant PVH_FATAL       : integer := -1 ;
-
-  constant MAXLINKWIDTH    : integer := 16 ;
+  constant FREERUNSIM          : integer :=  0 ;
+  constant STOPSIM             : integer :=  1 ;
+  constant FINISHSIM           : integer :=  2 ;
+                           
+  constant MEM_TRANS           : integer :=  0 ;
+  constant IO_TRANS            : integer :=  1 ;
+  constant CFG_SPC_TRANS       : integer :=  2 ;
+  constant MSG_TRANS           : integer :=  3 ;
+  constant CPL_TRANS           : integer :=  4 ;
+  
+  -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
+                               
+  constant MAXLINKWIDTH        : integer := 16 ;
 
   type LinkType is array (natural range <>) of std_logic_vector ;
 

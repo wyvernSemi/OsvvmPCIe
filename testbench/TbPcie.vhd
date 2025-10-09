@@ -58,17 +58,17 @@ architecture TestHarness of TbPcie is
   constant PCIE_DATA_WIDTH   : integer := 32 ;
 
   constant PCIE_LANE_WIDTH   : integer := 10 ;
-  constant PCIE_LINK_WIDTH   : integer := 16 ;
+  constant PCIE_LINK_WIDTH   : integer := 1 ;
 
   constant EN_TLP_REQ_DIGEST : boolean := false ;
-  constant PIPE              : boolean := false ;
-  constant DS_NODE_NUM       : integer := 1 ;
-  constant US_NODE_NUM       : integer := 0 ;
+  constant PIPE              : boolean := true ;
+  constant DS_NODE_NUM       : integer := 63 ;
+  constant US_NODE_NUM       : integer := 62 ;
 
   signal Clk                 : std_logic := '1';
   signal nReset              : std_logic := '0';
 
-  signal ManagerRec, SubordinateRec  : AddressBusRecType(
+  signal UpstreamRec, DownstreamRec  : AddressBusRecType(
           Address      (PCIE_ADDR_WIDTH-1 downto 0),
           DataToModel  (PCIE_DATA_WIDTH-1 downto 0),
           DataFromModel(PCIE_DATA_WIDTH-1 downto 0)
@@ -126,7 +126,7 @@ begin
     nReset      => nReset,
 
     -- Testbench Transaction Interface
-    -- TransRec    => open,
+    TransRec    => UpstreamRec,
 
     -- PCIe Manager Functional Interface
     PcieLinkOut => PcieLink.LinkOut,
@@ -134,7 +134,7 @@ begin
 
   ) ;
 
-  -- Behavioral model.  Replaces DUT for labs
+  -- Behavioural model.  Replaces DUT for labs
   Subordinate_1 : entity osvvm_pcie.PcieModel
   generic map (
     NODE_NUM          => DS_NODE_NUM,
@@ -149,7 +149,7 @@ begin
     nReset      => nReset,
 
     -- Testbench Transaction Interface
-    --TransRec    => open,
+    TransRec    => DownstreamRec,
 
     -- PCIe Manager Functional Interface
     PcieLinkOut => PcieLink.LinkIn,
@@ -175,8 +175,8 @@ begin
     nReset         => nReset,
 
     -- Testbench Transaction Interfaces
-    ManagerRec     => ManagerRec,
-    SubordinateRec => SubordinateRec
+    ManagerRec     => UpstreamRec,
+    SubordinateRec => DownstreamRec
   ) ;
 
 end architecture TestHarness ;

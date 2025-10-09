@@ -15,6 +15,9 @@ begin
   ------------------------------------------------------------
   ControlProc : process
   begin
+
+    SetTestName("CoSim_pcie");
+
     -- Initialization of test
     SetLogEnable(PASSED, TRUE) ;  -- Enable PASSED logs
     SetLogEnable(INFO, TRUE) ;    -- Enable INFO logs
@@ -49,48 +52,40 @@ begin
     variable OpRV           : RandomPType ;
     variable WaitForClockRV : RandomPType ;
     variable counts         : integer := 0;
-
-    -- CoSim variables
-    variable RnW            : integer ;
-    variable Done           : integer := 0 ;
-    variable Error          : integer := 0 ;
-    variable IntReq         : integer := 0 ;
-    variable NodeNum        : integer := Node ;
-
+    variable Data           : std_logic_vector(31 downto 0);
     variable Count          : integer ;
   begin
     -- Initialize Randomization Objects
     OpRV.InitSeed(OpRv'instance_name) ;
     WaitForClockRV.InitSeed(WaitForClockRV'instance_name) ;
 
-    -- Initialise VProc code
-    -- CoSimInit(NodeNum);
-    Initialised <= TRUE;
-
-    -- SetBurstMode(ManagerRec, BURST_MODE) ;
-
     -- Find exit of reset
     wait until nReset = '1' ;
     WaitForClock(ManagerRec, 2) ;
 
-    OperationLoop : loop
+    -- Run PHY initialisation
+    SetModelOptions(ManagerRec, INITPHY, NULLOPTVALUE);
+    
+    -- Run DLL initialisation
+    SetModelOptions(ManagerRec, INITDLL, NULLOPTVALUE);
 
-      -- 20 % of the time add a no-op cycle with a delay of 1 to 5 clocks
-      if WaitForClockRV.DistInt((8, 2)) = 1 then
-        WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
-      end if ;
+    -- Set to transmit memory accesses
+    SetModelOptions(ManagerRec, SETTRANSMODE, MEM_TRANS);
 
-      -- Call CoSimTrans procedure to generate an access from the running VProc program
-      -- CoSimTrans (ManagerRec, Done, Error, IntReq, NodeNum);
+    -- Do some memory reads and writes
+    Write(ManagerRec, X"0000080", x"900dc0de");
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
-      AlertIf(Error /= 0, "CoSimTrans flagged an error") ;
+    Write(ManagerRec, X"00000106", x"cafe");
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
-      -- Finish when Done flagged
-      exit when Done /= 0;
+    Read(ManagerRec, X"00000080", Data(31 downto 0));
+    AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #1: ");
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
-      counts := counts + 1;
-
-    end loop OperationLoop ;
+    Read(ManagerRec,  X"00000106", Data(15 downto 0)) ;
+    AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #2: ") ;
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
     TestActive <= FALSE ;
 
@@ -103,13 +98,14 @@ begin
     WaitForClock(ManagerRec, 2) ;
     WaitForBarrier(TestDone) ;
     wait ;
+
   end process ManagerProc ;
 end CoSim ;
 
--- Configuration Tb_PCIe of TbPcie is
---   for TestHarness
---     for TestCtrl_1 : TestCtrl
---       use entity work.TestCtrl(CoSim) ;
---     end for ;
---   end for ;
--- end Tb_PCIe ;
+Configuration Tb_PCIe of TbPcie is
+  for TestHarness
+    for TestCtrl_1 : TestCtrl
+      use entity work.TestCtrl(CoSim) ;
+    end for ;
+  end for ;
+end Tb_PCIe ;
