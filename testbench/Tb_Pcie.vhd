@@ -24,7 +24,7 @@ begin
 
     -- Wait for testbench initialization
     wait for 0 ns ;  wait for 0 ns ;
-    TranscriptOpen ;  -- SetTestName done in SW
+    TranscriptOpen ;
     SetTranscriptMirror(TRUE) ;
 
     -- Wait for Design Reset
@@ -65,18 +65,20 @@ begin
 
     -- Run PHY initialisation
     SetModelOptions(ManagerRec, INITPHY, NULLOPTVALUE);
-    
+
     -- Run DLL initialisation
     SetModelOptions(ManagerRec, INITDLL, NULLOPTVALUE);
+
+    -- ***** memory writes and reads *****
 
     -- Set to transmit memory accesses
     SetModelOptions(ManagerRec, SETTRANSMODE, MEM_TRANS);
 
     -- Do some memory reads and writes
-    Write(ManagerRec, X"0000080", x"900dc0de");
+    Write(ManagerRec, X"0000080", X"900dc0de");
     WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Write(ManagerRec, X"00000106", x"cafe");
+    Write(ManagerRec, X"00000106", X"cafe");
     WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
     Read(ManagerRec, X"00000080", Data(31 downto 0));
@@ -87,10 +89,29 @@ begin
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #2: ") ;
     WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
+    -- ***** configuration writes and reads *****
+
+    -- Set to transmit configuration space accesses
+    SetModelOptions(ManagerRec, SETTRANSMODE, CFG_SPC_TRANS);
+
+    Write(ManagerRec, X"00000010", X"ffffffff");
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
+
+    Write(ManagerRec, X"00000014", X"ffffffff");
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
+
+
+    Read(ManagerRec, X"00000010", Data(31 downto 0));
+    AffirmIfEqual(Data(31 downto 0), X"fffff008", "Read data #3: ") ;
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
+
+    Read(ManagerRec, X"00000014", Data(31 downto 0));
+    AffirmIfEqual(Data(31 downto 0), X"fffffc08", "Read data #4: ") ;
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
+
     TestActive <= FALSE ;
 
     -- Allow Subordinate to catch up before signaling OperationCount (needed when WRITE_OP is last)
-    -- wait for 0 ns ;  -- this is enough
     WaitForClock(ManagerRec, 2) ;
     Increment(OperationCount) ;
 

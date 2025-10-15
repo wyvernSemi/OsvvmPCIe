@@ -84,6 +84,7 @@ package PcieInterfacePkg is
   constant GETOPTIONS          : integer := 409 ;
   constant ACKTRANS            : integer := 410 ;
   constant SETDATAFROMMODEL    : integer := 411 ;
+  constant SETBOOLFROMMODEL    : integer := 412 ;
                                
   constant PVH_STOP            : integer := -3 ;
   constant PVH_FINISH          : integer := -2 ;

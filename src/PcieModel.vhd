@@ -316,6 +316,14 @@ begin
           WrData(63 downto 32)   := std_logic_vector(to_signed(VPDataHi, 32)) ;
 
           TransRec.DataFromModel <= SafeResize(WrData, TransRec.DataFromModel'length) ;
+          
+        when SETBOOLFROMMODEL =>
+        
+          if VPData /= 0 then
+              TransRec.BoolFromModel <= true;
+          else
+              TransRec.BoolFromModel <= false;
+          end if;
 
         when ACKTRANS =>
 
