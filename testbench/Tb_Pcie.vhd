@@ -108,6 +108,22 @@ begin
     Read(ManagerRec, X"00000014", Data(31 downto 0));
     AffirmIfEqual(Data(31 downto 0), X"fffffc08", "Read data #4: ") ;
     WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
+    
+    -- ***** I/O writes and reads *****
+    
+    -- Set to transmit I/O accesses
+    SetModelOptions(ManagerRec, SETTRANSMODE, IO_TRANS);
+    
+    Write(ManagerRec, X"12345678", X"87654321");
+    Read(ManagerRec,  X"12345678", Data(31 downto 0));
+    
+    -- ***** messages *****
+    
+    -- Set to transmit messages
+    SetModelOptions(ManagerRec, SETTRANSMODE, MSG_TRANS);
+    
+    WriteAddressAsync(ManagerRec, MSG_ERR_NON_FATAL);
+    Write(ManagerRec, MSG_SET_PWR_LIMIT, X"20251015");
 
     TestActive <= FALSE ;
 

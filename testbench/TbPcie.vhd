@@ -55,7 +55,7 @@ architecture TestHarness of TbPcie is
   constant tpd         : time := 100 ps ;
 
   constant PCIE_ADDR_WIDTH   : integer := 64 ;
-  constant PCIE_DATA_WIDTH   : integer := 32 ;
+  constant PCIE_DATA_WIDTH   : integer := 64 ;
 
   constant PCIE_LANE_WIDTH   : integer := 10 ;
   constant PCIE_LINK_WIDTH   : integer := 1 ;
