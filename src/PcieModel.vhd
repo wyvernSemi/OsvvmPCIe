@@ -42,7 +42,8 @@ library std;
 use std.env.all;
 
 library osvvm ;
-  context osvvm.OsvvmContext ;
+  context osvvm.OsvvmContext ; 
+  use osvvm.ScoreboardPkg_slv.all ;
 
 library osvvm_common ;
   context osvvm_common.OsvvmCommonContext ;
@@ -130,6 +131,10 @@ begin
     -- Alerts
     ID                      := NewID(MODEL_INSTANCE_NAME) ;
     ModelID                 <= ID ;
+    
+    wait for 0 ns;
+    TransRec.WriteBurstFifo <= NewID("WriteBurstFifo", ModelID, Search => PRIVATE_NAME) ;
+    TransRec.ReadBurstFifo  <= NewID("ReadBurstFifo",  ModelID, Search => PRIVATE_NAME) ;
     
     -- Co-simulation 
     CoSimInit(Node);
@@ -324,6 +329,16 @@ begin
           else
               TransRec.BoolFromModel <= false;
           end if;
+          
+        when POPDATA =>
+        
+          RdData(7 downto 0) := Pop(TransRec.WriteBurstFifo);
+          
+        when PUSHDATA =>
+        
+          WrData(7 downto 0) := std_logic_vector(to_signed(VPData, 8)) ;
+          
+          Push(TransRec.ReadBurstFifo, WrData(7 downto 0)) ; 
 
         when ACKTRANS =>
 

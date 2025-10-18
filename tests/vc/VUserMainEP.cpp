@@ -56,7 +56,20 @@ static void VUserInput(pPkt_t pkt, int status, void* usrptr)
     }
     else
     {
-        DebugVPrint("---> VUserInput_1 received TLP sequence %d of %d bytes at %d\n", pkt->seq, GET_TLP_LENGTH(pkt->data), pkt->TimeStamp);
+        PktData_t type = GET_TLP_TYPE(pkt->data);
+        
+        VPrint("===> VUserInput received %s TLP sequence %d with length %d at %d\n",
+                     (type & ~0x21) == TL_MRD32  ? "mem read"           :
+                     (type & ~0x20) == TL_MWR32  ? "mem_write"          :
+                     type           == TL_IORD   ? "i/o read"           :
+                     type           == TL_IOWR   ? "i/o write"          :
+                     (type & ~0x01) == TL_CFGRD0 ? "config space read"  :
+                     (type & ~0x01) == TL_CFGWR0 ? "config space write" :
+                     (type & ~0x07) == TL_MSG    ? "message"            :
+                     (type & ~0x07) == TL_MSGD   ? "message with data"  :
+                     (type & ~0x41) == TL_CPL    ? "completion"         :
+                                                   "unknown",
+                     pkt->seq, GET_TLP_LENGTH(pkt->data), pkt->TimeStamp);
     }
 
     // Once packet is finished with, the allocated space *must* be freed.
