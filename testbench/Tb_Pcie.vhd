@@ -137,25 +137,39 @@ begin
     SetModelOptions(ManagerRec, SETTRANSMODE, CPL_TRANS);
 
     Write(ManagerRec, X"03", X"0badf00d");
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** burst writes *****
 
     -- Set to transmit memory accesses
     SetModelOptions(ManagerRec, SETTRANSMODE, MEM_TRANS);
 
-    -- Write 128 bytes to 0x00000201
-    for i in 0 to 127 loop
+    -- Write 126 bytes to 0x00000201
+    for i in 0 to 125 loop
       Push(ManagerRec.WriteBurstFifo, to_slv(i, 8)) ;
     end loop ;
-    WriteBurst(ManagerRec, X"0001_0201", 128) ;
+    WriteBurst(ManagerRec, X"0001_0201", 126) ;
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- Read back bytes from 0x00000201
-    ReadBurst(ManagerRec, X"0001_0201", 128) ;
+    ReadBurst(ManagerRec, X"0001_0201", 126) ;
 
-    for i in 0 to 127 loop
+    for i in 0 to 125 loop
       Pop(ManagerRec.ReadBurstFifo, Data(7 downto 0)) ;
       AffirmIfEqual(Data(7 downto 0), to_slv(i, 8), "Read burst data #1: ") ;
     end loop ;
+    WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
+
+    -- ***** burst completion *****
+
+    -- Set to transmit completions
+    SetModelOptions(ManagerRec, SETTRANSMODE, CPL_TRANS);
+
+    -- complete 47 bytes with low addr = 0x02
+    for i in 0 to 46 loop
+      Push(ManagerRec.WriteBurstFifo, to_slv(i + 16, 8)) ;
+    end loop ;
+    WriteBurst(ManagerRec, X"0001_0202", 47) ;
 
     TestActive <= FALSE ;
 
