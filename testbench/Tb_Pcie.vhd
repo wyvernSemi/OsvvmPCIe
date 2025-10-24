@@ -108,8 +108,8 @@ begin
     AffirmIfEqual(Data(31 downto 0), X"fffffc08", "Read data #4: ") ;
     WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    -- Set BAR0 to be at 0x00010000
-    Write(ManagerRec, X"00000010", X"0001_0000");
+    -- Set BAR0 to be at 0x00010000, with bus =2, device = 0, func = 0
+    Write(ManagerRec, X"02_0_0_0010", X"0001_0000");
     WaitForClock(ManagerRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** I/O writes and reads *****
