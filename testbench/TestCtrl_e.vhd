@@ -19,12 +19,12 @@ entity TestCtrl is
     nReset         : In    std_logic ;
 
     -- Transaction Interfaces
-    ManagerRec     : inout AddressBusRecType ;
-    SubordinateRec : inout AddressBusRecType
+    UpstreamRec    : inout AddressBusRecType ;
+    DownstreamRec  : inout AddressBusRecType
 
   ) ;
 
-  constant PCIE_ADDR_WIDTH : integer := ManagerRec.Address'length ;
-  constant PCIE_DATA_WIDTH : integer := ManagerRec.DataToModel'length ;
+  constant PCIE_ADDR_WIDTH : integer := DownstreamRec.Address'length ;
+  constant PCIE_DATA_WIDTH : integer := DownstreamRec.DataToModel'length ;
 
 end entity TestCtrl ;

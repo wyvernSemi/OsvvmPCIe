@@ -330,6 +330,11 @@ begin
               TransRec.BoolFromModel <= false;
           end if;
           
+        when SETINTFROMMODEL =>
+        
+          TransRec.IntFromModel <= VPData;
+          
+          
         when POPDATA =>
         
           RdData(7 downto 0) := Pop(TransRec.WriteBurstFifo);

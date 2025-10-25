@@ -89,8 +89,8 @@ architecture TestHarness of TbPcie is
       nReset              : In    std_logic ;
 
       -- Transaction Interfaces
-      ManagerRec          : inout AddressBusRecType ;
-      SubordinateRec      : inout AddressBusRecType
+      UpstreamRec          : inout AddressBusRecType ;
+      DownstreamRec        : inout AddressBusRecType
     ) ;
   end component TestCtrl ;
 
@@ -175,8 +175,8 @@ begin
     nReset         => nReset,
 
     -- Testbench Transaction Interfaces
-    ManagerRec     => UpstreamRec,
-    SubordinateRec => DownstreamRec
+    UpstreamRec    => UpstreamRec,
+    DownstreamRec  => DownstreamRec
   ) ;
 
 end architecture TestHarness ;

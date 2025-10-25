@@ -85,8 +85,9 @@ package PcieInterfacePkg is
   constant ACKTRANS                    : integer := 410 ;
   constant SETDATAFROMMODEL            : integer := 411 ;
   constant SETBOOLFROMMODEL            : integer := 412 ;
-  constant POPDATA                     : integer := 413 ;
-  constant PUSHDATA                    : integer := 414 ;
+  constant SETINTFROMMODEL             : integer := 413 ;
+  constant POPDATA                     : integer := 414 ;
+  constant PUSHDATA                    : integer := 415 ;
 
   constant PVH_STOP                    : integer := -3 ;
   constant PVH_FINISH                  : integer := -2 ;
@@ -100,6 +101,10 @@ package PcieInterfacePkg is
   constant INITDLL                     : integer :=  1002 ;
   constant INITPHY                     : integer :=  1003 ;
   constant SETRDLCK                    : integer :=  1004 ;
+  constant SETCMPLRID                  : integer :=  1005 ;
+  constant SETCMPLCID                  : integer :=  1006 ;
+  constant SETCMPLTAG                  : integer :=  1007 ;
+  constant GETLASTCMPLSTATUS           : integer :=  1008 ;
 
   constant FREERUNSIM                  : integer :=  0 ;
   constant STOPSIM                     : integer :=  1 ;
@@ -139,6 +144,11 @@ package PcieInterfacePkg is
 
   constant MSG_DATA_NULL               : std_logic_vector(31 downto 0) := X"00000000" ;
 
+
+  constant CPL_SUCCESS                 : integer                       := 0 ;
+  constant CPL_UNSUPPORTED             : integer                       := 1 ;
+  constant CPL_CRS                     : integer                       := 2 ;
+  constant CPL_ABORT                   : integer                       := 4 ;
 
   -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
 
