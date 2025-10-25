@@ -1,6 +1,6 @@
 --
---  File Name:         PcieDownStreamPort.vhd
---  Design Unit Name:  PcieDownStreamPort
+--  File Name:         PcieModel.vhd
+--  Design Unit Name:  PcieModel
 --  Revision:          OSVVM MODELS STANDARD VERSION
 --
 --  Maintainer:        Simon Southwell      email:  simon.southwell@gmail.com
@@ -9,11 +9,11 @@
 --
 --
 --  Description:
---      Pcie GEN1/2 Downstream (away from RC towards and Endpoint) model
+--      Pcie GEN1/2 model
 --
 --  Revision History:
 --    Date      Version    Description
---    07/2025   2025.??    Initial version
+--    07/2025   ????.??    Initial version
 --
 --
 --  This file is part of OSVVM.
