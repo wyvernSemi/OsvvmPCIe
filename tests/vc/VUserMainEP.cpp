@@ -41,24 +41,26 @@
 #include "ltssm.h"
 
 //-------------------------------------------------------------
-// VUserInput_1()
+// VUserInput()
 //
 // Consumes the unhandled input Packets
 //-------------------------------------------------------------
 
 static void VUserInput(pPkt_t pkt, int status, void* usrptr)
 {
-    int idx;
-
     if (pkt->seq == DLLP_SEQ_ID)
     {
-        DebugVPrint("---> VUserInput_1 received DLLP\n");
+        DebugVPrint("---> VUserInput received DLLP\n");
     }
     else
     {
+        // Get transaction type
         PktData_t type = GET_TLP_TYPE(pkt->data);
-        
-        VPrint("===> VUserInput received %s TLP sequence %d with length %d at %d\n",
+
+        // Get transaction length if a payload type, else set to 0
+        int length  = (type & 0x40) ? (GET_TLP_LENGTH(pkt->data)) : 0;
+
+        VPrint("===> VUserInput received %s TLP sequence %d with payload length %d words at cycle %d\n",
                      (type & ~0x21) == TL_MRD32  ? "mem read"           :
                      (type & ~0x20) == TL_MWR32  ? "mem_write"          :
                      type           == TL_IORD   ? "i/o read"           :
@@ -69,7 +71,7 @@ static void VUserInput(pPkt_t pkt, int status, void* usrptr)
                      (type & ~0x07) == TL_MSGD   ? "message with data"  :
                      (type & ~0x41) == TL_CPL    ? "completion"         :
                                                    "unknown",
-                     pkt->seq, GET_TLP_LENGTH(pkt->data), pkt->TimeStamp);
+                     pkt->seq, length, pkt->TimeStamp);
     }
 
     // Once packet is finished with, the allocated space *must* be freed.
@@ -240,7 +242,7 @@ extern "C" void VUserMain63(int node)
     pcie->initialisePcie(VUserInput, NULL);
 
     unsigned pipe_mode, link_width, init_phy;
-    
+
     // Fetch configuration status
     VRead(PIPE_ADDR,    &pipe_mode,  pcieVcInterface::DELTACYCLE, node);
     VRead(LANESADDR,    &link_width, pcieVcInterface::DELTACYCLE, node);

@@ -52,7 +52,7 @@ begin
     variable OpRV           : RandomPType ;
     variable WaitForClockRV : RandomPType ;
     variable counts         : integer := 0;
-    variable Data           : std_logic_vector(31 downto 0);
+    variable Data           : std_logic_vector(31 downto 0) ;
     variable Count          : integer ;
     variable CmplStatus     : integer ;
   begin
@@ -65,113 +65,95 @@ begin
     WaitForClock(UpstreamRec, 2) ;
 
     -- Run PHY initialisation
-    SetModelOptions(UpstreamRec, INITPHY, NULLOPTVALUE);
+    SetModelOptions(UpstreamRec, INITPHY, NULLOPTVALUE) ;
 
     -- Run DLL initialisation
-    SetModelOptions(UpstreamRec, INITDLL, NULLOPTVALUE);
+    SetModelOptions(UpstreamRec, INITDLL, NULLOPTVALUE) ;
 
     -- ***** memory writes and reads *****
 
-    -- Set to transmit memory accesses
-    SetModelOptions(UpstreamRec, SETTRANSMODE, MEM_TRANS);
-
     -- Do some memory reads and writes
-    Write(UpstreamRec, X"0000080", X"900dc0de");
+    PcieMemWrite(UpstreamRec, X"0000080", X"900dc0de") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Write(UpstreamRec, X"00000106", X"cafe");
+    PcieMemWrite(UpstreamRec, X"00000106", X"cafe");
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Read(UpstreamRec, X"00000080", Data(31 downto 0));
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
+    PcieMemRead(UpstreamRec, X"00000080", Data(31 downto 0), CmplStatus) ;
+
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #1: ") ;
     AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Read(UpstreamRec,  X"00000106", Data(15 downto 0)) ;
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
+    PcieMemRead(UpstreamRec,  X"00000106", Data(15 downto 0), CmplStatus) ;
+
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #2: ") ;
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #2: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** configuration writes and reads *****
 
-    -- Set to transmit configuration space accesses
-    SetModelOptions(UpstreamRec, SETTRANSMODE, CFG_SPC_TRANS);
+    PcieCfgSpaceWrite(UpstreamRec, X"00000010", X"ffffffff", CmplStatus) ;
 
-    Write(UpstreamRec, X"00000010", X"ffffffff");
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Write(UpstreamRec, X"00000014", X"ffffffff");
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
+    PcieCfgSpaceWrite(UpstreamRec, X"00000014", X"ffffffff", CmplStatus) ;
+
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #2: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Read(UpstreamRec, X"00000010", Data(31 downto 0));
+    PcieCfgSpaceRead(UpstreamRec, X"00000010", Data(31 downto 0), CmplStatus) ;
     AffirmIfEqual(Data(31 downto 0), X"fffff008", "Read data #3: ") ;
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space read status #3: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    Read(UpstreamRec, X"00000014", Data(31 downto 0));
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
+    PcieCfgSpaceRead(UpstreamRec, X"00000014", Data(31 downto 0), CmplStatus) ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space read status #3: ") ;
     AffirmIfEqual(Data(31 downto 0), X"fffffc08", "Read data #4: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- Set BAR0 to be at 0x00010000, with bus =2, device = 0, func = 0
-    Write(UpstreamRec, X"02_0_0_0010", X"0001_0000");
+    PcieCfgSpaceWrite(UpstreamRec, X"02_0_0_0010", X"0001_0000", CmplStatus) ;
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #3: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** I/O writes and reads *****
 
     -- Set to transmit I/O accesses
-    SetModelOptions(UpstreamRec, SETTRANSMODE, IO_TRANS);
+    SetModelOptions(UpstreamRec, SETTRANSMODE, IO_TRANS) ;
 
-    Write(UpstreamRec, X"12345678", X"87654321");
-    Read(UpstreamRec,  X"12345678", Data(31 downto 0));
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
+    PcieIoWrite(UpstreamRec, X"12345678", X"87654321", CmplStatus) ;
+    AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "I/O Write Status #1: ") ;
+    PcieIoRead(UpstreamRec,  X"12345678", Data(31 downto 0), CmplStatus) ;
     AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "I/O Read Status #1: ") ;
 
     -- ***** messages *****
 
-    -- Set to transmit messages
-    SetModelOptions(UpstreamRec, SETTRANSMODE, MSG_TRANS);
-
     --  Error message (no payload)
-    WriteAddressAsync(UpstreamRec, MSG_ERR_NON_FATAL);
+    PcieMessageWrite(UpstreamRec, MSG_ERR_NON_FATAL) ;
 
     -- Set power limit messages (has payload)
-    Write(UpstreamRec, MSG_SET_PWR_LIMIT, X"20251015");
+    PcieMessageWrite(UpstreamRec, MSG_SET_PWR_LIMIT, X"20251015") ;
 
     -- ***** completions *****
 
     -- Set to transmit completions
-    SetModelOptions(UpstreamRec, SETTRANSMODE, CPL_TRANS);
-    SetModelOptions(UpstreamRec, SETCMPLRID,   x"003e");
-    SetModelOptions(UpstreamRec, SETCMPLCID,   x"0123");
-    SetModelOptions(UpstreamRec, SETCMPLTAG,   x"01");
+    PcieCompletion(UpstreamRec, X"63", X"0badf00d", X"003e", X"0123", X"01") ;
 
-    Write(UpstreamRec, X"03", X"0badf00d");
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    -- ***** burst writes ad reads *****
+    -- ***** burst writes and reads *****
 
-    -- Set to transmit memory accesses
-    SetModelOptions(UpstreamRec, SETTRANSMODE, MEM_TRANS);
-
-    -- Write 126 bytes to 0x00000201
+    -- Write 126 bytes to 0x00010201
     for i in 0 to 125 loop
       Push(UpstreamRec.WriteBurstFifo, to_slv(i, 8)) ;
     end loop ;
-    WriteBurst(UpstreamRec, X"0001_0201", 126) ;
+    PcieMemWrite(UpstreamRec, X"0001_0201", 126) ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    -- Read back bytes from 0x00000201
-    ReadBurst(UpstreamRec, X"0001_0201", 126) ;
-    GetModelOptions(UpstreamRec, GETLASTCMPLSTATUS, CmplStatus);
+    -- Read back bytes from 0x00010201
+    PcieMemRead(UpstreamRec, X"0001_0201", 126, CmplStatus) ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Burst read status #1: ") ;
 
     for i in 0 to 125 loop
@@ -183,14 +165,12 @@ begin
     -- ***** burst completion *****
 
     -- Set to transmit completions
-    SetModelOptions(UpstreamRec, SETTRANSMODE, CPL_TRANS);
-    SetModelOptions(UpstreamRec, SETCMPLTAG,   x"03");
 
-    -- complete 47 bytes with low addr = 0x02
+    -- complete 47 bytes with low addr = 0x32
     for i in 0 to 46 loop
       Push(UpstreamRec.WriteBurstFifo, to_slv(i + 16, 8)) ;
     end loop ;
-    WriteBurst(UpstreamRec, X"0001_0202", 47) ;
+    PcieCompletion(UpstreamRec, X"32", 47, X"003e", X"0123", X"02") ;
 
     TestActive <= FALSE ;
 

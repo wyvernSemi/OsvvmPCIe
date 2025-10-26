@@ -39,6 +39,9 @@ library ieee ;
   use ieee.numeric_std.all ;
   use ieee.numeric_std_unsigned.all ;
 
+library osvvm_common ;
+  context osvvm_common.OsvvmCommonContext ;
+
 package PcieInterfacePkg is
 
   -- **** If the below values change, also update ../../code/pcieVcInterface.h ****
@@ -105,6 +108,7 @@ package PcieInterfacePkg is
   constant SETCMPLCID                  : integer :=  1006 ;
   constant SETCMPLTAG                  : integer :=  1007 ;
   constant GETLASTCMPLSTATUS           : integer :=  1008 ;
+  constant GETLASTRXREQTAG             : integer :=  1009 ;
 
   constant FREERUNSIM                  : integer :=  0 ;
   constant STOPSIM                     : integer :=  1 ;
@@ -119,7 +123,7 @@ package PcieInterfacePkg is
   -- PCIe Message codes
 
   constant MSG_UNLOCK                  : std_logic_vector(31 downto 0) := X"00000000" ;
-  
+
   constant MSG_ASSERT_INTA             : std_logic_vector(31 downto 0) := X"00000020" ;
   constant MSG_ASSERT_INTB             : std_logic_vector(31 downto 0) := X"00000021" ;
   constant MSG_ASSERT_INTC             : std_logic_vector(31 downto 0) := X"00000022" ;
@@ -128,16 +132,16 @@ package PcieInterfacePkg is
   constant MSG_DEASSERT_INTB           : std_logic_vector(31 downto 0) := X"00000025" ;
   constant MSG_DEASSERT_INTC           : std_logic_vector(31 downto 0) := X"00000026" ;
   constant MSG_DEASSERT_INTD           : std_logic_vector(31 downto 0) := X"00000027" ;
-  
+
   constant MSG_PM_ACTIVE_STATE_NAK     : std_logic_vector(31 downto 0) := X"00000014" ;
   constant MSG_PME                     : std_logic_vector(31 downto 0) := X"00000018" ;
   constant MSG_PME_TURN_OFF            : std_logic_vector(31 downto 0) := X"00000019" ;
   constant MSG_PME_TO_ACK              : std_logic_vector(31 downto 0) := X"0000001B" ;
-  
+
   constant MSG_ERR_CORR                : std_logic_vector(31 downto 0) := X"00000030" ;
   constant MSG_ERR_NON_FATAL           : std_logic_vector(31 downto 0) := X"00000031" ;
   constant MSG_ERR_FATAL               : std_logic_vector(31 downto 0) := X"00000033" ;
-  
+
   constant MSG_SET_PWR_LIMIT           : std_logic_vector(31 downto 0) := X"00000050" ;
   constant MSG_VENDOR_0                : std_logic_vector(31 downto 0) := X"0000007e" ;
   constant MSG_VENDOR_1                : std_logic_vector(31 downto 0) := X"0000007f" ;
@@ -163,7 +167,131 @@ package PcieInterfacePkg is
 
   function has_an_x (vec : std_logic_vector) return boolean ;
 
+  ------------------------------------------------------------
+  procedure PcieMemWrite (
+  -- do PCIe Memory Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iData          : In    std_logic_vector
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemWrite (
+  -- do PCIe Burst Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemRead (
+  -- do PCIe Memory Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+    variable oData          : Out   std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) ;
+  
+  ------------------------------------------------------------
+  procedure PcieMemRead (
+  -- do PCIe Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+    variable oStatus        : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieCfgSpaceWrite (
+  -- do PCIe Configuration Space Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iData          : In    std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) ;
+
+
+  ------------------------------------------------------------
+  procedure PcieCfgSpaceRead (
+  -- do PCIe Configuration Space Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+    variable oData          : Out   std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieIoWrite (
+  -- do PCIe I/O Space Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iData          : In    std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieIoRead (
+  -- do PCIe I/O Space Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+    variable oData          : Out   std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) ;
+  
+  ------------------------------------------------------------
+  procedure PcieMessageWrite (
+  -- do PCIe message (no data) Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iMsgType       : In    std_logic_vector
+  ) ;
+  
+  ------------------------------------------------------------
+  procedure PcieMessageWrite (
+  -- do PCIe message (with data) Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iMsgType       : In    std_logic_vector ;
+             iMsgData       : In    std_logic_vector
+  ) ;
+
+  ------------------------------------------------------------ 
+  procedure PcieCompletion (
+  -- do PCIe completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    std_logic_vector
+  ) ;
+
+  ------------------------------------------------------------ 
+  procedure PcieCompletion (
+  -- do PCIe completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iByteCount     : In    integer ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    std_logic_vector
+  ) ;
+
 end package PcieInterfacePkg ;
+
+-- ***********************************************************
+-- ************************ B O D Y **************************
+-- ***********************************************************
 
 package body PcieInterfacePkg is
 
@@ -181,5 +309,218 @@ package body PcieInterfacePkg is
 
   end function has_an_x ;
 
+  ------------------------------------------------------------
+  procedure PcieMemWrite (
+  -- do PCIe Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iData          : In    std_logic_vector
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+
+    -- Do some memory reads and writes
+    Write(TransactionRec, iAddr, iData) ;
+
+  end procedure PcieMemWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieMemWrite (
+  -- do PCIe Burst Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+
+    -- Do some memory reads and writes
+    WriteBurst(TransactionRec, iAddr, iByteCount) ;
+
+  end procedure PcieMemWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieMemRead (
+  -- do PCIe Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+    variable oData          : Out   std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+
+    Read(TransactionRec, iAddr, oData) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieMemRead ;
+
+  ------------------------------------------------------------
+  procedure PcieMemRead (
+  -- do PCIe Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+    variable oStatus        : Out   integer
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+
+    ReadBurst(TransactionRec, iAddr, iByteCount) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieMemRead ;
+
+  ------------------------------------------------------------
+  procedure PcieCfgSpaceWrite (
+  -- do PCIe Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iData          : In    std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
+    
+    Write(TransactionRec, iAddr, iData) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieCfgSpaceWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieCfgSpaceRead (
+  -- do PCIe Configuration Space Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+    variable oData          : Out   std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) is
+  begin
+  
+    SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
+    
+    Read(TransactionRec, iAddr, oData);
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieCfgSpaceRead ;
+
+  ------------------------------------------------------------
+  procedure PcieIoWrite (
+  -- do PCIe Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iData          : In    std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
+    
+    Write(TransactionRec, iAddr, iData) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieIoWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieIoRead (
+  -- do PCIe Configuration Space Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+    variable oData          : Out   std_logic_vector ;
+    variable oStatus        : Out   integer
+  ) is
+  begin
+  
+    SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
+    
+    Read(TransactionRec, iAddr, oData);
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieIoRead ;
+
+  ------------------------------------------------------------
+  procedure PcieMessageWrite (
+  -- do PCIe message (no data) Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iMsgType       : In    std_logic_vector
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
+
+    -- Do some memory reads and writes
+    WriteAddressAsync(TransactionRec, iMsgType) ;
+
+  end procedure PcieMessageWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieMessageWrite (
+  -- do PCIe message (with data) Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iMsgType       : In    std_logic_vector ;
+             iMsgData       : In    std_logic_vector
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
+
+    -- Do some memory reads and writes
+    Write(TransactionRec, iMsgType, iMsgData) ;
+
+  end procedure PcieMessageWrite ;
+
+  ------------------------------------------------------------ 
+  procedure PcieCompletion (
+  -- do PCIe completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    std_logic_vector
+  ) is
+  begin
+  
+    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+
+    Write(TransactionRec, iLowAddr, iData);
+  
+  end procedure PcieCompletion ;
+
+  ------------------------------------------------------------ 
+  procedure PcieCompletion (
+  -- do PCIe completion (with burst data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iByteCount     : In    integer ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    std_logic_vector
+  ) is
+  begin
+  
+    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+
+    WriteBurst(TransactionRec, iLowAddr, iByteCount);
+  
+  end procedure PcieCompletion ;
+  
 end package body PcieInterfacePkg ;
 
