@@ -48,6 +48,8 @@
 
 static void VUserInput(pPkt_t pkt, int status, void* usrptr)
 {
+    int node = *((int*)usrptr);
+    
     if (pkt->seq == DLLP_SEQ_ID)
     {
         DebugVPrint("---> VUserInput received DLLP\n");
@@ -60,7 +62,7 @@ static void VUserInput(pPkt_t pkt, int status, void* usrptr)
         // Get transaction length if a payload type, else set to 0
         int length  = (type & 0x40) ? (GET_TLP_LENGTH(pkt->data)) : 0;
 
-        VPrint("===> VUserInput received %s TLP sequence %d with payload length %d words at cycle %d\n",
+        VPrint("===> VUserInput @node%d received %s TLP sequence %d with payload length %d words at cycle %d\n", node,
                      (type & ~0x21) == TL_MRD32  ? "mem read"           :
                      (type & ~0x20) == TL_MWR32  ? "mem_write"          :
                      type           == TL_IORD   ? "i/o read"           :
@@ -239,7 +241,7 @@ extern "C" void VUserMain63(int node)
     pcieModelClass* pcie = new pcieModelClass(node);
 
     // Initialise PCIe VHost, with input callback function and no user pointer.
-    pcie->initialisePcie(VUserInput, NULL);
+    pcie->initialisePcie(VUserInput, &node);
 
     unsigned pipe_mode, link_width, init_phy;
 

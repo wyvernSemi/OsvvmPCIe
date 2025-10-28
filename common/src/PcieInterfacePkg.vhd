@@ -39,6 +39,10 @@ library ieee ;
   use ieee.numeric_std.all ;
   use ieee.numeric_std_unsigned.all ;
 
+
+library osvvm ;
+  context osvvm.OsvvmContext ;
+
 library osvvm_common ;
   context osvvm_common.OsvvmCommonContext ;
 
@@ -107,8 +111,9 @@ package PcieInterfacePkg is
   constant SETCMPLRID                  : integer :=  1005 ;
   constant SETCMPLCID                  : integer :=  1006 ;
   constant SETCMPLTAG                  : integer :=  1007 ;
-  constant GETLASTCMPLSTATUS           : integer :=  1008 ;
-  constant GETLASTRXREQTAG             : integer :=  1009 ;
+  constant SETREQTAG                   : integer :=  1008 ;
+  constant GETLASTCMPLSTATUS           : integer :=  1009 ;
+  constant GETLASTRXREQTAG             : integer :=  1010 ;
 
   constant FREERUNSIM                  : integer :=  0 ;
   constant STOPSIM                     : integer :=  1 ;
@@ -119,6 +124,8 @@ package PcieInterfacePkg is
   constant CFG_SPC_TRANS               : integer :=  2 ;
   constant MSG_TRANS                   : integer :=  3 ;
   constant CPL_TRANS                   : integer :=  4 ;
+
+  constant TLP_TAG_AUTO                : integer :=  16#100#;
 
   -- PCIe Message codes
 
@@ -158,6 +165,8 @@ package PcieInterfacePkg is
 
   constant MAXLINKWIDTH        : integer := 16 ;
 
+  subtype TagType is integer range 0 to 256;
+
   type LinkType is array (natural range <>) of std_logic_vector ;
 
   type PcieRecType is record
@@ -173,7 +182,8 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-             iData          : In    std_logic_vector
+             iData          : In    std_logic_vector ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
@@ -182,7 +192,8 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-             iByteCount     : In    integer
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
@@ -191,10 +202,11 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-    variable oData          : Out   std_logic_vector ;
-    variable oStatus        : Out   integer
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
-  
+
   ------------------------------------------------------------
   procedure PcieMemRead (
   -- do PCIe Read Cycle
@@ -202,7 +214,28 @@ package PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iByteCount     : In    integer ;
-    variable oStatus        : Out   integer
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadAddress (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadData (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             oTag           : Out   TagType
   ) ;
 
   ------------------------------------------------------------
@@ -212,9 +245,9 @@ package PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iData          : In    std_logic_vector ;
-    variable oStatus        : Out   integer
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
-
 
   ------------------------------------------------------------
   procedure PcieCfgSpaceRead (
@@ -222,8 +255,9 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-    variable oData          : Out   std_logic_vector ;
-    variable oStatus        : Out   integer
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
@@ -233,7 +267,8 @@ package PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iData          : In    std_logic_vector ;
-    variable oStatus        : Out   integer
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
@@ -242,28 +277,31 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-    variable oData          : Out   std_logic_vector ;
-    variable oStatus        : Out   integer
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
-  
+
   ------------------------------------------------------------
   procedure PcieMessageWrite (
   -- do PCIe message (no data) Cycle
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
-             iMsgType       : In    std_logic_vector
+             iMsgType       : In    std_logic_vector ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
-  
+
   ------------------------------------------------------------
   procedure PcieMessageWrite (
   -- do PCIe message (with data) Cycle
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iMsgType       : In    std_logic_vector ;
-             iMsgData       : In    std_logic_vector
+             iMsgData       : In    std_logic_vector ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) ;
 
-  ------------------------------------------------------------ 
+  ------------------------------------------------------------
   procedure PcieCompletion (
   -- do PCIe completion (with data) Cycle
   ------------------------------------------------------------
@@ -272,10 +310,10 @@ package PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    std_logic_vector
+           iTag           : In    TagType
   ) ;
 
-  ------------------------------------------------------------ 
+  ------------------------------------------------------------
   procedure PcieCompletion (
   -- do PCIe completion (with data) Cycle
   ------------------------------------------------------------
@@ -284,7 +322,7 @@ package PcieInterfacePkg is
            iByteCount     : In    integer ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    std_logic_vector
+           iTag           : In    TagType
   ) ;
 
 end package PcieInterfacePkg ;
@@ -315,10 +353,12 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-             iData          : In    std_logic_vector
+             iData          : In    std_logic_vector ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
     -- Do some memory reads and writes
     Write(TransactionRec, iAddr, iData) ;
@@ -331,10 +371,12 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-             iByteCount     : In    integer
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
     -- Do some memory reads and writes
     WriteBurst(TransactionRec, iAddr, iByteCount) ;
@@ -347,11 +389,14 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-    variable oData          : Out   std_logic_vector ;
-    variable oStatus        : Out   integer
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
+
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
 
     Read(TransactionRec, iAddr, oData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
@@ -365,15 +410,63 @@ package body PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iByteCount     : In    integer ;
-    variable oStatus        : Out   integer
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieMemRead ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadAddress (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+
+    -- Put values in record
+    TransactionRec.Operation     <= READ_ADDRESS ;
+    TransactionRec.Address       <= SafeResize(iAddr, TransactionRec.Address'length) ;
+    TransactionRec.AddrWidth     <= iAddr'length ;
+    TransactionRec.DataToModel   <= (TransactionRec.DataToModel'range => 'X') ;
+    TransactionRec.DataWidth     <= iByteCount * 8;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    -- Start Transaction
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieMemReadAddress ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadData (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             oTag           : Out   TagType
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+
+    ReadData(TransactionRec, oData) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetModelOptions(TransactionRec, GETLASTRXREQTAG,   oTag) ;
+
+  end procedure PcieMemReadData ;
 
   ------------------------------------------------------------
   procedure PcieCfgSpaceWrite (
@@ -382,12 +475,14 @@ package body PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iData          : In    std_logic_vector ;
-    variable oStatus        : Out   integer
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
     SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
-    
+    SetModelOptions(TransactionRec, SETREQTAG, iTag) ;
+
     Write(TransactionRec, iAddr, iData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
@@ -399,13 +494,15 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-    variable oData          : Out   std_logic_vector ;
-    variable oStatus        : Out   integer
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
-  
+
     SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
-    
+    SetModelOptions(TransactionRec, SETREQTAG, iTag) ;
+
     Read(TransactionRec, iAddr, oData);
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
@@ -418,12 +515,14 @@ package body PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iData          : In    std_logic_vector ;
-    variable oStatus        : Out   integer
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
     SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
-    
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+
     Write(TransactionRec, iAddr, iData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
@@ -435,13 +534,15 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
-    variable oData          : Out   std_logic_vector ;
-    variable oStatus        : Out   integer
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
-  
+
     SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
-    
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+
     Read(TransactionRec, iAddr, oData);
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
@@ -452,10 +553,12 @@ package body PcieInterfacePkg is
   -- do PCIe message (no data) Cycle
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
-             iMsgType       : In    std_logic_vector
+             iMsgType       : In    std_logic_vector ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
     SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
     -- Do some memory reads and writes
     WriteAddressAsync(TransactionRec, iMsgType) ;
@@ -468,17 +571,19 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iMsgType       : In    std_logic_vector ;
-             iMsgData       : In    std_logic_vector
+             iMsgData       : In    std_logic_vector ;
+             iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
     SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
     -- Do some memory reads and writes
     Write(TransactionRec, iMsgType, iMsgData) ;
 
   end procedure PcieMessageWrite ;
 
-  ------------------------------------------------------------ 
+  ------------------------------------------------------------
   procedure PcieCompletion (
   -- do PCIe completion (with data) Cycle
   ------------------------------------------------------------
@@ -487,20 +592,20 @@ package body PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    std_logic_vector
+           iTag           : In    TagType
   ) is
   begin
-  
+
     SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
     SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
     SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
     SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
 
     Write(TransactionRec, iLowAddr, iData);
-  
+
   end procedure PcieCompletion ;
 
-  ------------------------------------------------------------ 
+  ------------------------------------------------------------
   procedure PcieCompletion (
   -- do PCIe completion (with burst data) Cycle
   ------------------------------------------------------------
@@ -509,18 +614,18 @@ package body PcieInterfacePkg is
            iByteCount     : In    integer ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    std_logic_vector
+           iTag           : In    TagType
   ) is
   begin
-  
+
     SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
     SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
     SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
     SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
 
     WriteBurst(TransactionRec, iLowAddr, iByteCount);
-  
+
   end procedure PcieCompletion ;
-  
+
 end package body PcieInterfacePkg ;
 

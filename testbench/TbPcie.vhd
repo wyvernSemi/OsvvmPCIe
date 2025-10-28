@@ -10,9 +10,7 @@
 --
 --  Description:
 --      Simple PCIe GEN1/2  Model test bench
---
---
---
+
 --  Revision History:
 --    Date      Version    Description
 --    08/2025   2025.??    Initial revision
@@ -51,7 +49,7 @@ end entity TbPcie ;
 
 architecture TestHarness of TbPcie is
 
-  constant tperiod_Clk : time := 2 ns ;
+  constant tperiod_Clk : time :=   4 ns ; -- 250MHz for GEN1
   constant tpd         : time := 100 ps ;
 
   constant PCIE_ADDR_WIDTH   : integer := 64 ;

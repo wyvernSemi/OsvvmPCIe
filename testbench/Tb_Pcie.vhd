@@ -1,3 +1,37 @@
+--
+--  File Name:         Tb_Pcie.vhd
+--  Design Unit Name:  Architecture of TestCtrl
+--  Revision:          OSVVM MODELS STANDARD VERSION
+--
+--  Maintainer:        Simon Southwell  email:  simon.southwell@gmail.com
+--  Contributor(s):
+--     Simon Southwell simon.southwell@gmail.com
+--
+--
+--  Description:
+--      Test transaction source
+--
+--  Revision History:
+--    Date      Version    Description
+--    10/2025   ????.??    Initial revision
+--
+--
+--  This file is part of OSVVM.
+--
+--  Copyright (c) 2025 by [OSVVM Authors](../../AUTHORS.md).
+--
+--  Licensed under the Apache License, Version 2.0 (the "License");
+--  you may not use this file except in compliance with the License.
+--  You may obtain a copy of the License at
+--
+--      https://www.apache.org/licenses/LICENSE-2.0
+--
+--  Unless required by applicable law or agreed to in writing, software
+--  distributed under the License is distributed on an "AS IS" BASIS,
+--  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+--  See the License for the specific language governing permissions and
+--  limitations under the License.
+
 architecture CoSim of TestCtrl is
 
   constant Node           : integer         := 0 ;
@@ -31,7 +65,6 @@ begin
     wait until nReset = '1' ;
     ClearAlerts ;
 
-
     -- Wait for test to finish
     WaitForBarrier(TestDone, 1 ms) ;
 
@@ -51,10 +84,9 @@ begin
   UpstreamProc : process
     variable OpRV           : RandomPType ;
     variable WaitForClockRV : RandomPType ;
-    variable counts         : integer := 0;
     variable Data           : std_logic_vector(31 downto 0) ;
-    variable Count          : integer ;
     variable CmplStatus     : integer ;
+    variable CmplTag        : integer ;
   begin
     -- Initialize Randomization Objects
     OpRV.InitSeed(OpRv'instance_name) ;
@@ -63,6 +95,10 @@ begin
     -- Find exit of reset
     wait until nReset = '1' ;
     WaitForClock(UpstreamRec, 2) ;
+
+    -- =================================================================
+    -- =====================  T  E  S  T  S  ===========================
+    -- =================================================================
 
     -- Run PHY initialisation
     SetModelOptions(UpstreamRec, INITPHY, NULLOPTVALUE) ;
@@ -73,7 +109,7 @@ begin
     -- ***** memory writes and reads *****
 
     -- Do some memory reads and writes
-    PcieMemWrite(UpstreamRec, X"0000080", X"900dc0de") ;
+    PcieMemWrite(UpstreamRec, X"00000080", X"900dc0de") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     PcieMemWrite(UpstreamRec, X"00000106", X"cafe");
@@ -93,7 +129,7 @@ begin
 
     -- ***** configuration writes and reads *****
 
-    PcieCfgSpaceWrite(UpstreamRec, X"00000010", X"ffffffff", CmplStatus) ;
+    PcieCfgSpaceWrite(UpstreamRec, X"00000010", X"ffffffff", CmplStatus, 128) ; -- Set the tag
 
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
@@ -139,7 +175,7 @@ begin
     -- ***** completions *****
 
     -- Set to transmit completions
-    PcieCompletion(UpstreamRec, X"63", X"0badf00d", X"003e", X"0123", X"01") ;
+    PcieCompletion(UpstreamRec, X"63", X"0badf00d", X"003e", X"0123", 1) ;
 
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
@@ -170,7 +206,31 @@ begin
     for i in 0 to 46 loop
       Push(UpstreamRec.WriteBurstFifo, to_slv(i + 16, 8)) ;
     end loop ;
-    PcieCompletion(UpstreamRec, X"32", 47, X"003e", X"0123", X"02") ;
+    PcieCompletion(UpstreamRec, X"32", 47, X"003e", X"0123", 2) ;
+
+
+    -- ***** read address *****
+    PcieMemWrite(UpstreamRec, X"00010080", X"900dc0de") ;
+    PcieMemWrite(UpstreamRec, X"00010106", X"cafe");
+
+    PcieMemReadAddress(UpstreamRec, X"00010080", 4, 16#a0#) ;
+    PcieMemReadAddress(UpstreamRec, X"00010106", 2, 16#a1#) ;
+
+    WaitForClock(UpstreamRec, 50);
+
+    PcieMemReadData(UpstreamRec, Data(31 downto 0), CmplStatus, CmplTag);
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #3: ") ;
+    AffirmIfEqual(CmplTag, 16#a0#, "Read tag #3: ") ;
+    AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #3: ") ;
+
+    PcieMemReadData(UpstreamRec, Data(15 downto 0), CmplStatus, CmplTag);
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #4: ") ;
+    AffirmIfEqual(CmplTag, 16#a1#, "Read tag #4: ") ;
+    AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #4: ") ;
+
+    -- =================================================================
+    -- ==========================  E  N  D  ============================
+    -- =================================================================
 
     TestActive <= FALSE ;
 
