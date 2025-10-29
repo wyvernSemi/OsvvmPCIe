@@ -72,13 +72,12 @@ architecture TestHarness of TbPcie is
           DataFromModel(PCIE_DATA_WIDTH-1 downto 0)
         ) ;
 
---  -- PCIe Manager Functional Interface
+--  -- PCIe Functional Interface
   signal   PcieLink : PcieRecType(
     LinkOut (0 to PCIE_LINK_WIDTH-1)(PCIE_LANE_WIDTH-1 downto 0),
     LinkIn  (0 to PCIE_LINK_WIDTH-1)(PCIE_LANE_WIDTH-1 downto 0)
 
   ) ;
-
 
   component TestCtrl is
     port (
@@ -92,16 +91,19 @@ architecture TestHarness of TbPcie is
     ) ;
   end component TestCtrl ;
 
-
 begin
 
+  ------------------------------------------------------------
   -- create Clock
+  ------------------------------------------------------------
   Osvvm.ClockResetPkg.CreateClock (
     Clk        => Clk,
     Period     => Tperiod_Clk
   )  ;
 
+  ------------------------------------------------------------
   -- create nReset
+  ------------------------------------------------------------
   Osvvm.ClockResetPkg.CreateReset (
     Reset       => nReset,
     ResetActive => '0',
@@ -110,7 +112,9 @@ begin
     tpd         => tpd
   ) ;
 
-  Manager_1 :  entity osvvm_pcie.PcieModel
+  ------------------------------------------------------------
+  Upstream_1 : PcieModel
+  ------------------------------------------------------------
   generic map (
     NODE_NUM          => US_NODE_NUM,
     REQ_ID            => US_NODE_NUM,
@@ -126,14 +130,16 @@ begin
     -- Testbench Transaction Interface
     TransRec    => UpstreamRec,
 
-    -- PCIe Manager Functional Interface
+    -- PCIe Functional Interface
     PcieLinkOut => PcieLink.LinkOut,
     PcieLinkIn  => PcieLink.LinkIn
 
   ) ;
 
+  ------------------------------------------------------------
   -- Behavioural model.  Replaces DUT for labs
-  Subordinate_1 : entity osvvm_pcie.PcieModel
+  Downstream_1 : PcieModel
+  ------------------------------------------------------------
   generic map (
     NODE_NUM          => DS_NODE_NUM,
     REQ_ID            => DS_NODE_NUM,
@@ -149,24 +155,26 @@ begin
     -- Testbench Transaction Interface
     TransRec    => DownstreamRec,
 
-    -- PCIe Manager Functional Interface
+    -- PCIe Functional Interface
     PcieLinkOut => PcieLink.LinkIn,
     PcieLinkIn  => PcieLink.LinkOut
-
   ) ;
 
---  Monitor_1 : PcieMonitor
---  port map (
---    -- Globals
---    Clk         => Clk,
---    nReset      => nReset,
---
---    -- Pcie Manager Functional Interface
---    PcieLink    => PcieLink
---  ) ;
+  ------------------------------------------------------------
+  Monitor_1 : PcieMonitor
+  ------------------------------------------------------------
+  port map (
+    -- Globals
+    Clk         => Clk,
+    nReset      => nReset,
 
+    -- Pcie Functional Interface
+    PcieLink    => PcieLink
+  ) ;
 
+  ------------------------------------------------------------
   TestCtrl_1 : TestCtrl
+  ------------------------------------------------------------
   port map (
     -- Globals
     Clk            => Clk,

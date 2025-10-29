@@ -32,5 +32,6 @@
 #
 
 library osvvm_pcie
-analyze ./PcieContext.vhd
 analyze ./PcieModel.vhd
+analyze ./PcieMonitor_dummy.vhd
+analyze ./PcieContext.vhd

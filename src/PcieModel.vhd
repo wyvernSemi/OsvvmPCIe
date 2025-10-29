@@ -42,7 +42,7 @@ library std;
 use std.env.all;
 
 library osvvm ;
-  context osvvm.OsvvmContext ; 
+  context osvvm.OsvvmContext ;
   use osvvm.ScoreboardPkg_slv.all ;
 
 library osvvm_common ;
@@ -71,7 +71,7 @@ port (
   -- Testbench Transaction Interface
   TransRec    : inout AddressBusRecType ;
 
-  -- PCIe downstream port Functional Interface
+  -- PCIe port Functional Interface
   PcieLinkOut : out  LinkType ;
   PcieLinkIn  : in   LinkType
 ) ;
@@ -86,25 +86,25 @@ end entity PcieModel ;
 
 architecture behavioral of PcieModel is
 
-  constant LINKWIDTH     : integer                                      := PcieLinkOut'length ;
-  constant LANEWIDTH     : integer                                      := PcieLinkOut(0)'length ;
-  constant ELECIDLE      : std_logic_vector(LANEWIDTH-1 downto 0)       := (others => 'Z') ;
+  constant LINKWIDTH     : integer                                          := PcieLinkOut'length ;
+  constant LANEWIDTH     : integer                                          := PcieLinkOut(0)'length ;
+  constant ELECIDLE      : std_logic_vector(LANEWIDTH-1 downto 0)           := (others => 'Z') ;
 
   signal   ModelID       : AlertLogIDType ;
 
   --signal   RdData        : std_logic_vector (31 downto 0);
-  signal   ClkCount      : integer                                      := 0 ;
-  signal   Initialised   : boolean                                      := false ;
+  signal   ClkCount      : integer                                          := 0 ;
+  signal   Initialised   : boolean                                          := false ;
 
-  signal   ReverseIn     : std_logic                                    := '0' ;
-  signal   ReverseOut    : std_logic                                    := '0' ;
-  signal   InvertIn      : std_logic                                    := '0' ;
-  signal   InvertOut     : std_logic                                    := '0' ;
+  signal   ReverseIn     : std_logic                                        := '0' ;
+  signal   ReverseOut    : std_logic                                        := '0' ;
+  signal   InvertIn      : std_logic                                        := '0' ;
+  signal   InvertOut     : std_logic                                        := '0' ;
   signal   InvertInVec   : std_logic_vector (LANEWIDTH-1 downto 0) ;
   signal   InvertOutVec  : std_logic_vector (LANEWIDTH-1 downto 0) ;
-  signal   ElecIdleOut   : std_logic_vector (LINKWIDTH-1 downto 0)      := (others => '1') ;
-  signal   ElecIdleIn    : std_logic_vector (LINKWIDTH-1 downto 0)      := (others => '0') ;
-  signal   RxDetect      : std_logic_vector (LINKWIDTH-1 downto 0)      := (others => '0') ;
+  signal   ElecIdleOut   : std_logic_vector (LINKWIDTH-1 downto 0)          := (others => '1') ;
+  signal   ElecIdleIn    : std_logic_vector (LINKWIDTH-1 downto 0)          := (others => '0') ;
+  signal   RxDetect      : std_logic_vector (LINKWIDTH-1 downto 0)          := (others => '0') ;
 
   signal   LinkInVec     : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0'));
   signal   LinkOutVec    : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0'));
@@ -131,12 +131,12 @@ begin
     -- Alerts
     ID                      := NewID(MODEL_INSTANCE_NAME) ;
     ModelID                 <= ID ;
-    
+
     wait for 0 ns;
     TransRec.WriteBurstFifo <= NewID("WriteBurstFifo", ModelID, Search => PRIVATE_NAME) ;
     TransRec.ReadBurstFifo  <= NewID("ReadBurstFifo",  ModelID, Search => PRIVATE_NAME) ;
-    
-    -- Co-simulation 
+
+    -- Co-simulation
     CoSimInit(Node);
     Initialised  <= true;
     wait ;
@@ -267,8 +267,7 @@ begin
         when PVH_FINISH => if WE then finish; end if;
         when PVH_FATAL  =>
           if WE then
-            assert false report "Fatal issued by VProc" severity error;
-            finish;
+            Alert(ModelID, "The Model had an internal error condition", ERROR) ;
           end if;
 
         -- -----------------------------------------------------
@@ -321,29 +320,29 @@ begin
           WrData(63 downto 32)   := std_logic_vector(to_signed(VPDataHi, 32)) ;
 
           TransRec.DataFromModel <= SafeResize(WrData, TransRec.DataFromModel'length) ;
-          
+
         when SETBOOLFROMMODEL =>
-        
+
           if VPData /= 0 then
               TransRec.BoolFromModel <= true;
           else
               TransRec.BoolFromModel <= false;
           end if;
-          
+
         when SETINTFROMMODEL =>
-        
+
           TransRec.IntFromModel <= VPData;
-          
-          
+
+
         when POPDATA =>
-        
+
           RdData(7 downto 0) := Pop(TransRec.WriteBurstFifo);
-          
+
         when PUSHDATA =>
-        
+
           WrData(7 downto 0) := std_logic_vector(to_signed(VPData, 8)) ;
-          
-          Push(TransRec.ReadBurstFifo, WrData(7 downto 0)) ; 
+
+          Push(TransRec.ReadBurstFifo, WrData(7 downto 0)) ;
 
         when ACKTRANS =>
 

@@ -5,7 +5,7 @@
 --
 --  Maintainer:        Simon Southwell      email:  simon.southwell@gmail.com
 --  Contributor(s):
---     Jim Lewis      simon.southwell@gmail.com
+--     Simon Southwell simon.southwell@gmail.com
 --
 --
 --  Description:
@@ -14,7 +14,7 @@
 --
 --  Revision History:
 --    Date      Version    Description
---    09/2025   2025.??       Initial revision
+--    09/2025   ????.??       Initial revision
 --
 --
 --  This file is part of OSVVM.

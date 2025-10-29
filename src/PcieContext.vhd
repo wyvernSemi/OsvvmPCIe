@@ -8,5 +8,6 @@ context PcieContext is
 
     use osvvm_pcie.PcieInterfacePkg.all ;
     use osvvm_pcie.PcieOptionsPkg.all ;
+    use osvvm_pcie.PcieComponentPkg.all ;
 
 end context PcieContext ;
