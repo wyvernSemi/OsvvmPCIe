@@ -179,6 +179,11 @@ begin
     PcieCompletion(UpstreamRec, X"63", X"0badf00d", X"003e", X"0123", 1) ;
 
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    
+    -- Set to transmit completions
+    PcieCompletionLock(UpstreamRec, X"51", X"25081964", X"003e", X"0123", 1) ;
+
+    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** burst writes and reads *****
 
@@ -245,6 +250,18 @@ begin
       Push(UpstreamRec.WriteBurstFifo, to_slv(i + 54, 8)) ;
     end loop ;
     PciePartCompletion(UpstreamRec, X"48", 25, X"003e", X"0123", std_logic_vector(to_unsigned(RemainLen, 12)), 4) ;
+    
+    -- ***** Locked read *****
+    PcieMemReadLock(UpstreamRec,  X"00010106", Data(15 downto 0), CmplStatus) ;
+
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #5: ") ;
+    AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #5: ") ;
+    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    
+    PcieMemReadLock(UpstreamRec,  X"00000006", Data(15 downto 0), CmplStatus) ;
+    
+    AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "Read Status #6: ") ;
+    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- =================================================================
     -- ==========================  E  N  D  ============================

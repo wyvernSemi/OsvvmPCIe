@@ -221,7 +221,50 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
+  procedure PcieMemReadLock (
+  -- do PCIe Memory Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadLock (
+  -- do PCIe Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) ;
+
+  ------------------------------------------------------------
   procedure PcieMemReadAddress (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             iLock          : In    boolean := false ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadAddress (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadLockAddress (
   -- do PCIe Read Address Cycle
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
@@ -327,22 +370,72 @@ package PcieInterfacePkg is
            iTag           : In    TagType
   ) ;
 
---  ------------------------------------------------------------
---  procedure PciePartCompletion (
---  -- do PCIe part completion (with data) Cycle
---  ------------------------------------------------------------
---  signal   TransactionRec : InOut AddressBusRecType ;
---           iLowAddr       : In    std_logic_vector ;
---           iData          : In    std_logic_vector ;
---           iRid           : In    std_logic_vector ;
---           iCid           : In    std_logic_vector ;
---           iRemainingLen  : In    std_logic_vector ;
---           iTag           : In    TagType
---  ) ;
+  ------------------------------------------------------------
+  procedure PcieCompletionLock (
+  -- do PCIe locked completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieCompletionLock (
+  -- do PCIe locked completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iByteCount     : In    integer ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PciePartCompletion (
+  -- do PCIe part completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iRemainingLen  : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) ;
 
   ------------------------------------------------------------
   procedure PciePartCompletion (
   -- do PCIe completion (with burst data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iByteCount     : In    integer ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iRemainingLen  : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PciePartCompletionLock (
+  -- do PCIe locked part completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iRemainingLen  : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PciePartCompletionLock (
+  -- do PCIe locked completion (with burst data) Cycle
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
            iLowAddr       : In    std_logic_vector ;
@@ -424,7 +517,9 @@ package body PcieInterfacePkg is
   begin
 
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+
 
     Read(TransactionRec, iAddr, oData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
@@ -444,11 +539,55 @@ package body PcieInterfacePkg is
   begin
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
     SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieMemRead ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadLock (
+  -- do PCIe Memory Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             oData          : Out   std_logic_vector ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+    Read(TransactionRec, iAddr, oData) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieMemReadLock ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadLock (
+  -- do PCIe Read Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             oStatus        : Out   integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) is
+  begin
+    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+
+    ReadBurst(TransactionRec, iAddr, iByteCount) ;
+    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+  end procedure PcieMemReadLock ;
 
   ------------------------------------------------------------
   procedure PcieMemReadAddress (
@@ -457,12 +596,14 @@ package body PcieInterfacePkg is
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
              iByteCount     : In    integer ;
+             iLock          : In    boolean := false ;
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     iLock) ;
 
     -- Put values in record
     TransactionRec.Operation     <= READ_ADDRESS ;
@@ -476,6 +617,36 @@ package body PcieInterfacePkg is
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
   end procedure PcieMemReadAddress ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadAddress (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) is
+  begin
+
+    PcieMemReadAddress(TransactionRec, iAddr, iByteCount, false, iTag) ;
+
+  end procedure PcieMemReadAddress ;
+
+  ------------------------------------------------------------
+  procedure PcieMemReadLockAddress (
+  -- do PCIe Read Address Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+             iAddr          : In    std_logic_vector ;
+             iByteCount     : In    integer ;
+             iTag           : In    TagType := TLP_TAG_AUTO
+  ) is
+  begin
+
+    PcieMemReadAddress(TransactionRec, iAddr, iByteCount, true, iTag) ;
+
+  end procedure PcieMemReadLockAddress ;
 
   ------------------------------------------------------------
   procedure PcieMemReadData (
@@ -531,7 +702,7 @@ package body PcieInterfacePkg is
     SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
     SetModelOptions(TransactionRec, SETREQTAG, iTag) ;
 
-    Read(TransactionRec, iAddr, oData);
+    Read(TransactionRec, iAddr, oData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieCfgSpaceRead ;
@@ -549,7 +720,7 @@ package body PcieInterfacePkg is
   begin
 
     SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
     Write(TransactionRec, iAddr, iData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
@@ -569,9 +740,9 @@ package body PcieInterfacePkg is
   begin
 
     SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag);
+    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
-    Read(TransactionRec, iAddr, oData);
+    Read(TransactionRec, iAddr, oData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieIoRead ;
@@ -628,8 +799,9 @@ package body PcieInterfacePkg is
     SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
     SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
     SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
 
-    Write(TransactionRec, iLowAddr, iData);
+    Write(TransactionRec, iLowAddr, iData) ;
 
   end procedure PcieCompletion ;
 
@@ -650,34 +822,82 @@ package body PcieInterfacePkg is
     SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
     SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
     SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
 
-    WriteBurst(TransactionRec, iLowAddr, iByteCount);
+    WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
 
   end procedure PcieCompletion ;
 
---  ------------------------------------------------------------
---  procedure PciePartCompletion (
---  -- do PCIe completion (with data) Cycle
---  ------------------------------------------------------------
---  signal   TransactionRec : InOut AddressBusRecType ;
---           iLowAddr       : In    std_logic_vector ;
---           iData          : In    std_logic_vector ;
---           iRid           : In    std_logic_vector ;
---           iCid           : In    std_logic_vector ;
---           iRemainingLen  : In    std_logic_vector ;
---           iTag           : In    TagType
---  ) is
---  begin
---
---    SetModelOptions(TransactionRec, SETTRANSMODE, PART_CPL_TRANS) ;
---    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
---    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
---    SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
---    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
---
---    Write(TransactionRec, iLowAddr, iData);
---
---  end procedure PciePartCompletion ;
+  ------------------------------------------------------------
+  procedure PcieCompletionLock (
+  -- do PCIe locked completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+    Write(TransactionRec, iLowAddr, iData) ;
+
+  end procedure PcieCompletionLock ;
+
+  ------------------------------------------------------------
+  procedure PcieCompletionLock (
+  -- do PCIe locked completion (with burst data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iByteCount     : In    integer ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+    WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
+
+  end procedure PcieCompletionLock ;
+
+  ------------------------------------------------------------
+  procedure PciePartCompletion (
+  -- do PCIe completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iRemainingLen  : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, PART_CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+
+    Write(TransactionRec, iLowAddr, iData) ;
+
+  end procedure PciePartCompletion ;
 
   ------------------------------------------------------------
   procedure PciePartCompletion (
@@ -698,10 +918,61 @@ package body PcieInterfacePkg is
     SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
     SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
     SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
 
-    WriteBurst(TransactionRec, iLowAddr, iByteCount);
+    WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
 
   end procedure PciePartCompletion ;
+
+  ------------------------------------------------------------
+  procedure PciePartCompletionLock (
+  -- do PCIe locked completion (with data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iData          : In    std_logic_vector ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iRemainingLen  : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, PART_CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+    Write(TransactionRec, iLowAddr, iData) ;
+
+  end procedure PciePartCompletionLock ;
+
+  ------------------------------------------------------------
+  procedure PciePartCompletionLock (
+  -- do PCIe locked completion (with burst data) Cycle
+  ------------------------------------------------------------
+  signal   TransactionRec : InOut AddressBusRecType ;
+           iLowAddr       : In    std_logic_vector ;
+           iByteCount     : In    integer ;
+           iRid           : In    std_logic_vector ;
+           iCid           : In    std_logic_vector ;
+           iRemainingLen  : In    std_logic_vector ;
+           iTag           : In    TagType
+  ) is
+  begin
+
+    SetModelOptions(TransactionRec, SETTRANSMODE, PART_CPL_TRANS) ;
+    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
+    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
+    SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
+    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
+    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+    WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
+
+  end procedure PciePartCompletionLock ;
 
 end package body PcieInterfacePkg ;
 
