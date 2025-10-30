@@ -87,6 +87,7 @@ begin
     variable Data           : std_logic_vector(31 downto 0) ;
     variable CmplStatus     : integer ;
     variable CmplTag        : integer ;
+    variable RemainLen      : integer ;
   begin
     -- Initialize Randomization Objects
     OpRV.InitSeed(OpRv'instance_name) ;
@@ -227,6 +228,23 @@ begin
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #4: ") ;
     AffirmIfEqual(CmplTag, 16#a1#, "Read tag #4: ") ;
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #4: ") ;
+    
+    -- ***** part completions *****
+    -- Transfer 47 bytes in two competions
+    RemainLen := 47 ;
+    
+    -- complete 22 bytes (of 47) with low addr = 0x32
+    for i in 0 to 21 loop
+      Push(UpstreamRec.WriteBurstFifo, to_slv(i + 32, 8)) ;
+    end loop ;
+    PciePartCompletion(UpstreamRec, X"32", 22, X"003e", X"0123", std_logic_vector(to_unsigned(RemainLen, 12)), 3) ;
+    RemainLen := RemainLen - 22 ;
+    
+    -- complete remaining 25 bytes with low addr = 0x48
+    for i in 0 to 24 loop
+      Push(UpstreamRec.WriteBurstFifo, to_slv(i + 54, 8)) ;
+    end loop ;
+    PciePartCompletion(UpstreamRec, X"48", 25, X"003e", X"0123", std_logic_vector(to_unsigned(RemainLen, 12)), 4) ;
 
     -- =================================================================
     -- ==========================  E  N  D  ============================
