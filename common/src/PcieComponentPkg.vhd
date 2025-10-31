@@ -84,6 +84,182 @@ package PcieComponentPkg is
     ) ;
   end component PcieMonitor ;
 
+  ------------------------------------------------------------
+  component PciePassThru is
+  ------------------------------------------------------------
+    port (
+      DownLinkIn0    : in  std_logic_vector ;
+      DownLinkIn1    : in  std_logic_vector ;
+      DownLinkIn2    : in  std_logic_vector ;
+      DownLinkIn3    : in  std_logic_vector ;
+      DownLinkIn4    : in  std_logic_vector ;
+      DownLinkIn5    : in  std_logic_vector ;
+      DownLinkIn6    : in  std_logic_vector ;
+      DownLinkIn7    : in  std_logic_vector ;
+      DownLinkIn8    : in  std_logic_vector ;
+      DownLinkIn9    : in  std_logic_vector ;
+      DownLinkIn10   : in  std_logic_vector ;
+      DownLinkIn11   : in  std_logic_vector ;
+      DownLinkIn12   : in  std_logic_vector ;
+      DownLinkIn13   : in  std_logic_vector ;
+      DownLinkIn14   : in  std_logic_vector ;
+      DownLinkIn15   : in  std_logic_vector ;
+
+      DownLinkOut0   : out std_logic_vector ;
+      DownLinkOut1   : out std_logic_vector ;
+      DownLinkOut2   : out std_logic_vector ;
+      DownLinkOut3   : out std_logic_vector ;
+      DownLinkOut4   : out std_logic_vector ;
+      DownLinkOut5   : out std_logic_vector ;
+      DownLinkOut6   : out std_logic_vector ;
+      DownLinkOut7   : out std_logic_vector ;
+      DownLinkOut8   : out std_logic_vector ;
+      DownLinkOut9   : out std_logic_vector ;
+      DownLinkOut10  : out std_logic_vector ;
+      DownLinkOut11  : out std_logic_vector ;
+      DownLinkOut12  : out std_logic_vector ;
+      DownLinkOut13  : out std_logic_vector ;
+      DownLinkOut14  : out std_logic_vector ;
+      DownLinkOut15  : out std_logic_vector ;
+
+      UpLinkIn0      : in  std_logic_vector ;
+      UpLinkIn1      : in  std_logic_vector ;
+      UpLinkIn2      : in  std_logic_vector ;
+      UpLinkIn3      : in  std_logic_vector ;
+      UpLinkIn4      : in  std_logic_vector ;
+      UpLinkIn5      : in  std_logic_vector ;
+      UpLinkIn6      : in  std_logic_vector ;
+      UpLinkIn7      : in  std_logic_vector ;
+      UpLinkIn8      : in  std_logic_vector ;
+      UpLinkIn9      : in  std_logic_vector ;
+      UpLinkIn10     : in  std_logic_vector ;
+      UpLinkIn11     : in  std_logic_vector ;
+      UpLinkIn12     : in  std_logic_vector ;
+      UpLinkIn13     : in  std_logic_vector ;
+      UpLinkIn14     : in  std_logic_vector ;
+      UpLinkIn15     : in  std_logic_vector ;
+
+      UpLinkOut0     : out std_logic_vector ;
+      UpLinkOut1     : out std_logic_vector ;
+      UpLinkOut2     : out std_logic_vector ;
+      UpLinkOut3     : out std_logic_vector ;
+      UpLinkOut4     : out std_logic_vector ;
+      UpLinkOut5     : out std_logic_vector ;
+      UpLinkOut6     : out std_logic_vector ;
+      UpLinkOut7     : out std_logic_vector ;
+      UpLinkOut8     : out std_logic_vector ;
+      UpLinkOut9     : out std_logic_vector ;
+      UpLinkOut10    : out std_logic_vector ;
+      UpLinkOut11    : out std_logic_vector ;
+      UpLinkOut12    : out std_logic_vector ;
+      UpLinkOut13    : out std_logic_vector ;
+      UpLinkOut14    : out std_logic_vector ;
+      UpLinkOut15    : out std_logic_vector
+    ) ;
+  end component PciePassThru;
+
+  ------------------------------------------------------------
+  component PciePassThru8 is
+  ------------------------------------------------------------
+    port (
+      DownLinkIn0    : in  std_logic_vector ;
+      DownLinkIn1    : in  std_logic_vector ;
+      DownLinkIn2    : in  std_logic_vector ;
+      DownLinkIn3    : in  std_logic_vector ;
+      DownLinkIn4    : in  std_logic_vector ;
+      DownLinkIn5    : in  std_logic_vector ;
+      DownLinkIn6    : in  std_logic_vector ;
+      DownLinkIn7    : in  std_logic_vector ;
+
+      DownLinkOut0   : out std_logic_vector ;
+      DownLinkOut1   : out std_logic_vector ;
+      DownLinkOut2   : out std_logic_vector ;
+      DownLinkOut3   : out std_logic_vector ;
+      DownLinkOut4   : out std_logic_vector ;
+      DownLinkOut5   : out std_logic_vector ;
+      DownLinkOut6   : out std_logic_vector ;
+      DownLinkOut7   : out std_logic_vector ;
+
+      UpLinkIn0      : in  std_logic_vector ;
+      UpLinkIn1      : in  std_logic_vector ;
+      UpLinkIn2      : in  std_logic_vector ;
+      UpLinkIn3      : in  std_logic_vector ;
+      UpLinkIn4      : in  std_logic_vector ;
+      UpLinkIn5      : in  std_logic_vector ;
+      UpLinkIn6      : in  std_logic_vector ;
+      UpLinkIn7      : in  std_logic_vector ;
+
+      UpLinkOut0     : out std_logic_vector ;
+      UpLinkOut1     : out std_logic_vector ;
+      UpLinkOut2     : out std_logic_vector ;
+      UpLinkOut3     : out std_logic_vector ;
+      UpLinkOut4     : out std_logic_vector ;
+      UpLinkOut5     : out std_logic_vector ;
+      UpLinkOut6     : out std_logic_vector ;
+      UpLinkOut7     : out std_logic_vector
+    ) ;
+  end component PciePassThru8;
+
+  ------------------------------------------------------------
+  component PciePassThru4 is
+  ------------------------------------------------------------
+    port (
+      DownLinkIn0    : in  std_logic_vector ;
+      DownLinkIn1    : in  std_logic_vector ;
+      DownLinkIn2    : in  std_logic_vector ;
+      DownLinkIn3    : in  std_logic_vector ;
+
+      DownLinkOut0   : out std_logic_vector ;
+      DownLinkOut1   : out std_logic_vector ;
+      DownLinkOut2   : out std_logic_vector ;
+      DownLinkOut3   : out std_logic_vector ;
+
+      UpLinkIn0      : in  std_logic_vector ;
+      UpLinkIn1      : in  std_logic_vector ;
+      UpLinkIn2      : in  std_logic_vector ;
+      UpLinkIn3      : in  std_logic_vector ;
+
+      UpLinkOut0     : out std_logic_vector ;
+      UpLinkOut1     : out std_logic_vector ;
+      UpLinkOut2     : out std_logic_vector ;
+      UpLinkOut3     : out std_logic_vector
+    );
+
+  end component PciePassThru4;
+
+  ------------------------------------------------------------
+  component PciePassThru2 is
+  ------------------------------------------------------------
+    port (
+      DownLinkIn0    : in  std_logic_vector ;
+      DownLinkIn1    : in  std_logic_vector ;
+
+      DownLinkOut0   : out std_logic_vector ;
+      DownLinkOut1   : out std_logic_vector ;
+
+      UpLinkIn0      : in  std_logic_vector ;
+      UpLinkIn1      : in  std_logic_vector ;
+
+      UpLinkOut0     : out std_logic_vector ;
+      UpLinkOut1     : out std_logic_vector
+    );
+
+  end component PciePassThru2 ;
+
+  ------------------------------------------------------------
+  component PciePassThru1 is
+  ------------------------------------------------------------
+    port (
+      DownLinkIn0    : in  std_logic_vector ;
+
+      DownLinkOut0   : out std_logic_vector ;
+
+      UpLinkIn0      : in  std_logic_vector ;
+
+      UpLinkOut0     : out std_logic_vector
+    );
+
+  end component PciePassThru1 ;
 
 end package PcieComponentPkg ;
 

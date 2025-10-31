@@ -73,7 +73,7 @@ architecture TestHarness of TbPcie is
         ) ;
 
 --  -- PCIe Functional Interface
-  signal   PcieLink : PcieRecType(
+  signal   PcieDnLink, PcieUpLink : PcieRecType(
     LinkOut (0 to PCIE_LINK_WIDTH-1)(PCIE_LANE_WIDTH-1 downto 0),
     LinkIn  (0 to PCIE_LINK_WIDTH-1)(PCIE_LANE_WIDTH-1 downto 0)
 
@@ -131,13 +131,23 @@ begin
     TransRec    => UpstreamRec,
 
     -- PCIe Functional Interface
-    PcieLinkOut => PcieLink.LinkOut,
-    PcieLinkIn  => PcieLink.LinkIn
+    PcieLinkOut => PcieUpLink.LinkOut,
+    PcieLinkIn  => PcieUpLink.LinkIn
 
   ) ;
 
   ------------------------------------------------------------
-  -- Behavioural model.  Replaces DUT for labs
+  passthru_1 : PciePassThru1
+  ------------------------------------------------------------
+  port map (
+    UpLinkIn0         => PcieDnLink.LinkOut(0),
+    UpLinkOut0        => PcieDnLink.LinkIn(0),
+
+    DownLinkIn0       => PcieUpLink.LinkOut(0),
+    DownLinkOut0      => PcieUpLink.LinkIn(0)
+  ) ;
+
+  ------------------------------------------------------------
   Downstream_1 : PcieModel
   ------------------------------------------------------------
   generic map (
@@ -156,8 +166,8 @@ begin
     TransRec    => DownstreamRec,
 
     -- PCIe Functional Interface
-    PcieLinkOut => PcieLink.LinkIn,
-    PcieLinkIn  => PcieLink.LinkOut
+    PcieLinkOut => PcieDnLink.LinkOut,
+    PcieLinkIn  => PcieDnLink.LinkIn
   ) ;
 
   ------------------------------------------------------------
@@ -169,7 +179,7 @@ begin
     nReset      => nReset,
 
     -- Pcie Functional Interface
-    PcieLink    => PcieLink
+    PcieLink    => PcieUpLink
   ) ;
 
   ------------------------------------------------------------
