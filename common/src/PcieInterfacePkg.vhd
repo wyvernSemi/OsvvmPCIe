@@ -48,86 +48,143 @@ library osvvm_common ;
 
 package PcieInterfacePkg is
 
-  -- **** If the below values change, also update ../../code/pcieVcInterface.h ****
-  constant LINKADDR0                   : integer :=  0 ;
-  constant LINKADDR1                   : integer :=  1 ;
-  constant LINKADDR2                   : integer :=  2 ;
-  constant LINKADDR3                   : integer :=  3 ;
-  constant LINKADDR4                   : integer :=  4 ;
-  constant LINKADDR5                   : integer :=  5 ;
-  constant LINKADDR6                   : integer :=  6 ;
-  constant LINKADDR7                   : integer :=  7 ;
-  constant LINKADDR8                   : integer :=  8 ;
-  constant LINKADDR9                   : integer :=  9 ;
-  constant LINKADDR10                  : integer := 10 ;
-  constant LINKADDR11                  : integer := 11 ;
-  constant LINKADDR12                  : integer := 12 ;
-  constant LINKADDR13                  : integer := 13 ;
-  constant LINKADDR14                  : integer := 14 ;
-  constant LINKADDR15                  : integer := 15 ;
+  -- **** If the below values change, a      lso update ../../code/pcieVcInterface.h ****
+  constant LINKADDR0                         : integer :=  0 ;
+  constant LINKADDR1                         : integer :=  1 ;
+  constant LINKADDR2                         : integer :=  2 ;
+  constant LINKADDR3                         : integer :=  3 ;
+  constant LINKADDR4                         : integer :=  4 ;
+  constant LINKADDR5                         : integer :=  5 ;
+  constant LINKADDR6                         : integer :=  6 ;
+  constant LINKADDR7                         : integer :=  7 ;
+  constant LINKADDR8                         : integer :=  8 ;
+  constant LINKADDR9                         : integer :=  9 ;
+  constant LINKADDR10                        : integer := 10 ;
+  constant LINKADDR11                        : integer := 11 ;
+  constant LINKADDR12                        : integer := 12 ;
+  constant LINKADDR13                        : integer := 13 ;
+  constant LINKADDR14                        : integer := 14 ;
+  constant LINKADDR15                        : integer := 15 ;
 
-  constant NODENUMADDR                 : integer := 200 ;
-  constant LANESADDR                   : integer := 201 ;
-  constant PVH_INVERT                  : integer := 202 ;
-  constant EP_ADDR                     : integer := 203 ;
-  constant CLK_COUNT                   : integer := 204 ;
-  constant LINK_STATE                  : integer := 205 ;
-  constant RESET_STATE                 : integer := 206 ;
+  constant NODENUMADDR                       : integer := 200 ;
+  constant LANESADDR                         : integer := 201 ;
+  constant PVH_INVERT                        : integer := 202 ;
+  constant EP_ADDR                           : integer := 203 ;
+  constant CLK_COUNT                         : integer := 204 ;
+  constant LINK_STATE                        : integer := 205 ;
+  constant RESET_STATE                       : integer := 206 ;
 
-  constant REQID_ADDR                  : integer := 300 ;
-  constant PIPE_ADDR                   : integer := 301 ;
-  constant EN_ECRC_ADDR                : integer := 302 ;
-  constant INITPHY_ADDR                : integer := 303 ;
+  constant REQID_ADDR                        : integer := 300 ;
+  constant PIPE_ADDR                         : integer := 301 ;
+  constant EN_ECRC_ADDR                      : integer := 302 ;
+  constant INITPHY_ADDR                      : integer := 303 ;
 
-  constant GETNEXTTRANS                : integer := 400 ;
-  constant GETINTTOMODEL               : integer := 401 ;
-  constant GETBOOLTOMODEL              : integer := 402 ;
-  constant GETTIMETOMODEL              : integer := 403 ;
-  constant GETADDRESS                  : integer := 404 ;
-  constant GETADDRESSWIDTH             : integer := 405 ;
-  constant GETDATATOMODEL              : integer := 406 ;
-  constant GETDATAWIDTH                : integer := 407 ;
-  constant GETPARAMS                   : integer := 408 ;
-  constant GETOPTIONS                  : integer := 409 ;
-  constant ACKTRANS                    : integer := 410 ;
-  constant SETDATAFROMMODEL            : integer := 411 ;
-  constant SETBOOLFROMMODEL            : integer := 412 ;
-  constant SETINTFROMMODEL             : integer := 413 ;
-  constant POPDATA                     : integer := 414 ;
-  constant PUSHDATA                    : integer := 415 ;
+  constant GETNEXTTRANS                      : integer := 400 ;
+  constant GETINTTOMODEL                     : integer := 401 ;
+  constant GETBOOLTOMODEL                    : integer := 402 ;
+  constant GETTIMETOMODEL                    : integer := 403 ;
+  constant GETADDRESS                        : integer := 404 ;
+  constant GETADDRESSWIDTH                   : integer := 405 ;
+  constant GETDATATOMODEL                    : integer := 406 ;
+  constant GETDATAWIDTH                      : integer := 407 ;
+  constant GETPARAMS                         : integer := 408 ;
+  constant GETOPTIONS                        : integer := 409 ;
+  constant ACKTRANS                          : integer := 410 ;
+  constant SETDATAFROMMODEL                  : integer := 411 ;
+  constant SETBOOLFROMMODEL                  : integer := 412 ;
+  constant SETINTFROMMODEL                   : integer := 413 ;
+  constant POPDATA                           : integer := 414 ;
+  constant PUSHDATA                          : integer := 415 ;
 
-  constant PVH_STOP                    : integer := -3 ;
-  constant PVH_FINISH                  : integer := -2 ;
-  constant PVH_FATAL                   : integer := -1 ;
+  constant PVH_STOP                          : integer := -3 ;
+  constant PVH_FINISH                        : integer := -2 ;
+  constant PVH_FATAL                         : integer := -1 ;
+
+  -- SetModelOptions for pcievhost model
+  constant CONFIG_FC_HDR_RATE                : integer :=  0 ;
+  constant CONFIG_FC_DATA_RATE               : integer :=  1 ;
+
+  constant CONFIG_ENABLE_FC                  : integer :=  2 ;
+  constant CONFIG_DISABLE_FC                 : integer :=  3 ;
+
+  constant CONFIG_ENABLE_ACK                 : integer :=  4 ;
+  constant CONFIG_DISABLE_ACK                : integer :=  5 ;
+
+  constant CONFIG_ENABLE_MEM                 : integer :=  6 ;
+  constant CONFIG_DISABLE_MEM                : integer :=  7 ;
+
+  constant CONFIG_ENABLE_SKIPS               : integer :=  8 ;
+  constant CONFIG_DISABLE_SKIPS              : integer :=  9 ;
+
+  constant CONFIG_ENABLE_UR_CPL              : integer := 10 ;
+  constant CONFIG_DISABLE_UR_CPL             : integer := 11 ;
+
+  constant CONFIG_POST_HDR_CR                : integer := 12 ;
+  constant CONFIG_POST_DATA_CR               : integer := 13 ;
+
+  constant CONFIG_NONPOST_HDR_CR             : integer := 14 ;
+  constant CONFIG_NONPOST_DATA_CR            : integer := 15 ;
+
+  constant CONFIG_CPL_HDR_CR                 : integer := 16 ;
+  constant CONFIG_CPL_DATA_CR                : integer := 17 ;
+
+  constant CONFIG_CPL_DELAY_RATE             : integer := 18 ;
+  constant CONFIG_CPL_DELAY_SPREAD           : integer := 19 ;
+
+  constant CONFIG_LTSSM_LINKNUM              : integer := 20 ;
+  constant CONFIG_LTSSM_N_FTS                : integer := 21 ;
+  constant CONFIG_LTSSM_TS_CTL               : integer := 22 ;
+  constant CONFIG_LTSSM_DETECT_QUIET_TO      : integer := 23 ;
+  constant CONFIG_LTSSM_ENABLE_TESTS         : integer := 24 ;
+  constant CONFIG_LTSSM_FORCE_TESTS          : integer := 25 ;
+  constant CONFIG_LTSSM_POLL_ACTIVE_TX_COUNT : integer := 26 ;
+  constant CONFIG_LTSSM_DISABLE_DISP_STATE   : integer := 27 ;
+
+  constant CONFIG_DISABLE_SCRAMBLING         : integer := 28 ;
+  constant CONFIG_ENABLE_SCRAMBLING          : integer := 29 ;
+
+  constant CONFIG_DISABLE_8B10B              : integer := 30 ;
+  constant CONFIG_ENABLE_8B10B               : integer := 31 ;
+
+  constant CONFIG_DISABLE_ECRC_CMPL          : integer := 32 ;
+  constant CONFIG_ENABLE_ECRC_CMPL           : integer := 33 ;
+
+  constant CONFIG_DISABLE_CRC_CHK            : integer := 34 ;
+  constant CONFIG_ENABLE_CRC_CHK             : integer := 35 ;
+
+  constant CONFIG_DISABLE_DISPLINK_COLOUR    : integer := 36 ;
+  constant CONFIG_ENABLE_DISPLINK_COLOUR     : integer := 37 ;
+
+  constant CONFIG_DISP_BCK_NODE_NUM          : integer := 38 ;
 
   -- SetModelOptions for PCIe VC
-  constant NULLOPTVALUE                : integer := -1 ;
-  constant VCOPTIONSTART               : integer :=  1000 ;
-  constant ENDMODELRUN                 : integer :=  VCOPTIONSTART ;
-  constant SETTRANSMODE                : integer :=  1001 ;
-  constant INITDLL                     : integer :=  1002 ;
-  constant INITPHY                     : integer :=  1003 ;
-  constant SETRDLCK                    : integer :=  1004 ;
-  constant SETCMPLRID                  : integer :=  1005 ;
-  constant SETCMPLCID                  : integer :=  1006 ;
-  constant SETCMPLRLEN                 : integer :=  1007 ;
-  constant SETCMPLTAG                  : integer :=  1008 ;
-  constant SETREQTAG                   : integer :=  1009 ;
-  constant GETLASTCMPLSTATUS           : integer :=  1010 ;
-  constant GETLASTRXREQTAG             : integer :=  1011 ;
+  constant NULLOPTVALUE                      : integer := -1 ;
+  constant VCOPTIONSTART                     : integer :=  1000 ;
+  constant ENDMODELRUN                       : integer :=  VCOPTIONSTART ;
+  constant SETTRANSMODE                      : integer :=  1001 ;
+  constant INITDLL                           : integer :=  1002 ;
+  constant INITPHY                           : integer :=  1003 ;
+  constant SETRDLCK                          : integer :=  1004 ;
+  constant SETCMPLRID                        : integer :=  1005 ;
+  constant SETCMPLCID                        : integer :=  1006 ;
+  constant SETCMPLRLEN                       : integer :=  1007 ;
+  constant SETCMPLTAG                        : integer :=  1008 ;
+  constant SETREQTAG                         : integer :=  1009 ;
+  constant GETLASTCMPLSTATUS                 : integer :=  1010 ;
+  constant GETLASTRXREQTAG                   : integer :=  1011 ;
 
-  constant FREERUNSIM                  : integer :=  0 ;
-  constant STOPSIM                     : integer :=  1 ;
-  constant FINISHSIM                   : integer :=  2 ;
+  constant FREERUNSIM                        : integer :=  0 ;
+  constant STOPSIM                           : integer :=  1 ;
+  constant FINISHSIM                         : integer :=  2 ;
 
-  constant MEM_TRANS                   : integer :=  0 ;
-  constant IO_TRANS                    : integer :=  1 ;
-  constant CFG_SPC_TRANS               : integer :=  2 ;
-  constant MSG_TRANS                   : integer :=  3 ;
-  constant CPL_TRANS                   : integer :=  4 ;
-  constant PART_CPL_TRANS              : integer :=  5 ;
+  constant MEM_TRANS                         : integer :=  0 ;
+  constant IO_TRANS                          : integer :=  1 ;
+  constant CFG_SPC_TRANS                     : integer :=  2 ;
+  constant MSG_TRANS                         : integer :=  3 ;
+  constant CPL_TRANS                         : integer :=  4 ;
+  constant PART_CPL_TRANS                    : integer :=  5 ;
 
-  constant TLP_TAG_AUTO                : integer :=  16#100#;
+  constant TLP_TAG_AUTO                      : integer :=  16#100#;
 
   -- PCIe Message codes
 
