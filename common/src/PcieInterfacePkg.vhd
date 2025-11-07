@@ -160,7 +160,6 @@ package PcieInterfacePkg is
   -- SetModelOptions for PCIe VC
   constant NULLOPTVALUE                      : integer := -1 ;
   constant VCOPTIONSTART                     : integer :=  1000 ;
-  constant ENDMODELRUN                       : integer :=  VCOPTIONSTART ;
   constant SETTRANSMODE                      : integer :=  1001 ;
   constant INITDLL                           : integer :=  1002 ;
   constant INITPHY                           : integer :=  1003 ;
@@ -170,8 +169,12 @@ package PcieInterfacePkg is
   constant SETCMPLRLEN                       : integer :=  1007 ;
   constant SETCMPLTAG                        : integer :=  1008 ;
   constant SETREQTAG                         : integer :=  1009 ;
-  constant GETLASTCMPLSTATUS                 : integer :=  1010 ;
-  constant GETLASTRXREQTAG                   : integer :=  1011 ;
+  constant SETCFGSPC                         : integer :=  1010 ;
+  constant SETCFGSPCMASK                     : integer :=  1011 ;
+  constant SETCFGSPCOFFSET                   : integer :=  1012 ;
+  
+  constant GETLASTCMPLSTATUS                 : integer :=  2000 ;
+  constant GETLASTRXREQTAG                   : integer :=  2001 ;
 
   constant FREERUNSIM                        : integer :=  0 ;
   constant STOPSIM                           : integer :=  1 ;
@@ -220,6 +223,8 @@ package PcieInterfacePkg is
   constant CPL_CRS                     : integer                       := 2 ;
   constant CPL_ABORT                   : integer                       := 4 ;
 
+  constant MAX_PCIE_LINK_WIDTH         : integer                       := 16 ;
+
   -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
 
   constant MAXLINKWIDTH        : integer := 16 ;
@@ -234,6 +239,8 @@ package PcieInterfacePkg is
   end record PcieRecType;
 
   function has_an_x (vec : std_logic_vector) return boolean ;
+
+  function selconst (cond : boolean; valtrue, valfalse : integer) return integer ;
 
   ------------------------------------------------------------
   procedure PcieMemWrite (
@@ -511,7 +518,9 @@ end package PcieInterfacePkg ;
 
 package body PcieInterfacePkg is
 
+  ------------------------------------------------------------
   function has_an_x (vec : std_logic_vector) return boolean is
+  ------------------------------------------------------------
   begin
 
     for idx in vec'range loop
@@ -524,6 +533,17 @@ package body PcieInterfacePkg is
     return false ;
 
   end function has_an_x ;
+
+  ------------------------------------------------------------
+  function selconst (cond : boolean;valtrue, valfalse : integer) return integer is
+  ------------------------------------------------------------
+  begin
+    if cond then
+      return valtrue ;
+    else
+      return valfalse ;
+    end if ;
+  end function selconst;
 
   ------------------------------------------------------------
   procedure PcieMemWrite (
@@ -577,7 +597,6 @@ package body PcieInterfacePkg is
     SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
     SetModelOptions(TransactionRec, SETRDLCK,     0) ;
 
-
     Read(TransactionRec, iAddr, oData) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
@@ -594,10 +613,10 @@ package body PcieInterfacePkg is
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
+
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
     SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
     SetModelOptions(TransactionRec, SETRDLCK,     0) ;
-
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
@@ -639,7 +658,6 @@ package body PcieInterfacePkg is
     SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
     SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
     SetModelOptions(TransactionRec, SETRDLCK,     1) ;
-
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
     GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
@@ -831,6 +849,7 @@ package body PcieInterfacePkg is
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
+
     SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
     SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 

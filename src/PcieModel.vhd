@@ -234,7 +234,7 @@ begin
               LinkOutVec(LinkOffset) <= std_logic_vector(to_signed(VPData, LANEWIDTH)) xor InvertOutVec ;
             end if;
 
-            RdData := 54x"000000" & (LinkInVec(LinkOffset) xor InvertInVec) ;
+            RdData := SafeResize(LinkInVec(LinkOffset) xor InvertInVec, RdData'length) ;
 
         when LINK_STATE  =>
 

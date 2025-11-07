@@ -3,19 +3,19 @@
 --  Design Unit Name:  PciePassThru
 --  Revision:          OSVVM MODELS STANDARD VERSION
 --
---  Maintainer:        Simon Sothwell email:  simon.southwell@gmail.com
+--  Maintainer:        Simon Southwell email:  simon.southwell@gmail.com
 --  Contributor(s):
 --     Simon Southwell simon.southwell@gmail.com
 --
 --
 --  Description:
---     DUT pass thru for PCIe VC testing
+--     DUT pass through for PCIe VC testing
 --     Used to demonstrate DUT connections
 --
 --
 --  Revision History:
 --    Date      Version    Description
---    10/2025   ???.??     Initial
+--    10/2025   ????.??    Initial
 --
 --
 --  This file is part of OSVVM.
