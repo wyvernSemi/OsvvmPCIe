@@ -130,12 +130,13 @@ begin
 
     -- ***** configuration writes and reads *****
 
-    PcieCfgSpaceWrite(UpstreamRec, X"00000010", X"ffffffff", CmplStatus, 128) ; -- Set the tag
+    --                 TransRec    Offset    CID      Data         Status      Tag
+    PcieCfgSpaceWrite(UpstreamRec, X"0010",  X"0000", X"ffffffff", CmplStatus, 128) ; -- Set the tag
 
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieCfgSpaceWrite(UpstreamRec, X"00000014", X"ffffffff", CmplStatus) ;
+    PcieCfgSpaceWrite(UpstreamRec, X"0014", X"0000", X"ffffffff", CmplStatus) ;
 
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #2: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
@@ -151,7 +152,7 @@ begin
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- Set BAR0 to be at 0x00010000, with bus =2, device = 0, func = 0
-    PcieCfgSpaceWrite(UpstreamRec, X"02_0_0_0010", X"0001_0000", CmplStatus) ;
+    PcieCfgSpaceWrite(UpstreamRec, X"0010", X"02_0_0", X"0001_0000", CmplStatus) ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config space write status #3: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
