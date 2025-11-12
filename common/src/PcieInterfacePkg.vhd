@@ -172,9 +172,15 @@ package PcieInterfacePkg is
   constant SETCFGSPC                         : integer :=  1010 ;
   constant SETCFGSPCMASK                     : integer :=  1011 ;
   constant SETCFGSPCOFFSET                   : integer :=  1012 ;
+  constant SETMEMADDRLO                      : integer :=  1013 ;
+  constant SETMEMADDRHI                      : integer :=  1014 ;
+  constant SETMEMDATA                        : integer :=  1015 ;
   
   constant GETLASTCMPLSTATUS                 : integer :=  2000 ;
   constant GETLASTRXREQTAG                   : integer :=  2001 ;
+  constant GETMEMDATA                        : integer :=  2002 ;
+
+  -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
 
   constant FREERUNSIM                        : integer :=  0 ;
   constant STOPSIM                           : integer :=  1 ;
@@ -225,7 +231,6 @@ package PcieInterfacePkg is
 
   constant MAX_PCIE_LINK_WIDTH         : integer                       := 16 ;
 
-  -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
 
   constant MAXLINKWIDTH        : integer := 16 ;
 
