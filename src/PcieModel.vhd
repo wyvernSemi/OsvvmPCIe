@@ -20,7 +20,7 @@
 --
 --  Copyright (c) 2025 by [OSVVM Authors](../../AUTHORS.md).
 --
---  Licensed under the Apache License, Version 2.0 (the "License");
+--  Licensed under the Apache License, Version 2.0 (the "License") ;
 --  you may not use this file except in compliance with the License.
 --  You may obtain a copy of the License at
 --
@@ -92,7 +92,7 @@ architecture behavioral of PcieModel is
 
   signal   ModelID       : AlertLogIDType ;
 
-  --signal   RdData        : std_logic_vector (31 downto 0);
+  --signal   RdData        : std_logic_vector (31 downto 0) ;
   signal   ClkCount      : integer                                          := 0 ;
   signal   Initialised   : boolean                                          := false ;
 
@@ -106,8 +106,8 @@ architecture behavioral of PcieModel is
   signal   ElecIdleIn    : std_logic_vector (LINKWIDTH-1 downto 0)          := (others => '0') ;
   signal   RxDetect      : std_logic_vector (LINKWIDTH-1 downto 0)          := (others => '0') ;
 
-  signal   LinkInVec     : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0'));
-  signal   LinkOutVec    : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0'));
+  signal   LinkInVec     : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
+  signal   LinkOutVec    : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
 
 begin
 
@@ -118,8 +118,8 @@ begin
     end if;
   end process ClockCounter ;
 
-  InvertInVec    <= (others => InvertIn);
-  InvertOutVec   <= (others => InvertOut);
+  InvertInVec    <= (others => InvertIn) ;
+  InvertOutVec   <= (others => InvertOut) ;
 
   ------------------------------------------------------------
   --  Initialise
@@ -135,9 +135,10 @@ begin
     wait for 0 ns;
     TransRec.WriteBurstFifo <= NewID("WriteBurstFifo", ModelID, Search => PRIVATE_NAME) ;
     TransRec.ReadBurstFifo  <= NewID("ReadBurstFifo",  ModelID, Search => PRIVATE_NAME) ;
+    TransRec.Params         <= NewID("Params", NUM_PCIE_PARAMS, ModelID, Search => PRIVATE_NAME) ;
 
     -- Co-simulation
-    CoSimInit(Node);
+    CoSimInit(Node) ;
     Initialised  <= true;
     wait ;
   end process Initialise ;
@@ -167,10 +168,10 @@ begin
     variable Delta             : boolean               := false;
     variable WE                : boolean               := false;
     variable LinkOffset        : integer               := 0;
-    variable DataLoBits        : unsigned (3 downto 0) := (others => '0');
+    variable DataLoBits        : unsigned (3 downto 0) := (others => '0') ;
 
-    variable RdData            : std_logic_vector (63 downto 0) := (others => '0');
-    variable WrData            : std_logic_vector (63 downto 0) := (others => '0');
+    variable RdData            : std_logic_vector (63 downto 0) := (others => '0') ;
+    variable WrData            : std_logic_vector (63 downto 0) := (others => '0') ;
 
   begin
 
@@ -216,7 +217,7 @@ begin
         -- Process global state
         -- -----------------------------------------------------
 
-        when RESET_STATE  => RdData := 63x"00000000" & not nReset ;
+        when RESET_STATE  => RdData := (0 => not nReset, others => '0') ;
         when CLK_COUNT    => RdData := std_logic_vector(to_unsigned(ClkCount, RdData'length)) ;
 
         -- -----------------------------------------------------
@@ -257,7 +258,7 @@ begin
             InvertIn     <= '1' when DataLoBits(0) = '1' else '0' ;
           end if;
 
-          RdData := (3 => ReverseOut, 2 => ReverseIn, 1 => InvertOut, 0 => InvertIn, others => '0');
+          RdData := (3 => ReverseOut, 2 => ReverseIn, 1 => InvertOut, 0 => InvertIn, others => '0') ;
 
         -- -----------------------------------------------------
         -- Process simulation control
@@ -304,11 +305,11 @@ begin
 
         when GETDATAWIDTH =>
 
-          RdData := std_logic_vector(to_signed(TransRec.DataWidth, RdData'length));
+          RdData := std_logic_vector(to_signed(TransRec.DataWidth, RdData'length)) ;
 
         when GETPARAMS =>
 
-          RdData := std_logic_vector(to_signed(TransRec.Params.ID, RdData'length)) ;
+          RdData := std_logic_vector(to_signed(Get(TransRec.Params, VPData), RdData'length)) ;
 
         when GETOPTIONS =>
 
@@ -333,16 +334,25 @@ begin
 
           TransRec.IntFromModel <= VPData;
 
+        when POPWDATA =>
 
-        when POPDATA =>
+          RdData(7 downto 0) := Pop(TransRec.WriteBurstFifo) ;
 
-          RdData(7 downto 0) := Pop(TransRec.WriteBurstFifo);
+        when PUSHWDATA =>
 
-        when PUSHDATA =>
+          WrData(7 downto 0) := std_logic_vector(to_signed(VPData, 8)) ;
+
+          Push(TransRec.WriteBurstFifo, WrData(7 downto 0)) ;
+
+        when PUSHRDATA =>
 
           WrData(7 downto 0) := std_logic_vector(to_signed(VPData, 8)) ;
 
           Push(TransRec.ReadBurstFifo, WrData(7 downto 0)) ;
+
+        when POPRDATA =>
+
+          RdData(7 downto 0) := Pop(TransRec.ReadBurstFifo) ;
 
         when ACKTRANS =>
 
@@ -383,7 +393,7 @@ begin
       ElecIdleIn(idx)   <= '1' when PcieLinkIn(idx) = ELECIDLE  else '0';
       RxDetect(idx)     <= '1' when has_an_x(PcieLinkOut(idx))  else '0';
       LinkInVec(idx)    <= PcieLinkIn(LINKWIDTH - 1 - idx) when ReverseIn = '1' else PcieLinkIn(idx) after 1 ps ;
-      PcieLinkOut(idx)  <= ELECIDLE when ElecIdleOut(0)  = '1' else LinkOutVec(LINKWIDTH - 1 - idx) when ReverseOut else LinkOutVec(idx);
+      PcieLinkOut(idx)  <= ELECIDLE when ElecIdleOut(0)  = '1' else LinkOutVec(LINKWIDTH - 1 - idx) when ReverseOut else LinkOutVec(idx) ;
 
     end loop ;
 
