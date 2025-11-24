@@ -21,7 +21,7 @@
 --
 --  Copyright (c) 2025 by [OSVVM Authors](../../../AUTHORS.md).
 --
---  Licensed under the Apache License, Version 2.0 (the "License");
+--  Licensed under the Apache License, Version 2.0 (the "License") ;
 --  you may not use this file except in compliance with the License.
 --  You may obtain a copy of the License at
 --
@@ -93,8 +93,10 @@ package PcieInterfacePkg is
   constant SETDATAFROMMODEL                  : integer := 411 ;
   constant SETBOOLFROMMODEL                  : integer := 412 ;
   constant SETINTFROMMODEL                   : integer := 413 ;
-  constant POPDATA                           : integer := 414 ;
-  constant PUSHDATA                          : integer := 415 ;
+  constant POPWDATA                          : integer := 414 ;
+  constant PUSHWDATA                         : integer := 415 ;
+  constant POPRDATA                          : integer := 416 ;
+  constant PUSHRDATA                         : integer := 417 ;
 
   constant PVH_STOP                          : integer := -3 ;
   constant PVH_FINISH                        : integer := -2 ;
@@ -160,25 +162,17 @@ package PcieInterfacePkg is
   -- SetModelOptions for PCIe VC
   constant NULLOPTVALUE                      : integer := -1 ;
   constant VCOPTIONSTART                     : integer :=  1000 ;
-  constant SETTRANSMODE                      : integer :=  1001 ;
   constant INITDLL                           : integer :=  1002 ;
   constant INITPHY                           : integer :=  1003 ;
-  constant SETRDLCK                          : integer :=  1004 ;
-  constant SETCMPLRID                        : integer :=  1005 ;
-  constant SETCMPLCID                        : integer :=  1006 ;
-  constant SETCMPLRLEN                       : integer :=  1007 ;
-  constant SETCMPLTAG                        : integer :=  1008 ;
-  constant SETREQTAG                         : integer :=  1009 ;
   constant SETCFGSPC                         : integer :=  1010 ;
   constant SETCFGSPCMASK                     : integer :=  1011 ;
   constant SETCFGSPCOFFSET                   : integer :=  1012 ;
   constant SETMEMADDRLO                      : integer :=  1013 ;
   constant SETMEMADDRHI                      : integer :=  1014 ;
   constant SETMEMDATA                        : integer :=  1015 ;
-  
-  constant GETLASTCMPLSTATUS                 : integer :=  2000 ;
-  constant GETLASTRXREQTAG                   : integer :=  2001 ;
-  constant GETMEMDATA                        : integer :=  2002 ;
+  constant SETMEMENDIANNESS                  : integer :=  1016 ;
+
+  constant GETMEMDATA                        : integer :=  2000 ;
 
   -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
 
@@ -195,44 +189,60 @@ package PcieInterfacePkg is
 
   constant TLP_TAG_AUTO                      : integer :=  16#100#;
 
+  constant LITTLE_END                        : integer := 1;
+  constant BIG_END                           : integer := 0;
+
+  constant PARAM_TRANS_MODE                  : integer := 0;
+  constant PARAM_RDLCK                       : integer := 1;
+  constant PARAM_CMPLRID                     : integer := 2;
+  constant PARAM_CMPLCID                     : integer := 3;
+  constant PARAM_CMPLRLEN                    : integer := 4;
+  constant PARAM_CMPLRTAG                    : integer := 5;
+  constant PARAM_CMPLSTATUS                  : integer := 6;
+  constant PARAM_REQTAG                      : integer := 7;
+  constant NUM_PCIE_PARAMS                   : integer := PARAM_REQTAG + 1;
+
   -- PCIe Message codes
 
-  constant MSG_UNLOCK                  : std_logic_vector(31 downto 0) := X"00000000" ;
+  constant MSG_UNLOCK                        : std_logic_vector(31 downto 0) := X"00000000" ;
+                                             
+  constant MSG_ASSERT_INTA                   : std_logic_vector(31 downto 0) := X"00000020" ;
+  constant MSG_ASSERT_INTB                   : std_logic_vector(31 downto 0) := X"00000021" ;
+  constant MSG_ASSERT_INTC                   : std_logic_vector(31 downto 0) := X"00000022" ;
+  constant MSG_ASSERT_INTD                   : std_logic_vector(31 downto 0) := X"00000023" ;
+  constant MSG_DEASSERT_INTA                 : std_logic_vector(31 downto 0) := X"00000024" ;
+  constant MSG_DEASSERT_INTB                 : std_logic_vector(31 downto 0) := X"00000025" ;
+  constant MSG_DEASSERT_INTC                 : std_logic_vector(31 downto 0) := X"00000026" ;
+  constant MSG_DEASSERT_INTD                 : std_logic_vector(31 downto 0) := X"00000027" ;
+                                             
+  constant MSG_PM_ACTIVE_STATE_NAK           : std_logic_vector(31 downto 0) := X"00000014" ;
+  constant MSG_PME                           : std_logic_vector(31 downto 0) := X"00000018" ;
+  constant MSG_PME_TURN_OFF                  : std_logic_vector(31 downto 0) := X"00000019" ;
+  constant MSG_PME_TO_ACK                    : std_logic_vector(31 downto 0) := X"0000001B" ;
+                                             
+  constant MSG_ERR_CORR                      : std_logic_vector(31 downto 0) := X"00000030" ;
+  constant MSG_ERR_NON_FATAL                 : std_logic_vector(31 downto 0) := X"00000031" ;
+  constant MSG_ERR_FATAL                     : std_logic_vector(31 downto 0) := X"00000033" ;
+                                             
+  constant MSG_SET_PWR_LIMIT                 : std_logic_vector(31 downto 0) := X"00000050" ;
+  constant MSG_VENDOR_0                      : std_logic_vector(31 downto 0) := X"0000007e" ;
+  constant MSG_VENDOR_1                      : std_logic_vector(31 downto 0) := X"0000007f" ;
+                                             
+  constant MSG_DATA_NULL                     : std_logic_vector(31 downto 0) := X"00000000" ;
+                                             
+                                             
+  constant CPL_SUCCESS                       : integer                       := 0 ;
+  constant CPL_UNSUPPORTED                   : integer                       := 1 ;
+  constant CPL_CRS                           : integer                       := 2 ;
+  constant CPL_ABORT                         : integer                       := 4 ;
+  
+  constant GETLASTCMPLSTATUS                 : integer :=  0 ;
+  constant GETLASTRXREQTAG                   : integer :=  1 ;
+                                             
+  constant MAX_PCIE_LINK_WIDTH               : integer                       := 16 ;
 
-  constant MSG_ASSERT_INTA             : std_logic_vector(31 downto 0) := X"00000020" ;
-  constant MSG_ASSERT_INTB             : std_logic_vector(31 downto 0) := X"00000021" ;
-  constant MSG_ASSERT_INTC             : std_logic_vector(31 downto 0) := X"00000022" ;
-  constant MSG_ASSERT_INTD             : std_logic_vector(31 downto 0) := X"00000023" ;
-  constant MSG_DEASSERT_INTA           : std_logic_vector(31 downto 0) := X"00000024" ;
-  constant MSG_DEASSERT_INTB           : std_logic_vector(31 downto 0) := X"00000025" ;
-  constant MSG_DEASSERT_INTC           : std_logic_vector(31 downto 0) := X"00000026" ;
-  constant MSG_DEASSERT_INTD           : std_logic_vector(31 downto 0) := X"00000027" ;
 
-  constant MSG_PM_ACTIVE_STATE_NAK     : std_logic_vector(31 downto 0) := X"00000014" ;
-  constant MSG_PME                     : std_logic_vector(31 downto 0) := X"00000018" ;
-  constant MSG_PME_TURN_OFF            : std_logic_vector(31 downto 0) := X"00000019" ;
-  constant MSG_PME_TO_ACK              : std_logic_vector(31 downto 0) := X"0000001B" ;
-
-  constant MSG_ERR_CORR                : std_logic_vector(31 downto 0) := X"00000030" ;
-  constant MSG_ERR_NON_FATAL           : std_logic_vector(31 downto 0) := X"00000031" ;
-  constant MSG_ERR_FATAL               : std_logic_vector(31 downto 0) := X"00000033" ;
-
-  constant MSG_SET_PWR_LIMIT           : std_logic_vector(31 downto 0) := X"00000050" ;
-  constant MSG_VENDOR_0                : std_logic_vector(31 downto 0) := X"0000007e" ;
-  constant MSG_VENDOR_1                : std_logic_vector(31 downto 0) := X"0000007f" ;
-
-  constant MSG_DATA_NULL               : std_logic_vector(31 downto 0) := X"00000000" ;
-
-
-  constant CPL_SUCCESS                 : integer                       := 0 ;
-  constant CPL_UNSUPPORTED             : integer                       := 1 ;
-  constant CPL_CRS                     : integer                       := 2 ;
-  constant CPL_ABORT                   : integer                       := 4 ;
-
-  constant MAX_PCIE_LINK_WIDTH         : integer                       := 16 ;
-
-
-  constant MAXLINKWIDTH        : integer := 16 ;
+  constant MAXLINKWIDTH                      : integer := 16 ;
 
   subtype TagType is integer range 0 to 256;
 
@@ -425,7 +435,8 @@ package PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
 
   ------------------------------------------------------------
@@ -437,9 +448,10 @@ package PcieInterfacePkg is
            iByteCount     : In    integer ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
-  
+
   ------------------------------------------------------------
   procedure PcieNoDataCompletion (
   -- do PCIe completion (with no data) Cycle
@@ -449,7 +461,8 @@ package PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
 
   ------------------------------------------------------------
@@ -461,7 +474,8 @@ package PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
 
   ------------------------------------------------------------
@@ -473,7 +487,8 @@ package PcieInterfacePkg is
            iByteCount     : In    integer ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
 
   ------------------------------------------------------------
@@ -486,7 +501,8 @@ package PcieInterfacePkg is
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
            iRemainingLen  : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
 
   ------------------------------------------------------------
@@ -499,8 +515,29 @@ package PcieInterfacePkg is
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
            iRemainingLen  : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) ;
+
+  ------------------------------------------------------------
+  procedure GetTransWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec  : InOut AddressBusRecType ;
+    variable oAddr           : Out   std_logic_vector ;
+    variable oData           : Out   std_logic_vector ;
+    constant StatusMsgOn     : In    boolean := false
+  ) ;
+
+ ------------------------------------------------------------
+ procedure GetCmplStatus (
+ --
+ ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+    constant Option         : In    integer ;
+    variable OptVal         : Out   integer
+    
+ ) ;
 
 end package PcieInterfacePkg ;
 
@@ -547,10 +584,10 @@ package body PcieInterfacePkg is
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
-    -- Do some memory reads and writes
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+
     Write(TransactionRec, iAddr, iData) ;
 
   end procedure PcieMemWrite ;
@@ -565,10 +602,10 @@ package body PcieInterfacePkg is
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
 
-    -- Do some memory reads and writes
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+
     WriteBurst(TransactionRec, iAddr, iByteCount) ;
 
   end procedure PcieMemWrite ;
@@ -585,12 +622,12 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieMemRead ;
 
@@ -606,12 +643,12 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieMemRead ;
 
@@ -627,12 +664,12 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieMemReadLock ;
 
@@ -647,12 +684,13 @@ package body PcieInterfacePkg is
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieMemReadLock ;
 
@@ -668,9 +706,9 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     iLock) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      iLock) ;
 
     -- Put values in record
     TransactionRec.Operation     <= READ_ADDRESS ;
@@ -726,11 +764,11 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, MEM_TRANS) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
 
     ReadData(TransactionRec, oData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
-    GetModelOptions(TransactionRec, GETLASTRXREQTAG,   oTag) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTRXREQTAG,   oTag) ;
 
   end procedure PcieMemReadData ;
 
@@ -747,11 +785,11 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG, iTag) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CFG_SPC_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Write(TransactionRec, iCid & iAddr, iData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieCfgSpaceWrite ;
 
@@ -767,11 +805,11 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CFG_SPC_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG, iTag) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CFG_SPC_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieCfgSpaceRead ;
 
@@ -787,11 +825,11 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, IO_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Write(TransactionRec, iAddr, iData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieIoWrite ;
 
@@ -807,11 +845,11 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, IO_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, IO_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetModelOptions(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
 
   end procedure PcieIoRead ;
 
@@ -824,8 +862,9 @@ package body PcieInterfacePkg is
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
   begin
-    SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MSG_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     -- Do some memory reads and writes
     WriteAddressAsync(TransactionRec, iMsgType) ;
@@ -843,8 +882,8 @@ package body PcieInterfacePkg is
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, MSG_TRANS) ;
-    SetModelOptions(TransactionRec, SETREQTAG,    iTag) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, MSG_TRANS) ;
+    Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     -- Do some memory reads and writes
     Write(TransactionRec, iMsgType, iMsgData) ;
@@ -860,15 +899,17 @@ package body PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
 
     Write(TransactionRec, iLowAddr, iData) ;
 
@@ -883,15 +924,17 @@ package body PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     WriteAddressAsync(TransactionRec, iLowAddr) ;
 
@@ -906,15 +949,17 @@ package body PcieInterfacePkg is
            iByteCount     : In    integer ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
 
@@ -929,15 +974,17 @@ package body PcieInterfacePkg is
            iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     Write(TransactionRec, iLowAddr, iData) ;
 
@@ -952,15 +999,17 @@ package body PcieInterfacePkg is
            iByteCount     : In    integer ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
 
@@ -976,16 +1025,18 @@ package body PcieInterfacePkg is
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
            iRemainingLen  : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, PART_CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     0) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, PART_CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRLEN,   iRemainingLen) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
 
@@ -1001,20 +1052,63 @@ package body PcieInterfacePkg is
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
            iRemainingLen  : In    std_logic_vector ;
-           iTag           : In    TagType
+           iTag           : In    TagType ;
+           iCplStatus     : In    integer := CPL_SUCCESS
   ) is
   begin
 
-    SetModelOptions(TransactionRec, SETTRANSMODE, PART_CPL_TRANS) ;
-    SetModelOptions(TransactionRec, SETCMPLRID,   iRid) ;
-    SetModelOptions(TransactionRec, SETCMPLCID,   iCid) ;
-    SetModelOptions(TransactionRec, SETCMPLRLEN,  iRemainingLen) ;
-    SetModelOptions(TransactionRec, SETCMPLTAG,   iTag) ;
-    SetModelOptions(TransactionRec, SETRDLCK,     1) ;
+    Set(TransactionRec.Params, PARAM_TRANS_MODE, PART_CPL_TRANS) ;
+    Set(TransactionRec.Params, PARAM_CMPLRTAG,   iTag) ;
+    Set(TransactionRec.Params, PARAM_CMPLCID,    iCid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRID,    iRid) ;
+    Set(TransactionRec.Params, PARAM_CMPLRLEN,   iRemainingLen) ;
+    Set(TransactionRec.Params, PARAM_CMPLSTATUS, iCplStatus) ;
+    Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     WriteBurst(TransactionRec, iLowAddr, iByteCount) ;
 
   end procedure PciePartCompletionLock ;
+
+ ------------------------------------------------------------
+ procedure GetCmplStatus (
+ --
+ ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType ;
+    constant Option         : In    integer ;
+    variable OptVal         : Out   integer
+    
+ ) is
+ begin
+ 
+    TransactionRec.Operation     <= EXTEND_OP ;
+    TransactionRec.Options       <= Option ;
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+    OptVal                       := TransactionRec.IntFromModel ; 
+ 
+ end procedure GetCmplStatus ;
+
+  ------------------------------------------------------------
+  procedure GetTransWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec  : InOut AddressBusRecType ;
+    variable oAddr           : Out   std_logic_vector ;
+    variable oData           : Out   std_logic_vector ;
+    constant StatusMsgOn     : In    boolean := false
+  )  is
+  begin
+    -- Put values in record
+    TransactionRec.Operation     <= EXTEND_WRITE_OP ;
+    TransactionRec.AddrWidth     <= oAddr'length ;
+    TransactionRec.DataWidth     <= oData'length ;
+    TransactionRec.StatusMsgOn   <= StatusMsgOn ;
+    
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+    
+    oAddr                        := FromTransaction(TransactionRec.Address, oAddr'length) ;
+    oData                        := FromTransaction(TransactionRec.DataFromModel, oData'length) ;
+
+  end procedure GetTransWrite ;
 
 end package body PcieInterfacePkg ;
 

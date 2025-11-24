@@ -79,7 +79,7 @@ begin
 
    ------------------------------------------------------------
   -- UpstreamProc
-  --   Generate transactions for P
+  --   Generate transactions
   ------------------------------------------------------------
   UpstreamProc : process
     variable OpRV           : RandomPType ;
@@ -158,9 +158,6 @@ begin
 
     -- ***** I/O writes and reads *****
 
-    -- Set to transmit I/O accesses
-    SetModelOptions(UpstreamRec, SETTRANSMODE, IO_TRANS) ;
-
     PcieIoWrite(UpstreamRec, X"12345678", X"87654321", CmplStatus) ;
     AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "I/O Write Status #1: ") ;
     PcieIoRead(UpstreamRec,  X"12345678", Data(31 downto 0), CmplStatus) ;
@@ -180,7 +177,7 @@ begin
     PcieCompletion(UpstreamRec, X"63", X"0badf00d", X"003e", X"0123", 1) ;
 
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
-    
+
     -- Set to transmit completions
     PcieCompletionLock(UpstreamRec, X"51", X"25081964", X"003e", X"0123", 1) ;
 
@@ -234,33 +231,33 @@ begin
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #4: ") ;
     AffirmIfEqual(CmplTag, 16#a1#, "Read tag #4: ") ;
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #4: ") ;
-    
+
     -- ***** part completions *****
     -- Transfer 47 bytes in two competions
     RemainLen := 47 ;
-    
+
     -- complete 22 bytes (of 47) with low addr = 0x32
     for i in 0 to 21 loop
       Push(UpstreamRec.WriteBurstFifo, to_slv(i + 32, 8)) ;
     end loop ;
     PciePartCompletion(UpstreamRec, X"32", 22, X"003e", X"0123", std_logic_vector(to_unsigned(RemainLen, 12)), 3) ;
     RemainLen := RemainLen - 22 ;
-    
+
     -- complete remaining 25 bytes with low addr = 0x48
     for i in 0 to 24 loop
       Push(UpstreamRec.WriteBurstFifo, to_slv(i + 54, 8)) ;
     end loop ;
     PciePartCompletion(UpstreamRec, X"48", 25, X"003e", X"0123", std_logic_vector(to_unsigned(RemainLen, 12)), 4) ;
-    
+
     -- ***** Locked read *****
     PcieMemReadLock(UpstreamRec,  X"00010106", Data(15 downto 0), CmplStatus) ;
 
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Status #5: ") ;
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #5: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
-    
+
     PcieMemReadLock(UpstreamRec,  X"00000006", Data(15 downto 0), CmplStatus) ;
-    
+
     AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "Read Status #6: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
