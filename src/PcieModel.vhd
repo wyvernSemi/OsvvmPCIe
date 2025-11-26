@@ -334,6 +334,10 @@ begin
 
           TransRec.IntFromModel <= VPData;
 
+        when SETPARAMS =>
+
+          Set(TransRec.Params, VPDataHi, VPData);
+
         when POPWDATA =>
 
           RdData(7 downto 0) := Pop(TransRec.WriteBurstFifo) ;

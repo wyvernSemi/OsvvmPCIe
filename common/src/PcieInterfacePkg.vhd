@@ -48,7 +48,7 @@ library osvvm_common ;
 
 package PcieInterfacePkg is
 
-  -- **** If the below values change, a      lso update ../../code/pcieVcInterface.h ****
+  -- **** If the below values change, also update ../../code/pcieVcInterface.h ****
   constant LINKADDR0                         : integer :=  0 ;
   constant LINKADDR1                         : integer :=  1 ;
   constant LINKADDR2                         : integer :=  2 ;
@@ -93,10 +93,11 @@ package PcieInterfacePkg is
   constant SETDATAFROMMODEL                  : integer := 411 ;
   constant SETBOOLFROMMODEL                  : integer := 412 ;
   constant SETINTFROMMODEL                   : integer := 413 ;
-  constant POPWDATA                          : integer := 414 ;
-  constant PUSHWDATA                         : integer := 415 ;
-  constant POPRDATA                          : integer := 416 ;
-  constant PUSHRDATA                         : integer := 417 ;
+  constant SETPARAMS                         : integer := 414 ;
+  constant POPWDATA                          : integer := 415 ;
+  constant PUSHWDATA                         : integer := 416 ;
+  constant POPRDATA                          : integer := 417 ;
+  constant PUSHRDATA                         : integer := 418 ;
 
   constant PVH_STOP                          : integer := -3 ;
   constant PVH_FINISH                        : integer := -2 ;
@@ -162,16 +163,19 @@ package PcieInterfacePkg is
   -- SetModelOptions for PCIe VC
   constant NULLOPTVALUE                      : integer := -1 ;
   constant VCOPTIONSTART                     : integer :=  1000 ;
-  constant INITDLL                           : integer :=  1002 ;
-  constant INITPHY                           : integer :=  1003 ;
-  constant SETCFGSPC                         : integer :=  1010 ;
-  constant SETCFGSPCMASK                     : integer :=  1011 ;
-  constant SETCFGSPCOFFSET                   : integer :=  1012 ;
-  constant SETMEMADDRLO                      : integer :=  1013 ;
-  constant SETMEMADDRHI                      : integer :=  1014 ;
-  constant SETMEMDATA                        : integer :=  1015 ;
-  constant SETMEMENDIANNESS                  : integer :=  1016 ;
 
+  constant SETCFGSPC                         : integer :=  1001 ;
+  constant SETCFGSPCMASK                     : integer :=  1002 ;
+  constant SETCFGSPCOFFSET                   : integer :=  1003 ;
+  constant SETMEMADDRLO                      : integer :=  1004 ;
+  constant SETMEMADDRHI                      : integer :=  1005 ;
+  constant SETMEMDATA                        : integer :=  1006 ;
+  constant SETMEMENDIANNESS                  : integer :=  1007 ;
+  
+  constant INITDLL                           : integer :=  1008 ;
+  constant INITPHY                           : integer :=  1009 ;
+
+  -- GetModelOptions for internal memory backdoor access
   constant GETMEMDATA                        : integer :=  2000 ;
 
   -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
@@ -200,12 +204,14 @@ package PcieInterfacePkg is
   constant PARAM_CMPLRTAG                    : integer := 5;
   constant PARAM_CMPLSTATUS                  : integer := 6;
   constant PARAM_REQTAG                      : integer := 7;
-  constant NUM_PCIE_PARAMS                   : integer := PARAM_REQTAG + 1;
+  constant PARAM_CMPL_STATUS                 : integer := 8;
+  constant PARAM_CMPL_RX_TAG                 : integer := 9;
+  constant NUM_PCIE_PARAMS                   : integer := PARAM_CMPL_RX_TAG + 1;
 
   -- PCIe Message codes
 
   constant MSG_UNLOCK                        : std_logic_vector(31 downto 0) := X"00000000" ;
-                                             
+
   constant MSG_ASSERT_INTA                   : std_logic_vector(31 downto 0) := X"00000020" ;
   constant MSG_ASSERT_INTB                   : std_logic_vector(31 downto 0) := X"00000021" ;
   constant MSG_ASSERT_INTC                   : std_logic_vector(31 downto 0) := X"00000022" ;
@@ -214,31 +220,31 @@ package PcieInterfacePkg is
   constant MSG_DEASSERT_INTB                 : std_logic_vector(31 downto 0) := X"00000025" ;
   constant MSG_DEASSERT_INTC                 : std_logic_vector(31 downto 0) := X"00000026" ;
   constant MSG_DEASSERT_INTD                 : std_logic_vector(31 downto 0) := X"00000027" ;
-                                             
+
   constant MSG_PM_ACTIVE_STATE_NAK           : std_logic_vector(31 downto 0) := X"00000014" ;
   constant MSG_PME                           : std_logic_vector(31 downto 0) := X"00000018" ;
   constant MSG_PME_TURN_OFF                  : std_logic_vector(31 downto 0) := X"00000019" ;
   constant MSG_PME_TO_ACK                    : std_logic_vector(31 downto 0) := X"0000001B" ;
-                                             
+
   constant MSG_ERR_CORR                      : std_logic_vector(31 downto 0) := X"00000030" ;
   constant MSG_ERR_NON_FATAL                 : std_logic_vector(31 downto 0) := X"00000031" ;
   constant MSG_ERR_FATAL                     : std_logic_vector(31 downto 0) := X"00000033" ;
-                                             
+
   constant MSG_SET_PWR_LIMIT                 : std_logic_vector(31 downto 0) := X"00000050" ;
   constant MSG_VENDOR_0                      : std_logic_vector(31 downto 0) := X"0000007e" ;
   constant MSG_VENDOR_1                      : std_logic_vector(31 downto 0) := X"0000007f" ;
-                                             
+
   constant MSG_DATA_NULL                     : std_logic_vector(31 downto 0) := X"00000000" ;
-                                             
-                                             
+
+
   constant CPL_SUCCESS                       : integer                       := 0 ;
   constant CPL_UNSUPPORTED                   : integer                       := 1 ;
   constant CPL_CRS                           : integer                       := 2 ;
   constant CPL_ABORT                         : integer                       := 4 ;
-  
+
   constant GETLASTCMPLSTATUS                 : integer :=  0 ;
   constant GETLASTRXREQTAG                   : integer :=  1 ;
-                                             
+
   constant MAX_PCIE_LINK_WIDTH               : integer                       := 16 ;
 
 
@@ -529,16 +535,6 @@ package PcieInterfacePkg is
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
- ------------------------------------------------------------
- procedure GetCmplStatus (
- --
- ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-    constant Option         : In    integer ;
-    variable OptVal         : Out   integer
-    
- ) ;
-
 end package PcieInterfacePkg ;
 
 -- ***********************************************************
@@ -627,7 +623,8 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemRead ;
 
@@ -648,7 +645,8 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_RDLCK,      0) ;
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemRead ;
 
@@ -669,7 +667,8 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemReadLock ;
 
@@ -690,7 +689,9 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_RDLCK,      1) ;
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+
 
   end procedure PcieMemReadLock ;
 
@@ -767,8 +768,9 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_TRANS_MODE, MEM_TRANS) ;
 
     ReadData(TransactionRec, oData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
-    GetCmplStatus(TransactionRec, GETLASTRXREQTAG,   oTag) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oTag    := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemReadData ;
 
@@ -789,7 +791,8 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Write(TransactionRec, iCid & iAddr, iData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieCfgSpaceWrite ;
 
@@ -809,7 +812,8 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieCfgSpaceRead ;
 
@@ -829,7 +833,8 @@ package body PcieInterfacePkg is
     Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Write(TransactionRec, iAddr, iData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieIoWrite ;
 
@@ -843,13 +848,15 @@ package body PcieInterfacePkg is
              oStatus        : Out   integer ;
              iTag           : In    TagType := TLP_TAG_AUTO
   ) is
+  variable Status           : integer ;
   begin
 
     Set(TransactionRec.Params, PARAM_TRANS_MODE, IO_TRANS) ;
     Set(TransactionRec.Params, PARAM_REQTAG,     iTag) ;
 
     Read(TransactionRec, iAddr, oData) ;
-    GetCmplStatus(TransactionRec, GETLASTCMPLSTATUS, oStatus) ;
+
+    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieIoRead ;
 
@@ -1069,24 +1076,6 @@ package body PcieInterfacePkg is
 
   end procedure PciePartCompletionLock ;
 
- ------------------------------------------------------------
- procedure GetCmplStatus (
- --
- ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-    constant Option         : In    integer ;
-    variable OptVal         : Out   integer
-    
- ) is
- begin
- 
-    TransactionRec.Operation     <= EXTEND_OP ;
-    TransactionRec.Options       <= Option ;
-    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-    OptVal                       := TransactionRec.IntFromModel ; 
- 
- end procedure GetCmplStatus ;
-
   ------------------------------------------------------------
   procedure GetTransWrite (
   --
@@ -1102,9 +1091,9 @@ package body PcieInterfacePkg is
     TransactionRec.AddrWidth     <= oAddr'length ;
     TransactionRec.DataWidth     <= oData'length ;
     TransactionRec.StatusMsgOn   <= StatusMsgOn ;
-    
+
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-    
+
     oAddr                        := FromTransaction(TransactionRec.Address, oAddr'length) ;
     oData                        := FromTransaction(TransactionRec.DataFromModel, oData'length) ;
 
