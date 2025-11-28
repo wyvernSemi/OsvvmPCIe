@@ -511,7 +511,6 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
            iLowAddr       : In    std_logic_vector ;
-           iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
            iTag           : In    TagType ;
@@ -577,10 +576,10 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable Option          : In    integer ;
-    variable TransType       : Out   integer ;
-    variable PktErrorStatus  : Out   integer ;
-    variable Available       : Out   boolean ;
+             Option          : In    integer ;
+             TransType       : Out   integer ;
+             PktErrorStatus  : Out   integer ;
+             Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
@@ -589,8 +588,8 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable TransType       : Out   integer ;
-    variable PktErrorStatus  : Out   integer ;
+             TransType       : Out   integer ;
+             PktErrorStatus  : Out   integer ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
@@ -599,9 +598,9 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable TransType       : Out   integer ;
-    variable PktErrorStatus  : Out   integer ;
-    variable Available       : Out   boolean ;
+             TransType       : Out   integer ;
+             PktErrorStatus  : Out   integer ;
+             Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
@@ -610,13 +609,13 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oLength            : Out   integer ;
-    variable oFBE               : Out   integer ;
-    variable oLBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oPayloadByteLength : Out   integer
+             oAddress           : Out   std_logic_vector ;
+             oLength            : Out   integer ;
+             oFBE               : Out   integer ;
+             oLBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oPayloadByteLength : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -624,13 +623,13 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oLength            : Out   integer ;
-    variable oFBE               : Out   integer ;
-    variable oLBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oLocked            : Out   boolean
+             oAddress           : Out   std_logic_vector ;
+             oLength            : Out   integer ;
+             oFBE               : Out   integer ;
+             oLBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oLocked            : Out   boolean
   ) ;
 
   ------------------------------------------------------------
@@ -638,11 +637,11 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oData              : Out   std_logic_vector ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer
+             oAddress           : Out   std_logic_vector ;
+             oData              : Out   std_logic_vector ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -650,10 +649,10 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer
+             oAddress           : Out   std_logic_vector ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -661,15 +660,15 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oBus               : Out   integer ;
-    variable oDev               : Out   integer ;
-    variable oFunc              : Out   integer ;
-    variable oReg               : Out   integer ;
-    variable oData              : Out   std_logic_vector ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oCfgType           : Out   integer
+             oBus               : Out   integer ;
+             oDev               : Out   integer ;
+             oFunc              : Out   integer ;
+             oReg               : Out   integer ;
+             oData              : Out   std_logic_vector ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oCfgType           : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -677,14 +676,14 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oBus               : Out   integer ;
-    variable oDev               : Out   integer ;
-    variable oFunc              : Out   integer ;
-    variable oReg               : Out   integer ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oCfgType           : Out   integer
+             oBus               : Out   integer ;
+             oDev               : Out   integer ;
+             oFunc              : Out   integer ;
+             oReg               : Out   integer ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oCfgType           : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -692,12 +691,12 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oMsgCode           : Out   integer ;
-    variable oLength            : Out   integer ;
-    variable oRouteType         : out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oPayloadByteLength : Out   integer
+             oMsgCode           : Out   integer ;
+             oLength            : Out   integer ;
+             oRouteType         : out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oPayloadByteLength : Out   integer
   );
 
 end package PcieInterfacePkg ;
@@ -1110,7 +1109,6 @@ package body PcieInterfacePkg is
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
            iLowAddr       : In    std_logic_vector ;
-           iData          : In    std_logic_vector ;
            iRid           : In    std_logic_vector ;
            iCid           : In    std_logic_vector ;
            iTag           : In    TagType ;
@@ -1263,10 +1261,10 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable Option          : In    integer ;
-    variable TransType       : Out   integer ;
-    variable PktErrorStatus  : Out   integer ;
-    variable Available       : Out   boolean ;
+             Option          : In    integer ;
+             TransType       : Out   integer ;
+             PktErrorStatus  : Out   integer ;
+             Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   )  is
   begin
@@ -1293,8 +1291,8 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable TransType       : Out   integer ;
-    variable PktErrorStatus  : Out   integer ;
+             TransType       : Out   integer ;
+             PktErrorStatus  : Out   integer ;
     constant StatusMsgOn     : In    boolean := false
   ) is
   variable   Available       :       boolean ;
@@ -1310,9 +1308,9 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable TransType       : Out   integer ;
-    variable PktErrorStatus  : Out   integer ;
-    variable Available       : Out   boolean ;
+             TransType       : Out   integer ;
+             PktErrorStatus  : Out   integer ;
+             Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) is
   variable   opt             :       integer := TRY ;
@@ -1325,13 +1323,13 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oLength            : Out   integer ;
-    variable oFBE               : Out   integer ;
-    variable oLBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oPayloadByteLength : Out   integer
+             oAddress           : Out   std_logic_vector ;
+             oLength            : Out   integer ;
+             oFBE               : Out   integer ;
+             oLBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oPayloadByteLength : Out   integer
   ) is
   begin
 
@@ -1350,13 +1348,13 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oLength            : Out   integer ;
-    variable oFBE               : Out   integer ;
-    variable oLBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oLocked            : Out   boolean
+             oAddress           : Out   std_logic_vector ;
+             oLength            : Out   integer ;
+             oFBE               : Out   integer ;
+             oLBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oLocked            : Out   boolean
   ) is
   variable tlptype              :       unsigned (7 downto 0);
   begin
@@ -1383,11 +1381,11 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oData              : Out   std_logic_vector ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer
+             oAddress           : Out   std_logic_vector ;
+             oData              : Out   std_logic_vector ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer
   ) is
   begin
 
@@ -1409,10 +1407,10 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oAddress           : Out   std_logic_vector ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer
+             oAddress           : Out   std_logic_vector ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer
   ) is
   begin
 
@@ -1428,15 +1426,15 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oBus               : Out   integer ;
-    variable oDev               : Out   integer ;
-    variable oFunc              : Out   integer ;
-    variable oReg               : Out   integer ;
-    variable oData              : Out   std_logic_vector ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oCfgType           : Out   integer
+             oBus               : Out   integer ;
+             oDev               : Out   integer ;
+             oFunc              : Out   integer ;
+             oReg               : Out   integer ;
+             oData              : Out   std_logic_vector ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oCfgType           : Out   integer
   ) is
   variable tlptype              :       unsigned (7 downto 0);
   begin
@@ -1471,14 +1469,14 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oBus               : Out   integer ;
-    variable oDev               : Out   integer ;
-    variable oFunc              : Out   integer ;
-    variable oReg               : Out   integer ;
-    variable oFBE               : Out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oCfgType           : Out   integer
+             oBus               : Out   integer ;
+             oDev               : Out   integer ;
+             oFunc              : Out   integer ;
+             oReg               : Out   integer ;
+             oFBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oCfgType           : Out   integer
   ) is
   variable tlptype              :       unsigned (7 downto 0);
   begin
@@ -1506,12 +1504,12 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-    variable oMsgCode           : Out   integer ;
-    variable oLength            : Out   integer ;
-    variable oRouteType         : out   integer ;
-    variable oRID               : Out   integer ;
-    variable oTag               : Out   integer ;
-    variable oPayloadByteLength : Out   integer
+             oMsgCode           : Out   integer ;
+             oLength            : Out   integer ;
+             oRouteType         : out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oPayloadByteLength : Out   integer
   ) is
   variable tlptype              :       unsigned (7 downto 0);
   begin
