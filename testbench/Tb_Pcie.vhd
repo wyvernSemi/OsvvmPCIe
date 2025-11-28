@@ -32,7 +32,7 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-architecture CoSim of TestCtrl is
+architecture CoSimAutoEp of TestCtrl is
 
   constant Node           : integer         := 0 ;
 
@@ -296,12 +296,12 @@ begin
     wait ;
 
   end process UpstreamProc ;
-end CoSim ;
+end CoSimAutoEp ;
 
-Configuration Tb_PCIe of TbPcie is
+Configuration Tb_PCIeAutoEp of TbPcieAutoEp is
   for TestHarness
     for TestCtrl_1 : TestCtrl
-      use entity work.TestCtrl(CoSim) ;
+      use entity work.TestCtrl(CoSimAutoEp) ;
     end for ;
   end for ;
-end Tb_PCIe ;
+end Tb_PCIeAutoEp ;

@@ -44,10 +44,10 @@ library osvvm ;
 library osvvm_pcie ;
   context osvvm_pcie.PcieContext ;
 
-entity TbPcie is
-end entity TbPcie ;
+entity TbPcieAutoEP is
+end entity TbPcieAutoEP ;
 
-architecture TestHarness of TbPcie is
+architecture TestHarness of TbPcieAutoEP is
 
   constant tperiod_Clk : time :=   4 ns ; -- 250MHz for GEN1
   constant tpd         : time := 100 ps ;
