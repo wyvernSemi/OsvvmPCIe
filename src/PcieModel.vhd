@@ -58,10 +58,11 @@ generic (
   MODEL_ID_NAME     : string  := "" ;    -- Model name
   NODE_NUM          : integer := 8 ;     -- CoSim node number. Must be unique from all other CoSim elements
   ENDPOINT          : boolean := false ; -- true to enable endpoint features
-  REQ_ID            : integer := 0 ;     -- Requester ID (completer ID when issuing completions)
-  EN_TLP_REQ_DIGEST : boolean := false ; -- Enable ECRC on TLP requests (completions will add in response to req with ECRC---can be disabled)
-  PIPE              : boolean := false ; -- true if output PIPE compatible (no scrambling or 8b10b encoding; lane width is 9 bits instead of 10)
-  ENABLE_INIT_PHY   : boolean := true    -- true if PHY layer link training is enabled
+  REQ_ID            : integer := 0 ;     -- Set Requester ID (completer ID when issuing completions)
+  EN_TLP_REQ_DIGEST : boolean := false ; -- true to enable ECRC on TLP requests (completions will add in response to req with ECRC---can be disabled)
+  PIPE              : boolean := false ; -- true if output to be PIPE compatible (no scrambling or 8b10b encoding; lane width is 9 bits instead of 10)
+  ENABLE_INIT_PHY   : boolean := true  ; -- true if PHY layer link training is to be enabled
+  ENABLE_AUTO       : boolean := false   -- true if PCIe automatic features are to be enabled
 ) ;
 port (
   -- Globals
@@ -205,13 +206,14 @@ begin
         -- Process parameters
         -- -----------------------------------------------------
 
-        when NODENUMADDR  => RdData := std_logic_vector(to_unsigned(NODE_NUM, RdData'length)) ;
-        when LANESADDR    => RdData := std_logic_vector(to_unsigned(LINKWIDTH, RdData'length)) ;
-        when EP_ADDR      => RdData := 64x"00000001" when ENDPOINT else 64x"00000000";
-        when REQID_ADDR   => RdData := std_logic_vector(to_unsigned(REQ_ID, RdData'length)) ;
-        when PIPE_ADDR    => RdData := 64x"00000001" when PIPE else 64x"00000000";
-        when EN_ECRC_ADDR => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
-        when INITPHY_ADDR => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
+        when NODENUMADDR      => RdData := std_logic_vector(to_unsigned(NODE_NUM, RdData'length)) ;
+        when LANESADDR        => RdData := std_logic_vector(to_unsigned(LINKWIDTH, RdData'length)) ;
+        when EP_ADDR          => RdData := 64x"00000001" when ENDPOINT else 64x"00000000";
+        when REQID_ADDR       => RdData := std_logic_vector(to_unsigned(REQ_ID, RdData'length)) ;
+        when PIPE_ADDR        => RdData := 64x"00000001" when PIPE else 64x"00000000";
+        when EN_ECRC_ADDR     => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
+        when INITPHY_ADDR     => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
+        when ENABLE_AUTO_ADDR => RdData := 64x"00000001" when ENABLE_AUTO     else 64x"00000000";
 
         -- -----------------------------------------------------
         -- Process global state
@@ -325,18 +327,34 @@ begin
         when SETBOOLFROMMODEL =>
 
           if VPData /= 0 then
-              TransRec.BoolFromModel <= true;
+              TransRec.BoolFromModel <= true ;
           else
-              TransRec.BoolFromModel <= false;
+              TransRec.BoolFromModel <= false ;
           end if;
 
         when SETINTFROMMODEL =>
 
-          TransRec.IntFromModel <= VPData;
+          TransRec.IntFromModel <= VPData ;
 
         when SETPARAMS =>
 
-          Set(TransRec.Params, VPDataHi, VPData);
+            -- When updating the address, construct as a 64-bit value
+            if VPDataHi = PARAM_REQ_ADDR then
+
+                WrData :=  std_logic_vector(to_signed(VPData, 64)) ;
+                Set(TransRec.Params, PARAM_REQ_ADDR, WrData) ;
+
+            -- If upper address bits being set, add to WrData upper bits and re-write the address parameter
+            elsif VPDataHi = PARAM_REQ_ADDRHI then
+
+                WrData(63 downto 32) :=  std_logic_vector(to_signed(VPData, 32)) ;
+                Set(TransRec.Params, PARAM_REQ_ADDR, WrData) ;
+
+            else
+
+                Set(TransRec.Params, VPDataHi, VPData) ;
+
+            end if ;
 
         when POPWDATA =>
 

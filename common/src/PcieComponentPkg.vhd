@@ -49,13 +49,14 @@ package PcieComponentPkg is
   component PcieModel is
   ------------------------------------------------------------
     generic (
-      MODEL_ID_NAME     : string := "" ;
+      MODEL_ID_NAME     : string  := "" ;    -- Model name
       NODE_NUM          : integer := 8 ;     -- CoSim node number. Must be unique from all other CoSim elements
       ENDPOINT          : boolean := false ; -- true to enable endpoint features
-      REQ_ID            : integer := 0 ;     -- Requester ID (completer ID when issuing completions)
-      EN_TLP_REQ_DIGEST : boolean := false ; -- Enable ECRC on TLP requests (completions will add in response to req with ECRC---can be disabled)
-      PIPE              : boolean := false ; -- true if output PIPE compatible (no scrambling or 8b10b encoding; lane width is 9 bits instead of 10)
-      ENABLE_INIT_PHY   : boolean := true    -- true if PHY layer link training is enabled
+      REQ_ID            : integer := 0 ;     -- Set Requester ID (completer ID when issuing completions)
+      EN_TLP_REQ_DIGEST : boolean := false ; -- true to enable ECRC on TLP requests (completions will add in response to req with ECRC---can be disabled)
+      PIPE              : boolean := false ; -- true if output to be PIPE compatible (no scrambling or 8b10b encoding; lane width is 9 bits instead of 10)
+      ENABLE_INIT_PHY   : boolean := true  ; -- true if PHY layer link training is to be enabled
+      ENABLE_AUTO       : boolean := false   -- true if PCIe automatic features are to be enabled
     ) ;
     port (
       -- Globals

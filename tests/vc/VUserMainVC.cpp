@@ -9,7 +9,7 @@
 //    Simon Southwell      simon.southwell@gmail.com
 //
 //  Description:
-//    Common co-sim code for PCIE VC bringup test
+//    Common co-sim code for PCIE VC bring-up test
 //
 //  Revision History:
 //    Date      Version    Description
@@ -47,4 +47,17 @@ extern "C" void VUserMain62 (int node)
     // Should not return
     vc->run();
 
+}
+
+//-------------------------------------------------------------
+// VUserMain63()
+//
+//-------------------------------------------------------------
+
+extern "C" void VUserMain63(int node)
+{
+    pcieVcInterface *vc = new pcieVcInterface(node);
+
+    // Should not return
+    vc->run();
 }

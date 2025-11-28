@@ -42,6 +42,7 @@ library ieee ;
 
 library osvvm ;
   context osvvm.OsvvmContext ;
+  use osvvm.ScoreboardPkg_slv.all ;
 
 library osvvm_common ;
   context osvvm_common.OsvvmCommonContext ;
@@ -78,6 +79,7 @@ package PcieInterfacePkg is
   constant PIPE_ADDR                         : integer := 301 ;
   constant EN_ECRC_ADDR                      : integer := 302 ;
   constant INITPHY_ADDR                      : integer := 303 ;
+  constant ENABLE_AUTO_ADDR                  : integer := 304 ;
 
   constant GETNEXTTRANS                      : integer := 400 ;
   constant GETINTTOMODEL                     : integer := 401 ;
@@ -171,7 +173,11 @@ package PcieInterfacePkg is
   constant SETMEMADDRHI                      : integer :=  1005 ;
   constant SETMEMDATA                        : integer :=  1006 ;
   constant SETMEMENDIANNESS                  : integer :=  1007 ;
-  
+
+  -- EXTEND_OP Options
+  constant WAIT_FOR_TRANS                    : integer := 0;
+  constant TRY                               : integer := 1;
+
   constant INITDLL                           : integer :=  1008 ;
   constant INITPHY                           : integer :=  1009 ;
 
@@ -191,22 +197,49 @@ package PcieInterfacePkg is
   constant CPL_TRANS                         : integer :=  4 ;
   constant PART_CPL_TRANS                    : integer :=  5 ;
 
-  constant TLP_TAG_AUTO                      : integer :=  16#100#;
+  constant TLP_TAG_AUTO                      : integer :=  16#100# ;
 
-  constant LITTLE_END                        : integer := 1;
-  constant BIG_END                           : integer := 0;
+  constant LITTLE_END                        : integer := 1 ;
+  constant BIG_END                           : integer := 0 ;
 
-  constant PARAM_TRANS_MODE                  : integer := 0;
-  constant PARAM_RDLCK                       : integer := 1;
-  constant PARAM_CMPLRID                     : integer := 2;
-  constant PARAM_CMPLCID                     : integer := 3;
-  constant PARAM_CMPLRLEN                    : integer := 4;
-  constant PARAM_CMPLRTAG                    : integer := 5;
-  constant PARAM_CMPLSTATUS                  : integer := 6;
-  constant PARAM_REQTAG                      : integer := 7;
-  constant PARAM_CMPL_STATUS                 : integer := 8;
-  constant PARAM_CMPL_RX_TAG                 : integer := 9;
-  constant NUM_PCIE_PARAMS                   : integer := PARAM_CMPL_RX_TAG + 1;
+  -- Parameters when generating transactions and returned status
+  constant PARAM_TRANS_MODE                  : integer := 0 ;
+  constant PARAM_RDLCK                       : integer := 1 ;
+  constant PARAM_CMPLRID                     : integer := 2 ;
+  constant PARAM_CMPLCID                     : integer := 3 ;
+  constant PARAM_CMPLRLEN                    : integer := 4 ;
+  constant PARAM_CMPLRTAG                    : integer := 5 ;
+  constant PARAM_CMPLSTATUS                  : integer := 6 ;
+  constant PARAM_REQTAG                      : integer := 7 ;
+  constant PARAM_CMPL_STATUS                 : integer := 8 ;
+  constant PARAM_CMPL_RX_TAG                 : integer := 9 ;
+  constant PARAM_PKT_STATUS                  : integer := 10 ;
+
+  -- Parameters when receiving transactions
+  constant PARAM_REQ_TYPE                    : integer := 0 ;
+  constant PARAM_REQ_TAG                     : integer := 1 ;
+  constant PARAM_REQ_RID                     : integer := 2 ;
+  constant PARAM_REQ_BE_MSGCODE              : integer := 3 ;
+  constant PARAM_REQ_DIGEST                  : integer := 4 ;
+  constant PARAM_REQ_POISONED                : integer := 5 ;
+  constant PARAM_REQ_ATTR                    : integer := 6 ;
+  constant PARAM_REQ_AT                      : integer := 7 ;
+  constant PARAM_REQ_FBE                     : integer := 8 ;
+  constant PARAM_REQ_LBE                     : integer := 9 ;
+  constant PARAM_REQ_MSG_CODE                : integer := 10 ;
+  constant PARAM_REQ_CFG_FUNC                : integer := 11 ;
+  constant PARAM_REQ_CFG_DEV                 : integer := 12 ;
+  constant PARAM_REQ_CFG_BUS                 : integer := 13 ;
+  constant PARAM_REQ_CFG_REG                 : integer := 14 ;
+  constant PARAM_REQ_LENGTH                  : integer := 15 ;
+  constant PARAM_REQ_BYTE_LEN                : integer := 16 ;
+  constant PARAM_REQ_PKT_STATUS              : integer := 18 ;
+  constant PARAM_REQ_ADDR                    : integer := 19 ;
+
+  constant NUM_PCIE_PARAMS                   : integer := PARAM_REQ_ADDR + 1 ;
+
+  -- PARAM_REQ_ADDRHI not included in parameter count but still required for decoding
+  constant PARAM_REQ_ADDRHI                  : integer := PARAM_REQ_ADDR + 1;
 
   -- PCIe Message codes
 
@@ -236,6 +269,12 @@ package PcieInterfacePkg is
 
   constant MSG_DATA_NULL                     : std_logic_vector(31 downto 0) := X"00000000" ;
 
+  constant PKT_STATUS_GOOD                   : integer                       := 0 ;
+  constant PKT_STATUS_BAD_LCRC               : integer                       := 1 ;
+  constant PKT_STATUS_BAD_DLLP_CRC           : integer                       := 1 ;
+  constant PKT_STATUS_BAD_ECRC               : integer                       := 2 ;
+  constant PKT_STATUS_UNSUPPORTED            : integer                       := 4 ;
+  constant PKT_STATUS_NULLIFIED              : integer                       := 8 ;
 
   constant CPL_SUCCESS                       : integer                       := 0 ;
   constant CPL_UNSUPPORTED                   : integer                       := 1 ;
@@ -246,7 +285,6 @@ package PcieInterfacePkg is
   constant GETLASTRXREQTAG                   : integer :=  1 ;
 
   constant MAX_PCIE_LINK_WIDTH               : integer                       := 16 ;
-
 
   constant MAXLINKWIDTH                      : integer := 16 ;
 
@@ -287,44 +325,48 @@ package PcieInterfacePkg is
   procedure PcieMemRead (
   -- do PCIe Memory Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
   procedure PcieMemRead (
   -- do PCIe Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iByteCount     : In    integer ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iByteCount      : In    integer ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
   procedure PcieMemReadLock (
   -- do PCIe Memory Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
   procedure PcieMemReadLock (
   -- do PCIe Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iByteCount     : In    integer ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iByteCount      : In    integer ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
@@ -362,55 +404,60 @@ package PcieInterfacePkg is
   procedure PcieMemReadData (
   -- do PCIe Read Address Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             oTag           : Out   TagType
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             oTag            : Out   integer
   ) ;
 
   ------------------------------------------------------------
   procedure PcieCfgSpaceWrite (
   -- do PCIe Configuration Space Write Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iCid           : In    std_logic_vector ;
-             iData          : In    std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iCid            : In    std_logic_vector ;
+             iData           : In    std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
   procedure PcieCfgSpaceRead (
   -- do PCIe Configuration Space Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
   procedure PcieIoWrite (
   -- do PCIe I/O Space Write Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iData          : In    std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iData           : In    std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
   procedure PcieIoRead (
   -- do PCIe I/O Space Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
   ------------------------------------------------------------
@@ -526,14 +573,132 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure GetTransWrite (
+  procedure GetTransCommon (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable oAddr           : Out   std_logic_vector ;
-    variable oData           : Out   std_logic_vector ;
+    variable Option          : In    integer ;
+    variable TransType       : Out   integer ;
+    variable PktErrorStatus  : Out   integer ;
+    variable Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
+
+  ------------------------------------------------------------
+  procedure GetTrans (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec  : InOut AddressBusRecType ;
+    variable TransType       : Out   integer ;
+    variable PktErrorStatus  : Out   integer ;
+    constant StatusMsgOn     : In    boolean := false
+  ) ;
+
+  ------------------------------------------------------------
+  procedure TryGetTrans (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec  : InOut AddressBusRecType ;
+    variable TransType       : Out   integer ;
+    variable PktErrorStatus  : Out   integer ;
+    variable Available       : Out   boolean ;
+    constant StatusMsgOn     : In    boolean := false
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMemWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oLength            : Out   integer ;
+    variable oFBE               : Out   integer ;
+    variable oLBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oPayloadByteLength : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMemRead (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oLength            : Out   integer ;
+    variable oFBE               : Out   integer ;
+    variable oLBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oLocked            : Out   boolean
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractIoWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oData              : Out   std_logic_vector ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractIoRead (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractCfgWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oBus               : Out   integer ;
+    variable oDev               : Out   integer ;
+    variable oFunc              : Out   integer ;
+    variable oReg               : Out   integer ;
+    variable oData              : Out   std_logic_vector ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oCfgType           : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractCfgRead (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oBus               : Out   integer ;
+    variable oDev               : Out   integer ;
+    variable oFunc              : Out   integer ;
+    variable oReg               : Out   integer ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oCfgType           : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMsg (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oMsgCode           : Out   integer ;
+    variable oLength            : Out   integer ;
+    variable oRouteType         : out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oPayloadByteLength : Out   integer
+  );
 
 end package PcieInterfacePkg ;
 
@@ -610,11 +775,12 @@ package body PcieInterfacePkg is
   procedure PcieMemRead (
   -- do PCIe Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -624,7 +790,8 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemRead ;
 
@@ -632,11 +799,12 @@ package body PcieInterfacePkg is
   procedure PcieMemRead (
   -- do PCIe Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iByteCount     : In    integer ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iByteCount      : In    integer ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -646,7 +814,8 @@ package body PcieInterfacePkg is
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemRead ;
 
@@ -654,11 +823,12 @@ package body PcieInterfacePkg is
   procedure PcieMemReadLock (
   -- do PCIe Memory Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -668,7 +838,8 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemReadLock ;
 
@@ -676,11 +847,12 @@ package body PcieInterfacePkg is
   procedure PcieMemReadLock (
   -- do PCIe Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iByteCount     : In    integer ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iByteCount      : In    integer ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -690,8 +862,8 @@ package body PcieInterfacePkg is
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
-
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieMemReadLock ;
 
@@ -758,10 +930,11 @@ package body PcieInterfacePkg is
   procedure PcieMemReadData (
   -- do PCIe Read Address Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             oTag           : Out   TagType
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             oTag            : Out   integer
   ) is
   begin
 
@@ -769,8 +942,9 @@ package body PcieInterfacePkg is
 
     ReadData(TransactionRec, oData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
-    oTag    := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oTag            := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemReadData ;
 
@@ -778,12 +952,13 @@ package body PcieInterfacePkg is
   procedure PcieCfgSpaceWrite (
   -- do PCIe Write Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iCid           : In    std_logic_vector ;
-             iData          : In    std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iCid            : In    std_logic_vector ;
+             iData           : In    std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -792,7 +967,8 @@ package body PcieInterfacePkg is
 
     Write(TransactionRec, iCid & iAddr, iData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieCfgSpaceWrite ;
 
@@ -800,11 +976,12 @@ package body PcieInterfacePkg is
   procedure PcieCfgSpaceRead (
   -- do PCIe Configuration Space Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -813,7 +990,8 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieCfgSpaceRead ;
 
@@ -821,11 +999,12 @@ package body PcieInterfacePkg is
   procedure PcieIoWrite (
   -- do PCIe Write Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             iData          : In    std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             iData           : In    std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
 
@@ -834,7 +1013,8 @@ package body PcieInterfacePkg is
 
     Write(TransactionRec, iAddr, iData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieIoWrite ;
 
@@ -842,13 +1022,14 @@ package body PcieInterfacePkg is
   procedure PcieIoRead (
   -- do PCIe Configuration Space Read Cycle
   ------------------------------------------------------------
-    signal   TransactionRec : InOut AddressBusRecType ;
-             iAddr          : In    std_logic_vector ;
-             oData          : Out   std_logic_vector ;
-             oStatus        : Out   integer ;
-             iTag           : In    TagType := TLP_TAG_AUTO
+    signal   TransactionRec  : InOut AddressBusRecType ;
+             iAddr           : In    std_logic_vector ;
+             oData           : Out   std_logic_vector ;
+             oPktErrorStatus : Out   integer ;
+             oCmplStatus     : Out   integer ;
+             iTag            : In    TagType := TLP_TAG_AUTO
   ) is
-  variable Status           : integer ;
+  variable Status            : integer ;
   begin
 
     Set(TransactionRec.Params, PARAM_TRANS_MODE, IO_TRANS) ;
@@ -856,7 +1037,8 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oStatus := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
 
   end procedure PcieIoRead ;
 
@@ -1077,27 +1259,279 @@ package body PcieInterfacePkg is
   end procedure PciePartCompletionLock ;
 
   ------------------------------------------------------------
-  procedure GetTransWrite (
+  procedure GetTransCommon (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-    variable oAddr           : Out   std_logic_vector ;
-    variable oData           : Out   std_logic_vector ;
+    variable Option          : In    integer ;
+    variable TransType       : Out   integer ;
+    variable PktErrorStatus  : Out   integer ;
+    variable Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   )  is
   begin
     -- Put values in record
     TransactionRec.Operation     <= EXTEND_WRITE_OP ;
-    TransactionRec.AddrWidth     <= oAddr'length ;
-    TransactionRec.DataWidth     <= oData'length ;
+    TransactionRec.Options       <= Option ;
     TransactionRec.StatusMsgOn   <= StatusMsgOn ;
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
-    oAddr                        := FromTransaction(TransactionRec.Address, oAddr'length) ;
-    oData                        := FromTransaction(TransactionRec.DataFromModel, oData'length) ;
+    TransType        := Get(TransactionRec.Params, PARAM_REQ_TYPE) ;
+    Available        := TransactionRec.BoolFromModel ;
 
-  end procedure GetTransWrite ;
+    if Available then
+      PktErrorStatus := Get(TransactionRec.Params, PARAM_REQ_PKT_STATUS) ;
+    else
+      PktErrorStatus := PKT_STATUS_GOOD ;
+    end if;
+
+  end procedure GetTransCommon ;
+
+  ------------------------------------------------------------
+  procedure GetTrans (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec  : InOut AddressBusRecType ;
+    variable TransType       : Out   integer ;
+    variable PktErrorStatus  : Out   integer ;
+    constant StatusMsgOn     : In    boolean := false
+  ) is
+  variable   Available       :       boolean ;
+  variable   opt             :       integer := WAIT_FOR_TRANS ;
+  begin
+
+    GetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
+
+  end procedure GetTrans ;
+
+  ------------------------------------------------------------
+  procedure TryGetTrans (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec  : InOut AddressBusRecType ;
+    variable TransType       : Out   integer ;
+    variable PktErrorStatus  : Out   integer ;
+    variable Available       : Out   boolean ;
+    constant StatusMsgOn     : In    boolean := false
+  ) is
+  variable   opt             :       integer := TRY ;
+  begin
+    GetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
+  end procedure TryGetTrans ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMemWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oLength            : Out   integer ;
+    variable oFBE               : Out   integer ;
+    variable oLBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oPayloadByteLength : Out   integer
+  ) is
+  begin
+
+    oAddress           := SafeResize(Get(TransactionRec.Params, PARAM_REQ_ADDR), oAddress'length) ;
+    oLength            := Get(TransactionRec.Params, PARAM_REQ_LENGTH) ;
+    oPayloadByteLength := Get(TransactionRec.Params, PARAM_REQ_BYTE_LEN) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oLBE               := Get(TransactionRec.Params, PARAM_REQ_LBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+  end procedure PcieExtractMemWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMemRead (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oLength            : Out   integer ;
+    variable oFBE               : Out   integer ;
+    variable oLBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oLocked            : Out   boolean
+  ) is
+  variable tlptype              :       unsigned (7 downto 0);
+  begin
+
+    oAddress           := SafeResize(Get(TransactionRec.Params, PARAM_REQ_ADDR), oAddress'length) ;
+    oLength            := Get(TransactionRec.Params, PARAM_REQ_LENGTH) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oLBE               := Get(TransactionRec.Params, PARAM_REQ_LBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+    tlptype            := to_unsigned(Get(TransactionRec.Params, PARAM_REQ_TYPE), 8) ;
+
+    if tlptype(5) = '1' then
+      oLocked          := true ;
+    else
+      oLocked          := false ;
+    end if ;
+
+  end procedure PcieExtractMemRead ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractIoWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oData              : Out   std_logic_vector ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer
+  ) is
+  begin
+
+    oAddress           := SafeResize(Get(TransactionRec.Params, PARAM_REQ_ADDR), oAddress'length) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+    oData := x"0" ;
+    Pop(TransactionRec.ReadBurstFifo, oData( 7 downto  0)) ;
+    Pop(TransactionRec.ReadBurstFifo, oData(15 downto  8)) ;
+    Pop(TransactionRec.ReadBurstFifo, oData(23 downto 16)) ;
+    Pop(TransactionRec.ReadBurstFifo, oData(31 downto 24)) ;
+
+  end procedure PcieExtractIoWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractIoRead (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oAddress           : Out   std_logic_vector ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer
+  ) is
+  begin
+
+    oAddress           := SafeResize(Get(TransactionRec.Params, PARAM_REQ_ADDR), oAddress'length) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+  end procedure PcieExtractIoRead ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractCfgWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oBus               : Out   integer ;
+    variable oDev               : Out   integer ;
+    variable oFunc              : Out   integer ;
+    variable oReg               : Out   integer ;
+    variable oData              : Out   std_logic_vector ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oCfgType           : Out   integer
+  ) is
+  variable tlptype              :       unsigned (7 downto 0);
+  begin
+
+    oBus               := Get(TransactionRec.Params, PARAM_REQ_CFG_BUS) ;
+    oDev               := Get(TransactionRec.Params, PARAM_REQ_CFG_DEV) ;
+    oFunc              := Get(TransactionRec.Params, PARAM_REQ_CFG_FUNC) ;
+    oReg               := Get(TransactionRec.Params, PARAM_REQ_CFG_REG) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+    tlptype            := to_unsigned(Get(TransactionRec.Params, PARAM_REQ_TYPE), 8) ;
+
+    if tlptype(0) = '1' then
+      oCfgType         := 1 ;
+    else
+      oCfgType         := 0 ;
+    end if ;
+
+    oData := x"0" ;
+    Pop(TransactionRec.ReadBurstFifo, oData( 7 downto  0)) ;
+    Pop(TransactionRec.ReadBurstFifo, oData(15 downto  8)) ;
+    Pop(TransactionRec.ReadBurstFifo, oData(23 downto 16)) ;
+    Pop(TransactionRec.ReadBurstFifo, oData(31 downto 24)) ;
+
+
+  end procedure PcieExtractCfgWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractCfgRead (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oBus               : Out   integer ;
+    variable oDev               : Out   integer ;
+    variable oFunc              : Out   integer ;
+    variable oReg               : Out   integer ;
+    variable oFBE               : Out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oCfgType           : Out   integer
+  ) is
+  variable tlptype              :       unsigned (7 downto 0);
+  begin
+
+    oBus               := Get(TransactionRec.Params, PARAM_REQ_CFG_BUS) ;
+    oDev               := Get(TransactionRec.Params, PARAM_REQ_CFG_DEV) ;
+    oFunc              := Get(TransactionRec.Params, PARAM_REQ_CFG_FUNC) ;
+    oReg               := Get(TransactionRec.Params, PARAM_REQ_CFG_REG) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+    tlptype            := to_unsigned(Get(TransactionRec.Params, PARAM_REQ_TYPE), 8) ;
+
+    if tlptype(0) = '1' then
+      oCfgType         := 1 ;
+    else
+      oCfgType         := 0 ;
+    end if ;
+
+  end procedure PcieExtractCfgRead ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMsg (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+    variable oMsgCode           : Out   integer ;
+    variable oLength            : Out   integer ;
+    variable oRouteType         : out   integer ;
+    variable oRID               : Out   integer ;
+    variable oTag               : Out   integer ;
+    variable oPayloadByteLength : Out   integer
+  ) is
+  variable tlptype              :       unsigned (7 downto 0);
+  begin
+
+    tlptype              := to_unsigned(Get(TransactionRec.Params, PARAM_REQ_TYPE), 8) ;
+
+    oMsgCode             := Get(TransactionRec.Params, PARAM_REQ_MSG_CODE) ;
+    oRouteType           := to_integer(tlptype(2 downto 0)) ;
+    oRID                 := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag                 := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+    if tlptype(6) = '1' then
+      oLength            := Get(TransactionRec.Params, PARAM_REQ_LENGTH) ;
+      oPayloadByteLength := Get(TransactionRec.Params, PARAM_REQ_BYTE_LEN) ;
+    else
+      oPayloadByteLength := 0 ;
+      oLength            := 0 ;
+    end if ;
+
+  end procedure PcieExtractMsg ;
 
 end package body PcieInterfacePkg ;
 
