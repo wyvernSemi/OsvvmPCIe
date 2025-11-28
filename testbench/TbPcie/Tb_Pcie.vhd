@@ -32,13 +32,11 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 
-architecture CoSimAutoEp of TestCtrl is
+architecture CoSim of TestCtrl is
 
   constant Node           : integer         := 0 ;
 
   signal   TestDone       : integer_barrier := 1 ;
-  signal   TestActive     : boolean         := TRUE ;
-  signal   OperationCount : integer         := 0 ;
   signal   Initialised    : boolean         := FALSE;
 
 begin
@@ -236,14 +234,14 @@ begin
     WaitForClock(UpstreamRec, 50);
 
     PcieMemReadData(UpstreamRec, Data(31 downto 0), PktErrorStatus, CmplStatus, CmplTag);
-    
+
     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #3: ") ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #3: ") ;
     AffirmIfEqual(CmplTag, 16#a0#, "Read tag #3: ") ;
     AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #3: ") ;
 
     PcieMemReadData(UpstreamRec, Data(15 downto 0), PktErrorStatus, CmplStatus, CmplTag);
-    
+
     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #4: ") ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #4: ") ;
     AffirmIfEqual(CmplTag, 16#a1#, "Read tag #4: ") ;
@@ -284,24 +282,51 @@ begin
     -- ==========================  E  N  D  ============================
     -- =================================================================
 
-    TestActive <= FALSE ;
-
-    -- Allow Downstream device to catch up before signaling OperationCount (needed when WRITE_OP is last)
-    WaitForClock(UpstreamRec, 2) ;
-    Increment(OperationCount) ;
-
     -- Wait for outputs to propagate and signal TestDone
     WaitForClock(UpstreamRec, 2) ;
     WaitForBarrier(TestDone) ;
     wait ;
 
   end process UpstreamProc ;
-end CoSimAutoEp ;
 
-Configuration Tb_PCIeAutoEp of TbPcieAutoEp is
+   ------------------------------------------------------------
+  -- DownstreamProc
+  --   Receiving transactions
+  ------------------------------------------------------------
+  DownstreamProc : process
+    variable OpRV           : RandomPType ;
+    variable WaitForClockRV : RandomPType ;
+  begin
+
+    -- Initialize Randomization Objects
+    OpRV.InitSeed(OpRv'instance_name) ;
+    WaitForClockRV.InitSeed(WaitForClockRV'instance_name) ;
+
+    -- Find exit of reset
+    wait until nReset = '1' ;
+    WaitForClock(DownstreamRec, 2) ;
+
+    -- =================================================================
+    -- =====================  T  E  S  T  S  ===========================
+    -- =================================================================
+
+    -- =================================================================
+    -- ==========================  E  N  D  ============================
+    -- ================================================================= ;
+
+    -- Wait for outputs to propagate and signal TestDone
+    WaitForClock(DownstreamRec, 2) ;
+    WaitForBarrier(TestDone) ;
+    wait ;
+
+  end process DownstreamProc ;
+
+end CoSim ;
+
+Configuration Tb_PCIe of TbPcie is
   for TestHarness
     for TestCtrl_1 : TestCtrl
-      use entity work.TestCtrl(CoSimAutoEp) ;
+      use entity work.TestCtrl(CoSim) ;
     end for ;
   end for ;
-end Tb_PCIeAutoEp ;
+end Tb_PCIe ;

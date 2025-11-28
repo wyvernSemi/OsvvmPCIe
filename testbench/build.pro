@@ -33,20 +33,16 @@
 
 library    osvvm_TbPcie
 
-ChangeWorkingDirectory ./TbPcieAutoEp
-
-# build ../common
-
 analyze TestCtrl_e.vhd
-analyze TbPcie.vhd
 
+ChangeWorkingDirectory ./TbPcie
+
+analyze TbPcie.vhd
 analyze Tb_Pcie.vhd
 
-# library    osvvm_TbPcie
-# 
-# ChangeWorkingDirectory ../tests
-# 
-# MkVproc    bringup
-# TestName   CoSim_pcie
-# simulate   Tb_PCIe [CoSim]
+ChangeWorkingDirectory ../TbPcieAutoEp
+
+analyze TbPcieAutoEp.vhd
+analyze Tb_PcieAutoEp.vhd
+
 

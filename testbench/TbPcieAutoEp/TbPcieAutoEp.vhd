@@ -1,5 +1,5 @@
 --
---  File Name:         TbPcie.vhd
+--  File Name:         TbPcieAutoEp.vhd
 --  Design Unit Name:  TbPcie
 --  Revision:          OSVVM MODELS STANDARD VERSION
 --
@@ -13,7 +13,7 @@
 
 --  Revision History:
 --    Date      Version    Description
---    08/2025   2025.??    Initial revision
+--    08/2025   ????.??    Initial revision
 --
 --
 --  This file is part of OSVVM.
