@@ -33,6 +33,8 @@
 
 library    osvvm_TbPcie
 
+ChangeWorkingDirectory ./TbPcieAutoEp
+
 # build ../common
 
 analyze TestCtrl_e.vhd
