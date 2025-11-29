@@ -13,4 +13,4 @@ if {($::osvvm::ToolName eq "GHDL")} {
  SetExtendedRunOptions --ieee-asserts=disable
 }
 
-simulate Tb_PCIeAutoEp
+simulate Tb_PCIeAutoEp [CoSim]
