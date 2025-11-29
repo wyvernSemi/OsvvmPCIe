@@ -340,8 +340,8 @@ begin
 
             -- When updating the address, construct as a 64-bit value
             if VPDataHi = PARAM_REQ_ADDR then
-
-                WrData :=  std_logic_vector(to_signed(VPData, 64)) ;
+                WrData := std_logic_vector(to_unsigned(0, WrData'length)) ;
+                WrData(31 downto 0) := std_logic_vector(to_signed(VPData, 32)) ;
                 Set(TransRec.Params, PARAM_REQ_ADDR, WrData) ;
 
             -- If upper address bits being set, add to WrData upper bits and re-write the address parameter
