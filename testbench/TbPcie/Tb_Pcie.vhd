@@ -101,10 +101,10 @@ begin
     -- =================================================================
 
     -- Run PHY initialisation
-    SetModelOptions(UpstreamRec, INITPHY, NULLOPTVALUE) ;
+    PcieInitLink(UpstreamRec) ;
 
     -- Run DLL initialisation
-    SetModelOptions(UpstreamRec, INITDLL, NULLOPTVALUE) ;
+    PcieInitDll(UpstreamRec) ;
 
     -- ***** memory writes and reads *****
 
@@ -248,7 +248,7 @@ begin
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #4: ") ;
 
     -- ***** part completions *****
-    -- Transfer 47 bytes in two competions
+    -- Transfer 47 bytes in two completions
     RemainLen := 47 ;
 
     -- complete 22 bytes (of 47) with low addr = 0x32

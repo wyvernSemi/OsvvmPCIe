@@ -101,10 +101,10 @@ begin
     -- =================================================================
 
     -- Run PHY initialisation
-    SetModelOptions(UpstreamRec, INITPHY, NULLOPTVALUE) ;
+    PcieInitLink(UpstreamRec) ;
 
     -- Run DLL initialisation
-    SetModelOptions(UpstreamRec, INITDLL, NULLOPTVALUE) ;
+    PcieInitDll(UpstreamRec) ;
 
     -- ***** memory writes and reads *****
 
@@ -234,14 +234,14 @@ begin
     WaitForClock(UpstreamRec, 50);
 
     PcieMemReadData(UpstreamRec, Data(31 downto 0), PktErrorStatus, CmplStatus, CmplTag);
-    
+
     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #3: ") ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #3: ") ;
     AffirmIfEqual(CmplTag, 16#a0#, "Read tag #3: ") ;
     AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #3: ") ;
 
     PcieMemReadData(UpstreamRec, Data(15 downto 0), PktErrorStatus, CmplStatus, CmplTag);
-    
+
     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #4: ") ;
     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #4: ") ;
     AffirmIfEqual(CmplTag, 16#a1#, "Read tag #4: ") ;

@@ -178,8 +178,9 @@ package PcieInterfacePkg is
   constant WAIT_FOR_TRANS                    : integer := 0;
   constant TRY                               : integer := 1;
 
-  constant INITDLL                           : integer :=  1008 ;
-  constant INITPHY                           : integer :=  1009 ;
+  -- EXTEND_DIRECTIVE_OP options
+  constant INITDLL                           : integer := 0 ;
+  constant INITPHY                           : integer := 1 ;
 
   -- GetModelOptions for internal memory backdoor access
   constant GETMEMDATA                        : integer :=  2000 ;
@@ -300,6 +301,20 @@ package PcieInterfacePkg is
   function has_an_x (vec : std_logic_vector) return boolean ;
 
   function selconst (cond : boolean; valtrue, valfalse : integer) return integer ;
+
+  ------------------------------------------------------------
+  procedure PcieInitLink (
+  -- do PCIe Memory Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieInitDll (
+  -- do PCIe Memory Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType
+  ) ;
 
   ------------------------------------------------------------
   procedure PcieMemWrite (
@@ -733,6 +748,38 @@ package body PcieInterfacePkg is
       return valfalse ;
     end if ;
   end function selconst;
+
+  ------------------------------------------------------------
+  procedure PcieInitLink (
+  -- do PCIe Memory Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType
+  ) is
+  begin
+    -- Put values in record
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= INITPHY ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieInitLink ;
+
+  ------------------------------------------------------------
+  procedure PcieInitDll (
+  -- do PCIe Memory Write Cycle
+  ------------------------------------------------------------
+    signal   TransactionRec : InOut AddressBusRecType
+  ) is
+  begin
+    -- Put values in record
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= INITDLL ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieInitDll ;
 
   ------------------------------------------------------------
   procedure PcieMemWrite (
