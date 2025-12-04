@@ -234,13 +234,33 @@ package PcieInterfacePkg is
   constant PARAM_REQ_CFG_REG                 : integer := 14 ;
   constant PARAM_REQ_LENGTH                  : integer := 15 ;
   constant PARAM_REQ_BYTE_LEN                : integer := 16 ;
-  constant PARAM_REQ_PKT_STATUS              : integer := 18 ;
-  constant PARAM_REQ_ADDR                    : integer := 19 ;
+  constant PARAM_REQ_PKT_STATUS              : integer := 17 ;
+  constant PARAM_REQ_ADDR                    : integer := 18 ;
 
   constant NUM_PCIE_PARAMS                   : integer := PARAM_REQ_ADDR + 1 ;
 
   -- PARAM_REQ_ADDRHI not included in parameter count but still required for decoding
   constant PARAM_REQ_ADDRHI                  : integer := PARAM_REQ_ADDR + 1;
+
+  -- TLP types
+  constant TL_MRD32                          : integer := 16#00# ;
+  constant TL_MRD64                          : integer := 16#20# ;
+  constant TL_MRDLCK32                       : integer := 16#01# ;
+  constant TL_MRDLCK64                       : integer := 16#21# ;
+  constant TL_MWR32                          : integer := 16#40# ;
+  constant TL_MWR64                          : integer := 16#60# ;
+  constant TL_IORD                           : integer := 16#02# ;
+  constant TL_IOWR                           : integer := 16#42# ;
+  constant TL_CFGRD0                         : integer := 16#04# ;
+  constant TL_CFGWR0                         : integer := 16#44# ;
+  constant TL_CFGRD1                         : integer := 16#05# ;
+  constant TL_CFGWR1                         : integer := 16#45# ;
+  constant TL_MSG                            : integer := 16#30# ;
+  constant TL_MSGD                           : integer := 16#70# ;
+  constant TL_CPL                            : integer := 16#0a# ;
+  constant TL_CPLD                           : integer := 16#4a# ;
+  constant TL_CPLLK                          : integer := 16#0b# ;
+  constant TL_CPLDLK                         : integer := 16#4b# ;
 
   -- PCIe Message codes
 
@@ -509,7 +529,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieCompletion (
-  -- do PCIe completion (with data) Cycle
+  -- do PCIe completion (with burst data) Cycle
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
            iLowAddr       : In    std_logic_vector ;
@@ -521,7 +541,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure PcieNoDataCompletion (
+  procedure PcieCompletion (
   -- do PCIe completion (with no data) Cycle
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
@@ -547,7 +567,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieCompletionLock (
-  -- do PCIe locked completion (with data) Cycle
+  -- do PCIe locked completion (with no data) Cycle
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
            iLowAddr       : In    std_logic_vector ;
@@ -587,7 +607,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure GetTransCommon (
+  procedure PcieGetTransCommon (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
@@ -599,7 +619,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure GetTrans (
+  procedure PcieGetTrans (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
@@ -609,7 +629,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure TryGetTrans (
+  procedure PcieTryGetTrans (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
@@ -617,6 +637,21 @@ package PcieInterfacePkg is
              PktErrorStatus  : Out   integer ;
              Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMemWrite (
+  --
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             oAddress           : Out   std_logic_vector ;
+             oData              : Out   std_logic_vector ;
+             oLength            : Out   integer ;
+             oFBE               : Out   integer ;
+             oLBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oPayloadByteLength : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -682,8 +717,7 @@ package PcieInterfacePkg is
              oData              : Out   std_logic_vector ;
              oFBE               : Out   integer ;
              oRID               : Out   integer ;
-             oTag               : Out   integer ;
-             oCfgType           : Out   integer
+             oTag               : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -697,8 +731,7 @@ package PcieInterfacePkg is
              oReg               : Out   integer ;
              oFBE               : Out   integer ;
              oRID               : Out   integer ;
-             oTag               : Out   integer ;
-             oCfgType           : Out   integer
+             oTag               : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -1151,7 +1184,7 @@ package body PcieInterfacePkg is
   end procedure PcieCompletion ;
 
   ------------------------------------------------------------
-  procedure PcieNoDataCompletion (
+  procedure PcieCompletion (
   -- do PCIe completion (with no data) Cycle
   ------------------------------------------------------------
   signal   TransactionRec : InOut AddressBusRecType ;
@@ -1172,7 +1205,7 @@ package body PcieInterfacePkg is
 
     WriteAddressAsync(TransactionRec, iLowAddr) ;
 
-  end procedure PcieNoDataCompletion ;
+  end procedure PcieCompletion ;
 
   ------------------------------------------------------------
   procedure PcieCompletion (
@@ -1304,7 +1337,7 @@ package body PcieInterfacePkg is
   end procedure PciePartCompletionLock ;
 
   ------------------------------------------------------------
-  procedure GetTransCommon (
+  procedure PcieGetTransCommon (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
@@ -1316,7 +1349,7 @@ package body PcieInterfacePkg is
   )  is
   begin
     -- Put values in record
-    TransactionRec.Operation     <= EXTEND_WRITE_OP ;
+    TransactionRec.Operation     <= EXTEND_OP ;
     TransactionRec.Options       <= Option ;
     TransactionRec.StatusMsgOn   <= StatusMsgOn ;
 
@@ -1331,10 +1364,10 @@ package body PcieInterfacePkg is
       PktErrorStatus := PKT_STATUS_GOOD ;
     end if;
 
-  end procedure GetTransCommon ;
+  end procedure PcieGetTransCommon ;
 
   ------------------------------------------------------------
-  procedure GetTrans (
+  procedure PcieGetTrans (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
@@ -1346,12 +1379,12 @@ package body PcieInterfacePkg is
   variable   opt             :       integer := WAIT_FOR_TRANS ;
   begin
 
-    GetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
+    PcieGetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
 
-  end procedure GetTrans ;
+  end procedure PcieGetTrans ;
 
   ------------------------------------------------------------
-  procedure TryGetTrans (
+  procedure PcieTryGetTrans (
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
@@ -1362,12 +1395,50 @@ package body PcieInterfacePkg is
   ) is
   variable   opt             :       integer := TRY ;
   begin
-    GetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
-  end procedure TryGetTrans ;
+    PcieGetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
+  end procedure PcieTryGetTrans ;
+
 
   ------------------------------------------------------------
   procedure PcieExtractMemWrite (
-  --
+  -- Extract a memory write word request
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             oAddress           : Out   std_logic_vector ;
+             oData              : Out   std_logic_vector ;
+             oLength            : Out   integer ;
+             oFBE               : Out   integer ;
+             oLBE               : Out   integer ;
+             oRID               : Out   integer ;
+             oTag               : Out   integer ;
+             oPayloadByteLength : Out   integer
+  ) is
+  begin
+
+    oAddress           := SafeResize(Get(TransactionRec.Params, PARAM_REQ_ADDR), oAddress'length) ;
+    oLength            := Get(TransactionRec.Params, PARAM_REQ_LENGTH) ;
+    oPayloadByteLength := Get(TransactionRec.Params, PARAM_REQ_BYTE_LEN) ;
+    oFBE               := Get(TransactionRec.Params, PARAM_REQ_FBE) ;
+    oLBE               := Get(TransactionRec.Params, PARAM_REQ_LBE) ;
+    oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
+    oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
+
+    oData := std_logic_vector(to_unsigned(0, oData'length)) ;
+    for i in 0 to oPayloadByteLength-1 loop
+      case (i) is
+      when 0 => Pop(TransactionRec.ReadBurstFifo, oData( 7 downto  0)) ;
+      when 1 => Pop(TransactionRec.ReadBurstFifo, oData(15 downto  8)) ;
+      when 2 => Pop(TransactionRec.ReadBurstFifo, oData(23 downto 16)) ;
+      when 3 => Pop(TransactionRec.ReadBurstFifo, oData(31 downto 24)) ;
+      when others => null ;
+      end case ;
+    end loop ;
+
+  end procedure PcieExtractMemWrite ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractMemWrite (
+  -- Extract a memory write burst request
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oAddress           : Out   std_logic_vector ;
@@ -1480,8 +1551,7 @@ package body PcieInterfacePkg is
              oData              : Out   std_logic_vector ;
              oFBE               : Out   integer ;
              oRID               : Out   integer ;
-             oTag               : Out   integer ;
-             oCfgType           : Out   integer
+             oTag               : Out   integer
   ) is
   variable tlptype              :       unsigned (7 downto 0);
   begin
@@ -1496,13 +1566,7 @@ package body PcieInterfacePkg is
 
     tlptype            := to_unsigned(Get(TransactionRec.Params, PARAM_REQ_TYPE), 8) ;
 
-    if tlptype(0) = '1' then
-      oCfgType         := 1 ;
-    else
-      oCfgType         := 0 ;
-    end if ;
-
-    oData := x"0" ;
+    oData := std_logic_vector(to_unsigned(0, oData'length)) ;
     Pop(TransactionRec.ReadBurstFifo, oData( 7 downto  0)) ;
     Pop(TransactionRec.ReadBurstFifo, oData(15 downto  8)) ;
     Pop(TransactionRec.ReadBurstFifo, oData(23 downto 16)) ;
@@ -1522,8 +1586,7 @@ package body PcieInterfacePkg is
              oReg               : Out   integer ;
              oFBE               : Out   integer ;
              oRID               : Out   integer ;
-             oTag               : Out   integer ;
-             oCfgType           : Out   integer
+             oTag               : Out   integer
   ) is
   variable tlptype              :       unsigned (7 downto 0);
   begin
@@ -1537,12 +1600,6 @@ package body PcieInterfacePkg is
     oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
 
     tlptype            := to_unsigned(Get(TransactionRec.Params, PARAM_REQ_TYPE), 8) ;
-
-    if tlptype(0) = '1' then
-      oCfgType         := 1 ;
-    else
-      oCfgType         := 0 ;
-    end if ;
 
   end procedure PcieExtractCfgRead ;
 

@@ -1,25 +1,37 @@
-//=============================================================
+// =========================================================================
 //
-// Copyright (c) 2016 - 2024 Simon Southwell. All rights reserved.
+//  File Name:         pcie.h
+//  Design Unit Name:
+//  Revision:          OSVVM MODELS STANDARD VERSION
 //
-// Date: 20th Sep 2016
+//  Maintainer:        Simon Southwell email:  simon.southwell@gmail.com
+//  Contributor(s):
+//    Simon Southwell      simon.southwell@gmail.com
 //
-// This file is part of the pcieVHost package.
+//  Description:
+//    PCIe VC model external top level header
 //
-// pcieVHost is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+//  Revision History:
+//    Date      Version    Description
+//    09/2025   ????       Initial Version
 //
-// pcieVHost is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+//  This file is part of OSVVM.
 //
-// You should have received a copy of the GNU General Public License
-// along with pcieVHost. If not, see <http://www.gnu.org/licenses/>.
+//  Copyright (c) 2025 by [OSVVM Authors](../../AUTHORS.md)
 //
-//=============================================================
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      https://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+// =========================================================================
 
 #ifndef _PCIE_H_
 #define _PCIE_H_
@@ -65,7 +77,7 @@
 
 #define PCIE_MAJOR_VER                    1
 #define PCIE_MINOR_VER                    6
-#define PCIE_PATCH_VER                    12
+#define PCIE_PATCH_VER                    14
 
 // Used in macros
 #define BYTE_MASK                         0xff
@@ -345,13 +357,13 @@
 #define OFFSET_FROM_FBE(_FBE) (((((_FBE) & 0x3) == 0x00) ? 0x2 : 0x0) + ( ((((_FBE) & 0x3) == 0x2) || (((_FBE) & 0xc) == 0x80)) ? 0x1 : 0x0))
 #define OFFSET_FROM_LBE(_LBE) ((((_LBE) == 0xf) || ((_LBE) == 0x0)) ? 0x0 : (_LBE) == 0x7 ? 1 : (_LBE) == 0x3 ? 0x2 : 0x3)
 
-#define GET_TLP_3DW_ADDRESS(_PKT) ((uint64_t)(_PKT)[TLP_ADDR_OFFSET]          | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+1]<<8ULL  | \
-                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+2]<<16ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+3]<<24ULL)
+#define GET_TLP_3DW_ADDRESS(_PKT) ((uint64_t)(_PKT)[TLP_ADDR_OFFSET+3]        | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+2]<<8ULL  | \
+                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+1]<<16ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+0]<<24ULL)
 
-#define GET_TLP_4DW_ADDRESS(_PKT) ((uint64_t)(_PKT)[TLP_ADDR_OFFSET]          | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+1]<<8ULL  | \
-                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+2]<<16ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+3]<<24ULL | \
-                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+4]<<32ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+5]<<40ULL | \
-                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+6]<<48ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+7]<<56ULL)
+#define GET_TLP_4DW_ADDRESS(_PKT) ((uint64_t)(_PKT)[TLP_ADDR_OFFSET+7]        | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+6]<<8ULL  | \
+                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+5]<<16ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+4]<<24ULL | \
+                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+3]<<32ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+2]<<40ULL | \
+                                   (uint64_t)(_PKT)[TLP_ADDR_OFFSET+1]<<48ULL | (uint64_t)(_PKT)[TLP_ADDR_OFFSET+0]<<56ULL)
 #define GET_TLP_ADDRESS(_PKT) (TLP_HDR_4DW(_PKT) ? GET_TLP_4DW_ADDRESS(_PKT) : GET_TLP_3DW_ADDRESS(_PKT))
 
 #define GET_TLP_PAYLOAD_PTR(_PKT) (TLP_HDR_4DW(_PKT) ? (&(_PKT)[19]) : (&(_PKT)[15]))

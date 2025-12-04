@@ -48,7 +48,7 @@ begin
   ControlProc : process
   begin
 
-    SetTestName("CoSim_pcie");
+    SetTestName("CoSim_PcieAutoEp");
 
     -- Initialization of test
     SetLogEnable(PASSED, TRUE) ;  -- Enable PASSED logs
