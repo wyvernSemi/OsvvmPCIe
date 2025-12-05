@@ -1512,7 +1512,7 @@ package body PcieInterfacePkg is
     oRID               := Get(TransactionRec.Params, PARAM_REQ_RID) ;
     oTag               := Get(TransactionRec.Params, PARAM_REQ_TAG) ;
 
-    oData := x"0" ;
+    oData := std_logic_vector(to_unsigned(0, oData'length)) ;
     Pop(TransactionRec.ReadBurstFifo, oData( 7 downto  0)) ;
     Pop(TransactionRec.ReadBurstFifo, oData(15 downto  8)) ;
     Pop(TransactionRec.ReadBurstFifo, oData(23 downto 16)) ;
