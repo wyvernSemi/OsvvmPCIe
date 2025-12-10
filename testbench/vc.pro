@@ -12,8 +12,8 @@ if {($::osvvm::ToolName eq "GHDL")} {
 }
 
 
-TestName   CoSim_PcieAutoEp
-simulate Tb_PCIeAutoEp [CoSim]
+#TestName   CoSim_PcieAutoEp
+#simulate Tb_PCIeAutoEp [CoSim]
 
-#TestName CoSim_Pcie
-#simulate Tb_PCIe
+TestName CoSim_Pcie
+simulate Tb_PCIe [CoSim]

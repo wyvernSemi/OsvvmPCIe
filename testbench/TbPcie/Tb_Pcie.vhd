@@ -34,7 +34,16 @@
 
 architecture CoSim of TestCtrl is
 
-  constant Node           : integer         := 0 ;
+  type rd_req_t is record
+    addr          : std_logic_vector(31 downto 0);
+    rid           : integer ;
+    word_len      : integer ;
+    tag           : integer ;
+    word_offset   : integer ;
+    padding       : integer ;
+  end record rd_req_t ;
+
+  type rd_req_array_t is array (natural range <>) of rd_req_t ;
 
   signal   TestDone       : integer_barrier := 1 ;
   signal   Initialised    : boolean         := FALSE;
@@ -194,53 +203,55 @@ begin
     PcieMemWrite(UpstreamRec, X"0001_0201", 126) ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-   -- Read back bytes from 0x00010201
-   PcieMemRead(UpstreamRec, X"0001_0201", 126, PktErrorStatus, CmplStatus) ;
-   AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Burst Read Error Status #1: ") ;
-   AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Burst Read Completion Status #1: ") ;
+    -- Read back bytes from 0x00010201
+    PcieMemRead(UpstreamRec, X"0001_0201", 126, PktErrorStatus, CmplStatus) ;
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Burst Read Error Status #1: ") ;
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Burst Read Completion Status #1: ") ;
 
-   for i in 0 to 125 loop
-     Pop(UpstreamRec.ReadBurstFifo, Data(7 downto 0)) ;
-     AffirmIfEqual(Data(7 downto 0), to_slv(i, 8), "Read burst data #1: ") ;
-   end loop ;
-   WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    for i in 0 to 125 loop
+      Pop(UpstreamRec.ReadBurstFifo, Data(7 downto 0)) ;
+      AffirmIfEqual(Data(7 downto 0), to_slv(i, 8), "Read burst data #1: ") ;
+    end loop ;
+    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
---     -- ***** read address *****
---     PcieMemWrite(UpstreamRec, X"00010080", X"900dc0de") ;
---     PcieMemWrite(UpstreamRec, X"00010106", X"cafe");
---
---     PcieMemReadAddress(UpstreamRec, X"00010080", 4, 16#a0#) ;
---     PcieMemReadAddress(UpstreamRec, X"00010106", 2, 16#a1#) ;
---
---     WaitForClock(UpstreamRec, 50);
---
---     PcieMemReadData(UpstreamRec, Data(31 downto 0), PktErrorStatus, CmplStatus, CmplTag);
---
---     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #3: ") ;
---     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #3: ") ;
---     AffirmIfEqual(CmplTag, 16#a0#, "Read tag #3: ") ;
---     AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #3: ") ;
---
---     PcieMemReadData(UpstreamRec, Data(15 downto 0), PktErrorStatus, CmplStatus, CmplTag);
---
---     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #4: ") ;
---     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #4: ") ;
---     AffirmIfEqual(CmplTag, 16#a1#, "Read tag #4: ") ;
---     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #4: ") ;
---
---     -- ***** Locked read *****
---     PcieMemReadLock(UpstreamRec,  X"00010106", Data(15 downto 0), PktErrorStatus, CmplStatus) ;
---
---     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #5: ") ;
---     AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #5: ") ;
---     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #5: ") ;
---     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
---
---     PcieMemReadLock(UpstreamRec,  X"00000006", Data(15 downto 0), PktErrorStatus, CmplStatus) ;
---
---     AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #6: ") ;
---     AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "Read Completion Status #6: ") ;
---     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    -- ***** read address *****
+    PcieMemReadAddress(UpstreamRec, X"00000080", 4, 16#a0#) ;
+    PcieMemReadAddress(UpstreamRec, X"00000106", 2, 16#a1#) ;
+
+    WaitForClock(UpstreamRec, 50);
+
+    -- Expect completions in any order
+    for cmplidx in 0 to 1 loop
+
+      PcieMemReadData(UpstreamRec, Data(31 downto 0), PktErrorStatus, CmplStatus, CmplTag);
+
+      AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #3: ") ;
+      AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #3: ") ;
+
+      if CmplTag = 16#a0# then
+        AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #3: ") ;
+      elsif CmplTag = 16#a1# then
+        AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #3: ") ;
+      else
+        Alert("Read data #3 unexpected TAG " & integer'image(CmplTag) & " Read data #3", ERROR) ;
+      end if ;
+    end loop ;
+
+    -- ***** Locked read *****
+
+    PcieMemReadLock(UpstreamRec,  X"00000080", Data, PktErrorStatus, CmplStatus) ;
+
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #5: ") ;
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #5: ") ;
+    AffirmIfEqual(Data, X"900dc0de", "Read data #6: ") ;
+    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+
+    PcieMemReadLock(UpstreamRec,  X"00000106", Data(15 downto 0), PktErrorStatus, CmplStatus) ;
+
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #6: ") ;
+    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #6: ") ;
+    AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #6: ") ;
+    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- =================================================================
     -- ==========================  E  N  D  ============================
@@ -265,6 +276,8 @@ begin
     variable MemData           : std_logic_vector(31 downto 0) ;
     variable Address           : std_logic_vector(31 downto 0) ;
     variable CID               : std_logic_vector(15 downto 0) := x"0000";
+
+    variable ReadReqs          : rd_req_array_t (0 to 1) ;
 
     variable TransType         : integer ;
     variable PktErrorStatus    : integer ;
@@ -358,8 +371,8 @@ begin
     PcieGetTrans(DownstreamRec, TransType, PktErrorStatus);
 
         -- Check it's a good packet and of the expected type
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Write Req Error Status #3: ") ;
-    AffirmIfEqual(TransType,      TL_MRD32, "Rx Write Req Type #3: ") ;
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Read Req Error Status #3: ") ;
+    AffirmIfEqual(TransType,      TL_MRD32, "Rx Read Req Type #3: ") ;
 
     -- If received packet good and the type expected, extract the rest of the data and check
     if PktErrorStatus = PKT_STATUS_GOOD and TransType = TL_MRD32 then
@@ -380,8 +393,8 @@ begin
     PcieGetTrans(DownstreamRec, TransType, PktErrorStatus);
 
         -- Check it's a good packet and of the expected type
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Write Req Error Status #4: ") ;
-    AffirmIfEqual(TransType,      TL_MRD32, "Rx Write Req Type #4: ") ;
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Read Req Error Status #4: ") ;
+    AffirmIfEqual(TransType,      TL_MRD32, "Rx Read Req Type #4: ") ;
 
     -- If received packet good and the type expected, extract the rest of the data and check
     if PktErrorStatus = PKT_STATUS_GOOD and TransType = TL_MRD32 then
@@ -628,7 +641,7 @@ begin
         Pop(DownstreamRec.ReadBurstFifo, Data(15 downto  8)) ;
         Pop(DownstreamRec.ReadBurstFifo, Data(23 downto 16)) ;
         Pop(DownstreamRec.ReadBurstFifo, Data(31 downto 24)) ;
-        
+
         AffirmIfEqual(Data, x"20251015") ;
 
     end if ;
@@ -655,7 +668,7 @@ begin
         AffirmIfEqual(LBE,             16#7#, "Rx Write Req LBE #14: ");
         AffirmIfEqual(RID,                62, "Rx Write Req RID #14: ");
         AffirmIfEqual(Tag,            16#89#, "Rx Write Req Tag #14: ");
-        AffirmIfEqual(PayloadByteLength, 126, "Rx Write Req Payload bytes #1: ");
+        AffirmIfEqual(PayloadByteLength, 126, "Rx Write Req Payload bytes #14: ");
 
         Offset    := to_integer(unsigned(Address(1 downto 0)));
         Address   := Address(Address'length-1 downto 2) & "00";
@@ -704,7 +717,7 @@ begin
                    1 when LBE = 16#7# else
                    0 ;
         ByteCount := Length*4 - Padding - Offset ;
-        
+
         Address   := Address(Address'length-1 downto 2) & "00";
         Data      := MemRead(MemId, Address);
         if Offset /= 0 then
@@ -725,6 +738,119 @@ begin
 
         PcieCompletion(DownstreamRec, Address(1 downto 0), ByteCount, std_logic_vector(to_unsigned(RID, 16)), CID, Tag) ;
 
+    end if ;
+
+    -- ******************************************
+    -- ************** async reads ***************
+    -- ******************************************
+
+    -- Stack up read requests
+    for ridx in 0 to 1 loop
+      -- Wait for the reception of a transaction
+      PcieGetTrans(DownstreamRec, TransType, PktErrorStatus);
+
+      -- Check it's a good packet and of the expected type
+      AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Write Req Error Status (loop " & integer'image(ridx) & ") #16: ") ;
+      AffirmIfEqual(TransType,      TL_MRD32, "Rx Write Req Type (loop " & integer'image(ridx) & ") #16: ") ;
+
+      -- If received packet good and the type expected, extract the rest of the data and check
+      if PktErrorStatus = PKT_STATUS_GOOD and TransType = TL_MRD32 then
+
+          PcieExtractMemRead(DownstreamRec, Address, Length, FBE, LBE, RID, Tag, Locked) ;
+
+          if ridx = 0 then
+            AffirmIfEqual(Address,           X"00000080", "Rx Read Req Address (loop " & integer'image(ridx) & ") #16: ") ;
+          else
+            AffirmIfEqual(Address,           X"00000106", "Rx Read Req Address (loop " & integer'image(ridx) & ") #16: ") ;
+          end if ;
+          AffirmIfEqual(Length,                        1, "Rx Read Req Length (loop " & integer'image(ridx) & ") #16: ") ;
+
+          -- Store the request
+          ReadReqs(ridx).addr        := Address ;
+          ReadReqs(ridx).rid         := RID ;
+          ReadReqs(ridx).word_len    := Length ;
+          ReadReqs(ridx).tag         := Tag ;
+          ReadReqs(ridx).word_offset := 3 when FBE = 16#8# else 2 when FBE = 16#c# else 1 when FBE = 16#e# else 0 ;
+          ReadReqs(ridx).padding     := 3 when LBE = 16#1# else 2 when LBE = 16#3# else 1 when LBE = 16#7# else 0 ;
+
+      end if ;
+
+    end loop ;
+
+    WaitForClock(DownstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+
+    -- Send completions out-of-order
+    for ridx in 1 downto 0 loop
+
+      MemData := MemRead(MemId, ReadReqs(ridx).addr(31 downto 2) & "00") ;
+
+      -- Send completion
+      if ridx = 0 then
+        PcieCompletion(DownstreamRec,
+                       ReadReqs(ridx).addr(1 downto 0),
+                       MemData,
+                       std_logic_vector(to_unsigned(ReadReqs(ridx).rid, 16)),
+                       x"003f",
+                       ReadReqs(ridx).tag) ;
+      else
+        PcieCompletion(DownstreamRec,
+                       ReadReqs(ridx).addr(1 downto 0),
+                       MemData(31 downto 16),
+                       std_logic_vector(to_unsigned(ReadReqs(ridx).rid, 16)),
+                       x"003f",
+                       ReadReqs(ridx).tag) ;
+      end if ;
+
+      WaitForClock(DownstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+
+    end loop ;
+    
+    -- ******************************************
+    -- ************* locked reads ***************
+    -- ******************************************
+    
+    -- Wait for the reception of a transaction
+    PcieGetTrans(DownstreamRec, TransType, PktErrorStatus);
+
+        -- Check it's a good packet and of the expected type
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Read locked Req Error Status #17: ") ;
+    AffirmIfEqual(TransType,      TL_MRDLCK32, "Rx Read locked Req Type #17: ") ;
+
+    -- If received packet good and the type expected, extract the rest of the data and check
+    if PktErrorStatus = PKT_STATUS_GOOD and TransType = TL_MRDLCK32 then
+
+        PcieExtractMemRead(DownstreamRec, Address, Length, FBE, LBE, RID, Tag, Locked) ;
+
+        AffirmIfEqual(Address,           X"00000080", "Rx Read locked Req Address #17: ") ;
+        AffirmIfEqual(Length,                      1, "Rx Read locked Req Length #17: ") ;
+
+        MemData := MemRead(MemId, Address(Address'length-1 downto 2) & "00") ;
+
+        -- Send completion
+        PcieCompletionLock(DownstreamRec, X"80", MemData, std_logic_vector(to_unsigned(RID, 16)), x"003f", Tag) ;
+
+    end if ;
+
+    -- Wait for the reception of a transaction
+    PcieGetTrans(DownstreamRec, TransType, PktErrorStatus);
+
+        -- Check it's a good packet and of the expected type
+    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Rx Read locked Req Error Status #18: ") ;
+    AffirmIfEqual(TransType,      TL_MRDLCK32, "Rx Read locked Req Type #18: ") ;
+
+    -- If received packet good and the type expected, extract the rest of the data and check
+    if PktErrorStatus = PKT_STATUS_GOOD and TransType = TL_MRDLCK32 then
+
+        PcieExtractMemRead(DownstreamRec, Address, Length, FBE, LBE, RID, Tag, Locked) ;
+
+        AffirmIfEqual(Address,           X"00000106", "Rx Read locked Req Address #18: ") ;
+        AffirmIfEqual(Length,                      1, "Rx Read locked Length #18: ") ;
+
+        -- Read word aligned memory
+        MemData := MemRead(MemId, Address(Address'length-1 downto 2) & "00") ;
+
+        -- Send completion
+        PcieCompletionLock(DownstreamRec, X"06", MemData(31 downto 16), std_logic_vector(to_unsigned(RID, 16)), x"003f", Tag) ;
     end if ;
 
     -- =================================================================
