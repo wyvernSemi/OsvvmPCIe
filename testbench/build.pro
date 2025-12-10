@@ -11,7 +11,7 @@
 #
 #  Revision History:
 #    Date      Version    Description
-#    08/2025   2025.??    Initial revision
+#    08/2025   ????.??    Initial revision
 #
 #
 #  This file is part of OSVVM.
@@ -35,14 +35,15 @@ library    osvvm_TbPcie
 
 analyze TestCtrl_e.vhd
 
-ChangeWorkingDirectory ./TbPcie
+ChangeWorkingDirectory ./TbPcieAutoEp
+
+analyze TbPcieAutoEp.vhd
+analyze Tb_PcieAutoEp.vhd
+
+ChangeWorkingDirectory ../TbPcie
 
 analyze TbPcie.vhd
 analyze Tb_Pcie.vhd
 
-ChangeWorkingDirectory ../TbPcieAutoEp
-
-analyze TbPcieAutoEp.vhd
-analyze Tb_PcieAutoEp.vhd
 
 
