@@ -319,6 +319,7 @@ package PcieInterfacePkg is
   end record PcieRecType;
 
   function has_an_x (vec : std_logic_vector) return boolean ;
+  function has_all_z  (vec : std_logic_vector) return boolean ;
 
   function selconst (cond : boolean; valtrue, valfalse : integer) return integer ;
 
@@ -770,6 +771,23 @@ package body PcieInterfacePkg is
     return false ;
 
   end function has_an_x ;
+  
+  ------------------------------------------------------------
+  function has_all_z (vec : std_logic_vector) return boolean is
+  ------------------------------------------------------------
+  variable zcount : integer := 0 ;
+  begin
+
+    for idx in vec'range loop
+      case vec(idx) is
+        when 'Z'                         => zcount := zcount + 1 ;
+        when others                      => zcount := 0 ;
+      end case;
+    end loop;
+
+    return zcount = vec'length ;
+
+  end function has_all_z ; 
 
   ------------------------------------------------------------
   function selconst (cond : boolean;valtrue, valfalse : integer) return integer is

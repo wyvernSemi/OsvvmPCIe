@@ -93,7 +93,6 @@ architecture behavioral of PcieModel is
 
   signal   ModelID       : AlertLogIDType ;
 
-  --signal   RdData        : std_logic_vector (31 downto 0) ;
   signal   ClkCount      : integer                                          := 0 ;
   signal   Initialised   : boolean                                          := false ;
 
@@ -169,7 +168,7 @@ begin
     variable Delta             : boolean               := false;
     variable WE                : boolean               := false;
     variable LinkOffset        : integer               := 0;
-    variable DataLoBits        : unsigned (3 downto 0) := (others => '0') ;
+    variable DataLoBits        : std_logic_vector (3 downto 0) := (others => '0') ;
 
     variable RdData            : std_logic_vector (63 downto 0) := (others => '0') ;
     variable WrData            : std_logic_vector (63 downto 0) := (others => '0') ;
@@ -200,9 +199,6 @@ begin
       case VPAddr is
 
         -- -----------------------------------------------------
-        -- -----------------------------------------------------
-
-        -- -----------------------------------------------------
         -- Process parameters
         -- -----------------------------------------------------
 
@@ -220,7 +216,7 @@ begin
         -- -----------------------------------------------------
 
         when RESET_STATE  => RdData := (0 => not nReset, others => '0') ;
-        when CLK_COUNT    => RdData := std_logic_vector(to_unsigned(ClkCount, RdData'length)) ;
+        when CLK_COUNT    => RdData := SafeResize(std_logic_vector(to_unsigned(ClkCount, 64)), RdData'length) ;
 
         -- -----------------------------------------------------
         -- Process PCIe port signalling
@@ -234,7 +230,7 @@ begin
             LinkOffset := (VPAddr - LINKADDR0) mod 16;
 
             if WE then
-              LinkOutVec(LinkOffset) <= std_logic_vector(to_signed(VPData, LANEWIDTH)) xor InvertOutVec ;
+              LinkOutVec(LinkOffset) <= SafeResize(std_logic_vector(to_signed(VPData, 32)), LinkOutVec(LinkOffset)'length) xor InvertOutVec ;
             end if;
 
             RdData := SafeResize(LinkInVec(LinkOffset) xor InvertInVec, RdData'length) ;
@@ -242,7 +238,12 @@ begin
         when LINK_STATE  =>
 
           if WE then
-            ElecIdleOut <= std_logic_vector(to_unsigned(VPData, LINKWIDTH)) ;
+            -- Just check bottom bit and set all to that value
+            if (VPData mod 2) = 0 then
+              ElecIdleOut <= (others => '0') ;
+            else
+              ElecIdleOut <= (others => '1') ;
+            end if;
           end if;
 
            RdData                                 := (others=> '0') ;
@@ -251,7 +252,7 @@ begin
 
         when PVH_INVERT =>
 
-          DataLoBits     := to_unsigned(VPData, 4) ;
+          DataLoBits     := SafeResize(std_logic_vector(to_unsigned(VPData mod 16, 4)), DataLoBits'length) ;
 
           if WE then
             ReverseOut   <= '1' when DataLoBits(3) = '1' else '0' ;
@@ -279,11 +280,11 @@ begin
 
         when GETNEXTTRANS =>
 
-          RdData := std_logic_vector(to_unsigned(AddressBusOperationType'pos(TransRec.Operation), RdData'length)) ;
+          RdData := SafeResize(std_logic_vector(to_unsigned(AddressBusOperationType'pos(TransRec.Operation), 32)), RdData'length) ;
 
         when GETINTTOMODEL =>
 
-          RdData := std_logic_vector(to_signed(TransRec.IntToModel, RdData'length)) ;
+          RdData := SafeResize(std_logic_vector(to_signed(TransRec.IntToModel, 32)), RdData'length) ;
 
         when GETBOOLTOMODEL =>
 
@@ -299,7 +300,7 @@ begin
 
         when GETADDRESSWIDTH =>
 
-          RdData := std_logic_vector(to_signed(TransRec.AddrWidth, RdData'length)) ;
+          RdData := SafeResize(std_logic_vector(to_signed(TransRec.AddrWidth, 32)), RdData'length) ;
 
         when GETDATATOMODEL =>
 
@@ -307,20 +308,20 @@ begin
 
         when GETDATAWIDTH =>
 
-          RdData := std_logic_vector(to_signed(TransRec.DataWidth, RdData'length)) ;
+          RdData := SafeResize(std_logic_vector(to_signed(TransRec.DataWidth, 32)), RdData'length) ;
 
         when GETPARAMS =>
 
-          RdData := std_logic_vector(to_signed(Get(TransRec.Params, VPData), RdData'length)) ;
+          RdData := SafeResize(std_logic_vector(to_signed(Get(TransRec.Params, VPData), 32)), RdData'length) ;
 
         when GETOPTIONS =>
 
-          RdData := std_logic_vector(to_signed(TransRec.Options, RdData'length)) ;
+          RdData := SafeResize(std_logic_vector(to_signed(TransRec.Options, 32)), RdData'length) ;
 
         when SETDATAFROMMODEL =>
 
-          WrData(31 downto  0)   := std_logic_vector(to_signed(VPData,   32)) ;
-          WrData(63 downto 32)   := std_logic_vector(to_signed(VPDataHi, 32)) ;
+          WrData(31 downto  0)   := SafeResize(std_logic_vector(to_signed(VPData,   32)), 32) ;
+          WrData(63 downto 32)   := SafeResize(std_logic_vector(to_signed(VPDataHi, 32)), 32) ;
 
           TransRec.DataFromModel <= SafeResize(WrData, TransRec.DataFromModel'length) ;
 
@@ -341,13 +342,13 @@ begin
             -- When updating the address, construct as a 64-bit value
             if VPDataHi = PARAM_REQ_ADDR then
                 WrData := std_logic_vector(to_unsigned(0, WrData'length)) ;
-                WrData(31 downto 0) := std_logic_vector(to_signed(VPData, 32)) ;
+                WrData(31 downto 0) := SafeResize(std_logic_vector(to_signed(VPData, 32)), 32) ;
                 Set(TransRec.Params, PARAM_REQ_ADDR, WrData) ;
 
             -- If upper address bits being set, add to WrData upper bits and re-write the address parameter
             elsif VPDataHi = PARAM_REQ_ADDRHI then
 
-                WrData(63 downto 32) :=  std_logic_vector(to_signed(VPData, 32)) ;
+                WrData(63 downto 32) :=  SafeResize(std_logic_vector(to_signed(VPData, 32)), 32) ;
                 Set(TransRec.Params, PARAM_REQ_ADDR, WrData) ;
 
             else
@@ -362,13 +363,13 @@ begin
 
         when PUSHWDATA =>
 
-          WrData(7 downto 0) := std_logic_vector(to_signed(VPData, 8)) ;
+          WrData(7 downto 0) := SafeResize(std_logic_vector(to_signed(VPData, 32)), 8) ;
 
           Push(TransRec.WriteBurstFifo, WrData(7 downto 0)) ;
 
         when PUSHRDATA =>
 
-          WrData(7 downto 0) := std_logic_vector(to_signed(VPData, 8)) ;
+          WrData(7 downto 0) := SafeResize(std_logic_vector(to_signed(VPData, 32)), 8) ;
 
           Push(TransRec.ReadBurstFifo, WrData(7 downto 0)) ;
 
@@ -412,8 +413,8 @@ begin
 
     for idx in 0 to LINKWIDTH-1 loop
 
-      ElecIdleIn(idx)   <= '1' when PcieLinkIn(idx) = ELECIDLE  else '0';
-      RxDetect(idx)     <= '1' when has_an_x(PcieLinkOut(idx))  else '0';
+      ElecIdleIn(idx)   <= '1' when has_all_z(PcieLinkIn(idx))  else '0';
+      RxDetect(idx)     <= '1' when has_an_x(PcieLinkOut(idx)) else '0';
       LinkInVec(idx)    <= PcieLinkIn(LINKWIDTH - 1 - idx) when ReverseIn = '1' else PcieLinkIn(idx) after 1 ps ;
       PcieLinkOut(idx)  <= ELECIDLE when ElecIdleOut(0)  = '1' else LinkOutVec(LINKWIDTH - 1 - idx) when ReverseOut else LinkOutVec(idx) ;
 
