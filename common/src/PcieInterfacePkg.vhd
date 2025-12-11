@@ -611,10 +611,10 @@ package PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             Option          : In    integer ;
-             TransType       : Out   integer ;
-             PktErrorStatus  : Out   integer ;
-             Available       : Out   boolean ;
+             iOption         : In    integer ;
+             oTransType      : Out   integer ;
+             oPktErrorStatus : Out   integer ;
+             oAvailable      : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
@@ -635,7 +635,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              oTransType      : Out   integer ;
              oPktErrorStatus : Out   integer ;
-             Available       : Out   boolean ;
+             oAvailable      : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
@@ -1341,27 +1341,27 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             Option          : In    integer ;
-             TransType       : Out   integer ;
-             PktErrorStatus  : Out   integer ;
-             Available       : Out   boolean ;
+             iOption         : In    integer ;
+             oTransType      : Out   integer ;
+             oPktErrorStatus : Out   integer ;
+             oAvailable      : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   )  is
   begin
     -- Put values in record
     TransactionRec.Operation     <= EXTEND_OP ;
-    TransactionRec.Options       <= Option ;
+    TransactionRec.Options       <= iOption ;
     TransactionRec.StatusMsgOn   <= StatusMsgOn ;
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
-    TransType        := Get(TransactionRec.Params, PARAM_REQ_TYPE) ;
-    Available        := TransactionRec.BoolFromModel ;
+    oTransType       := Get(TransactionRec.Params, PARAM_REQ_TYPE) ;
+    oAvailable       := TransactionRec.BoolFromModel ;
 
-    if Available then
-      PktErrorStatus := Get(TransactionRec.Params, PARAM_REQ_PKT_STATUS) ;
+    if oAvailable then
+      oPktErrorStatus := Get(TransactionRec.Params, PARAM_REQ_PKT_STATUS) ;
     else
-      PktErrorStatus := PKT_STATUS_GOOD ;
+      oPktErrorStatus := PKT_STATUS_GOOD ;
     end if;
 
   end procedure PcieGetTransCommon ;
@@ -1379,7 +1379,7 @@ package body PcieInterfacePkg is
   variable   opt             :       integer := WAIT_FOR_TRANS ;
   begin
 
-    PcieGetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
+    PcieGetTransCommon(TransactionRec, opt, oTransType, oPktErrorStatus, Available, StatusMsgOn) ;
 
   end procedure PcieGetTrans ;
 
@@ -1390,12 +1390,12 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              oTransType      : Out   integer ;
              oPktErrorStatus : Out   integer ;
-             Available       : Out   boolean ;
+             oAvailable      : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) is
   variable   opt             :       integer := TRY ;
   begin
-    PcieGetTransCommon(TransactionRec, opt, TransType, PktErrorStatus, Available, StatusMsgOn) ;
+    PcieGetTransCommon(TransactionRec, opt, oTransType, oPktErrorStatus, oAvailable, StatusMsgOn) ;
   end procedure PcieTryGetTrans ;
 
 
