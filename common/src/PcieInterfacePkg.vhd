@@ -370,7 +370,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieMemRead (
-  -- do PCIe Read Cycle
+  -- do PCIe Burst Read Cycle
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
@@ -382,7 +382,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieMemReadLock (
-  -- do PCIe Memory Read Cycle
+  -- do PCIe Locked Memory Read Cycle
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
@@ -394,7 +394,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieMemReadLock (
-  -- do PCIe Read Cycle
+  -- do PCIe Locked Burst Memory Read Cycle
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
@@ -417,7 +417,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieMemReadAddress (
-  -- do PCIe Read Address Cycle
+  -- do PCIe Burst Read Address Cycle
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
@@ -427,7 +427,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieMemReadLockAddress (
-  -- do PCIe Read Address Cycle
+  -- do PCIe Locked Burst Read Address Cycle
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType ;
              iAddr          : In    std_logic_vector ;
@@ -620,28 +620,28 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieGetTrans (
-  --
+  -- Blocking fetch of received transaction
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             TransType       : Out   integer ;
-             PktErrorStatus  : Out   integer ;
+             oTransType      : Out   integer ;
+             oPktErrorStatus : Out   integer ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
   ------------------------------------------------------------
   procedure PcieTryGetTrans (
-  --
+  -- Non-blocking test for a received transaction
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             TransType       : Out   integer ;
-             PktErrorStatus  : Out   integer ;
+             oTransType      : Out   integer ;
+             oPktErrorStatus : Out   integer ;
              Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) ;
 
   ------------------------------------------------------------
   procedure PcieExtractMemWrite (
-  --
+  -- Extract memory write data word
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oAddress           : Out   std_logic_vector ;
@@ -656,7 +656,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractMemWrite (
-  --
+  -- Extract memory write with burst data
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oAddress           : Out   std_logic_vector ;
@@ -670,7 +670,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractMemRead (
-  --
+  -- Extract memory read
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oAddress           : Out   std_logic_vector ;
@@ -684,7 +684,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractIoWrite (
-  --
+  -- Extract memoryI/O write data word
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oAddress           : Out   std_logic_vector ;
@@ -696,7 +696,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractIoRead (
-  --
+  -- Extract I/O read
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oAddress           : Out   std_logic_vector ;
@@ -707,7 +707,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractCfgWrite (
-  --
+  -- Extract configuration space write data word
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oBus               : Out   integer ;
@@ -722,7 +722,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractCfgRead (
-  --
+  -- Extract Configuration space read
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oBus               : Out   integer ;
@@ -736,7 +736,7 @@ package PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieExtractMsg (
-  --
+  -- Extract message
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              oMsgCode           : Out   integer ;
@@ -1371,8 +1371,8 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             TransType       : Out   integer ;
-             PktErrorStatus  : Out   integer ;
+             oTransType      : Out   integer ;
+             oPktErrorStatus : Out   integer ;
     constant StatusMsgOn     : In    boolean := false
   ) is
   variable   Available       :       boolean ;
@@ -1388,8 +1388,8 @@ package body PcieInterfacePkg is
   --
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             TransType       : Out   integer ;
-             PktErrorStatus  : Out   integer ;
+             oTransType      : Out   integer ;
+             oPktErrorStatus : Out   integer ;
              Available       : Out   boolean ;
     constant StatusMsgOn     : In    boolean := false
   ) is
