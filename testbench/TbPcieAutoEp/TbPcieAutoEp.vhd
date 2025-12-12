@@ -57,7 +57,7 @@ architecture TestHarness of TbPcieAutoEP is
 
   -- Common configurations
   constant EN_TLP_REQ_DIGEST : boolean := false ;
-  constant PIPE              : boolean := true ;
+  constant PIPE              : boolean := false ;
   constant PCIE_LINK_WIDTH   : integer := 2 ; -- valid values: 1, 2, 4, 8 and 16
   constant PCIE_LANE_WIDTH   : integer := selconst(PIPE, 9, 10) ; -- 9 when PIPE else 10
   
