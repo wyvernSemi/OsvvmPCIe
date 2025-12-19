@@ -233,7 +233,9 @@ begin
               LinkOutVec(LinkOffset) <= SafeResize(std_logic_vector(to_signed(VPData, 32)), LinkOutVec(LinkOffset)'length) xor InvertOutVec ;
             end if;
 
-            RdData := SafeResize(LinkInVec(LinkOffset) xor InvertInVec, RdData'length) ;
+            if not has_an_x(LinkInVec(LinkOffset)) then
+              RdData := SafeResize(LinkInVec(LinkOffset) xor InvertInVec, RdData'length) ;
+            end if ;
 
         when LINK_STATE  =>
 

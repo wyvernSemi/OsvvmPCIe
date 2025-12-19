@@ -35,4 +35,6 @@ library osvvm_pcie
 analyze ./PcieModel.vhd
 analyze ./PcieMonitor_dummy.vhd
 analyze ./PciePassThru.vhd
+analyze ./PcieModelSerialiser.vhd
 analyze ./PcieContext.vhd
+analyze ./PcieModelSerial.vhd

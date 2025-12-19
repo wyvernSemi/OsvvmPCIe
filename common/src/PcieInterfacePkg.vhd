@@ -104,6 +104,10 @@ package PcieInterfacePkg is
   constant PVH_STOP                          : integer := -3 ;
   constant PVH_FINISH                        : integer := -2 ;
   constant PVH_FATAL                         : integer := -1 ;
+  
+  -- 10 bit COMMA codes
+  constant PCOMMA                            : std_logic_vector (9 downto 0) := 10b"1010000011";   -- 0x283
+  constant NCOMMA                            : std_logic_vector (9 downto 0) := 10b"0101111100";   -- 0x17c
 
   -- SetModelOptions for pcievhost model
   constant CONFIG_FC_HDR_RATE                : integer :=  0 ;
@@ -212,9 +216,9 @@ package PcieInterfacePkg is
   constant PARAM_CMPLRTAG                    : integer := 5 ;
   constant PARAM_CMPLSTATUS                  : integer := 6 ;
   constant PARAM_REQTAG                      : integer := 7 ;
-  constant PARAM_CMPL_STATUS                 : integer := 8 ;
-  constant PARAM_CMPL_RX_TAG                 : integer := 9 ;
-  constant PARAM_PKT_STATUS                  : integer := 10 ;
+  constant PARAM_PKT_STATUS                  : integer := 8 ;
+  constant PARAM_CMPL_STATUS                 : integer := 9;
+  constant PARAM_CMPL_RX_TAG                 : integer := 10 ;
 
   -- Parameters when receiving transactions
   constant PARAM_REQ_TYPE                    : integer := 0 ;
@@ -290,24 +294,25 @@ package PcieInterfacePkg is
 
   constant MSG_DATA_NULL                     : std_logic_vector(31 downto 0) := X"00000000" ;
 
-  constant PKT_STATUS_GOOD                   : integer                       := 0 ;
-  constant PKT_STATUS_BAD_LCRC               : integer                       := 1 ;
-  constant PKT_STATUS_BAD_DLLP_CRC           : integer                       := 1 ;
-  constant PKT_STATUS_BAD_ECRC               : integer                       := 2 ;
-  constant PKT_STATUS_UNSUPPORTED            : integer                       := 4 ;
-  constant PKT_STATUS_NULLIFIED              : integer                       := 8 ;
+  constant PKT_STATUS_GOOD                   : integer                       :=  0 ;
+  constant PKT_STATUS_BAD_LCRC               : integer                       :=  1 ;
+  constant PKT_STATUS_BAD_DLLP_CRC           : integer                       :=  1 ;
+  constant PKT_STATUS_BAD_ECRC               : integer                       :=  2 ;
+  constant PKT_STATUS_UNSUPPORTED            : integer                       :=  4 ;
+  constant PKT_STATUS_NULLIFIED              : integer                       :=  8 ;
 
-  constant CPL_SUCCESS                       : integer                       := 0 ;
-  constant CPL_UNSUPPORTED                   : integer                       := 1 ;
-  constant CPL_CRS                           : integer                       := 2 ;
-  constant CPL_ABORT                         : integer                       := 4 ;
+  constant CPL_SUCCESS                       : integer                       :=  0 ;
+  constant CPL_UNSUPPORTED                   : integer                       :=  1 ;
+  constant CPL_CRS                           : integer                       :=  2 ;
+  constant CPL_ABORT                         : integer                       :=  4 ;
 
-  constant GETLASTCMPLSTATUS                 : integer :=  0 ;
-  constant GETLASTRXREQTAG                   : integer :=  1 ;
+  constant GETLASTCMPLSTATUS                 : integer                       :=  0 ;
+  constant GETLASTRXREQTAG                   : integer                       :=  1 ;
 
   constant MAX_PCIE_LINK_WIDTH               : integer                       := 16 ;
 
-  constant MAXLINKWIDTH                      : integer := 16 ;
+  constant MAXLINKWIDTH                      : integer                       := 16 ;
+  constant ENCODEDWIDTH                      : integer                       := 10 ;
 
   subtype TagType is integer range 0 to 256;
 

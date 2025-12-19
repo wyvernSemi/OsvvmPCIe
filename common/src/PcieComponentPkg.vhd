@@ -37,6 +37,10 @@
 library ieee ;
   use ieee.std_logic_1164.all ;
 
+library osvvm ;
+  context osvvm.OsvvmContext ;
+  use osvvm.ScoreboardPkg_slv.all ;
+
 library osvvm_common ;
   context osvvm_common.OsvvmCommonContext ;
 
@@ -71,6 +75,47 @@ package PcieComponentPkg is
       PcieLinkIn  : in   LinkType
     ) ;
   end component PcieModel ;
+
+  ------------------------------------------------------------
+  component PcieModelSerial is
+  ------------------------------------------------------------
+    generic (
+      MODEL_ID_NAME         : string  := "" ;
+      NODE_NUM              : integer := 8 ;
+      ENDPOINT              : boolean := false ;
+      REQ_ID                : integer := 0 ;
+      EN_TLP_REQ_DIGEST     : boolean := false ;
+      ENABLE_INIT_PHY       : boolean := true  ;
+      ENABLE_AUTO           : boolean := false
+    );
+    port (
+      Clk                   : in  std_logic;
+      SerClk                : in  std_logic;
+      nReset                : in  std_logic;
+
+      TransRec    : inout AddressBusRecType ;
+
+      SerLinkIn             : in  std_logic_vector;
+      SerLinkOut            : out std_logic_vector
+    );
+  end component PcieModelSerial;
+
+  ------------------------------------------------------------
+  component PcieModelSerialiser is
+  ------------------------------------------------------------
+    generic (
+      NUMOFLANES                         : integer := MAXLINKWIDTH
+    );
+    port (
+      SerClk                             : in  std_logic;
+
+      ParIn                              : in  LinkType(0 to NUMOFLANES-1)(ENCODEDWIDTH-1 downto 0) ;
+      SerOut                             : out std_logic_vector (NUMOFLANES-1 downto 0);
+
+      SerIn                              : in  std_logic_vector (NUMOFLANES-1 downto 0);
+      ParOut                             : out LinkType(0 to NUMOFLANES-1)(ENCODEDWIDTH-1 downto 0)
+    );
+  end component PcieModelSerialiser ;
 
   ------------------------------------------------------------
   component PcieMonitor is

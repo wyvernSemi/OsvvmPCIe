@@ -45,5 +45,10 @@ ChangeWorkingDirectory ../TbPcie
 analyze TbPcie.vhd
 analyze Tb_Pcie.vhd
 
+ChangeWorkingDirectory ../TbPcieSerial
+
+analyze TbPcieSerial.vhd
+analyze Tb_PcieSerial.vhd
+
 
 
