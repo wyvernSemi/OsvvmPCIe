@@ -1,6 +1,6 @@
 --
---  File Name:         PcieModel.vhd
---  Design Unit Name:  PcieModel
+--  File Name:         PcieModelSerial.vhd
+--  Design Unit Name:  PcieModelSerial
 --  Revision:          OSVVM MODELS STANDARD VERSION
 --
 --  Maintainer:        Simon Southwell      email:  simon.southwell@gmail.com
@@ -9,11 +9,12 @@
 --
 --
 --  Description:
---      Pcie GEN1/2 model
+--      Pcie GEN1/2 model wrapper module to convert 8b10b for serial
+--      (single ended)
 --
 --  Revision History:
 --    Date      Version    Description
---    07/2025   ????.??    Initial version
+--    07/2025   2026.01    Initial version
 --
 --
 --  This file is part of OSVVM.

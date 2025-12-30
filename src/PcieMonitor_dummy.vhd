@@ -1,6 +1,6 @@
 --
---  File Name:         PcieMonitor.vhd
---  Design Unit Name:  PcieMonitor
+--  File Name:         PcieMonitorDummy.vhd
+--  Design Unit Name:  PcieMonitorDummy
 --  Revision:          OSVVM MODELS STANDARD VERSION
 --
 --  Maintainer:        Simon Southwell   email:  simon.southwell@gmail.com
@@ -13,7 +13,7 @@
 --
 --  Revision History:
 --    Date      Version    Description
---    10/2025   ????.??    Initial version
+--    10/2025   2026.01    Initial version
 --
 --
 --  This file is part of OSVVM.
