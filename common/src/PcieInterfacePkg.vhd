@@ -14,12 +14,12 @@
 --
 --  Revision History:
 --    Date      Version    Description
---    09/2025   2026.01       Initial revision
+--    09/2025   2026.01    Initial revision
 --
 --
 --  This file is part of OSVVM.
 --
---  Copyright (c) 2025 by [OSVVM Authors](../../../AUTHORS.md).
+--  Copyright (c) 2026 by [OSVVM Authors](../../../AUTHORS.md).
 --
 --  Licensed under the Apache License, Version 2.0 (the "License") ;
 --  you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ package PcieInterfacePkg is
   constant PVH_STOP                          : integer := -3 ;
   constant PVH_FINISH                        : integer := -2 ;
   constant PVH_FATAL                         : integer := -1 ;
-  
+
   -- 10 bit COMMA codes
   constant PCOMMA                            : std_logic_vector (9 downto 0) := 10b"1010000011";   -- 0x283
   constant NCOMMA                            : std_logic_vector (9 downto 0) := 10b"0101111100";   -- 0x17c
@@ -323,6 +323,12 @@ package PcieInterfacePkg is
     LinkIn        : LinkType ;
   end record PcieRecType;
 
+  type PcieStatusRecType is record
+    Packet     : integer ;
+    Completion : integer ;
+    Tag        : TagType ;
+  end record PcieStatusRecType ;
+
   function has_an_x (vec : std_logic_vector) return boolean ;
   function has_all_z  (vec : std_logic_vector) return boolean ;
 
@@ -369,8 +375,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -381,8 +386,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              iByteCount      : In    integer ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -393,8 +397,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -405,8 +408,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              iByteCount      : In    integer ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -446,10 +448,8 @@ package PcieInterfacePkg is
   -- do PCIe Read Address Cycle
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
-             oTag            : Out   integer
+    variable oData           : Out   std_logic_vector ;
+             oStatus         : Out   PcieStatusRecType
   ) ;
 
   ------------------------------------------------------------
@@ -460,8 +460,7 @@ package PcieInterfacePkg is
              iAddr           : In    std_logic_vector ;
              iCid            : In    std_logic_vector ;
              iData           : In    std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -472,8 +471,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -484,8 +482,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              iData           : In    std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -496,8 +493,7 @@ package PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
 
@@ -776,7 +772,7 @@ package body PcieInterfacePkg is
     return false ;
 
   end function has_an_x ;
-  
+
   ------------------------------------------------------------
   function has_all_z (vec : std_logic_vector) return boolean is
   ------------------------------------------------------------
@@ -792,7 +788,7 @@ package body PcieInterfacePkg is
 
     return zcount = vec'length ;
 
-  end function has_all_z ; 
+  end function has_all_z ;
 
   ------------------------------------------------------------
   function selconst (cond : boolean;valtrue, valfalse : integer) return integer is
@@ -880,8 +876,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -892,8 +887,9 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemRead ;
 
@@ -904,8 +900,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              iByteCount      : In    integer ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -916,8 +911,9 @@ package body PcieInterfacePkg is
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemRead ;
 
@@ -928,8 +924,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -940,8 +935,9 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemReadLock ;
 
@@ -952,8 +948,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              iByteCount      : In    integer ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -964,8 +959,9 @@ package body PcieInterfacePkg is
 
     ReadBurst(TransactionRec, iAddr, iByteCount) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemReadLock ;
 
@@ -1033,10 +1029,8 @@ package body PcieInterfacePkg is
   -- do PCIe Read Address Cycle
   ------------------------------------------------------------
     signal   TransactionRec  : InOut AddressBusRecType ;
-             oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
-             oTag            : Out   integer
+    variable oData           : Out   std_logic_vector ;
+             oStatus         : Out   PcieStatusRecType
   ) is
   begin
 
@@ -1044,9 +1038,9 @@ package body PcieInterfacePkg is
 
     ReadData(TransactionRec, oData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
-    oTag            := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieMemReadData ;
 
@@ -1058,8 +1052,7 @@ package body PcieInterfacePkg is
              iAddr           : In    std_logic_vector ;
              iCid            : In    std_logic_vector ;
              iData           : In    std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -1069,8 +1062,9 @@ package body PcieInterfacePkg is
 
     Write(TransactionRec, iCid & iAddr, iData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieCfgSpaceWrite ;
 
@@ -1081,8 +1075,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -1092,8 +1085,9 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieCfgSpaceRead ;
 
@@ -1104,8 +1098,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              iData           : In    std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   begin
@@ -1115,8 +1108,9 @@ package body PcieInterfacePkg is
 
     Write(TransactionRec, iAddr, iData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieIoWrite ;
 
@@ -1127,8 +1121,7 @@ package body PcieInterfacePkg is
     signal   TransactionRec  : InOut AddressBusRecType ;
              iAddr           : In    std_logic_vector ;
              oData           : Out   std_logic_vector ;
-             oPktErrorStatus : Out   integer ;
-             oCmplStatus     : Out   integer ;
+             oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) is
   variable Status            : integer ;
@@ -1139,8 +1132,9 @@ package body PcieInterfacePkg is
 
     Read(TransactionRec, iAddr, oData) ;
 
-    oPktErrorStatus := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
-    oCmplStatus     := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Packet     := Get(TransactionRec.Params, PARAM_PKT_STATUS) ;
+    oStatus.Completion := Get(TransactionRec.Params, PARAM_CMPL_STATUS) ;
+    oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieIoRead ;
 

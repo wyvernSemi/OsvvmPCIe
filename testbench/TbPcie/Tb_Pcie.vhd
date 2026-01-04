@@ -98,10 +98,8 @@ begin
     variable OpRV           : RandomPType ;
     variable WaitForClockRV : RandomPType ;
     variable Data           : std_logic_vector(31 downto 0) ;
-    variable CmplStatus     : integer ;
-    variable PktErrorStatus : integer ;
-    variable CmplTag        : integer ;
     variable RemainLen      : integer ;
+    variable PcieStatus     : PcieStatusRecType ;
   begin
     -- Initialize Randomization Objects
     OpRV.InitSeed(OpRv'instance_name) ;
@@ -130,61 +128,61 @@ begin
     PcieMemWrite(UpstreamRec, X"00000106", X"cafe");
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieMemRead(UpstreamRec, X"00000080", Data(31 downto 0), PktErrorStatus, CmplStatus) ;
+    PcieMemRead(UpstreamRec, X"00000080", Data(31 downto 0), PcieStatus) ;
 
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #1: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #1: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #1: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #1: ") ;
     AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieMemRead(UpstreamRec,  X"00000106", Data(15 downto 0), PktErrorStatus, CmplStatus) ;
+    PcieMemRead(UpstreamRec,  X"00000106", Data(15 downto 0), PcieStatus) ;
 
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #2: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #2: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #2: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #2: ") ;
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #2: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** configuration writes and reads *****
-    --                 TransRec    Offset    CID      Data         Status      Tag
-    PcieCfgSpaceWrite(UpstreamRec, X"0010",  X"0000", X"ffffffff", PktErrorStatus, CmplStatus, 128) ; -- Set the tag
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Config Space Write Error Status #1: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config Space Write Completion Status #1: ") ;
+    --                 TransRec    Offset    CID      Data         Status     Tag
+    PcieCfgSpaceWrite(UpstreamRec, X"0010",  X"0000", X"ffffffff", PcieStatus, 128) ; -- Set the tag
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Write Error Status #1: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieCfgSpaceWrite(UpstreamRec, X"0014", X"0000", X"ffffffff", PktErrorStatus, CmplStatus) ;
+    PcieCfgSpaceWrite(UpstreamRec, X"0014", X"0000", X"ffffffff", PcieStatus) ;
 
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Config Space Write Error Status #2: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config Space Write Completion status #2: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Write Error Status #2: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion status #2: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieCfgSpaceRead(UpstreamRec, X"00000010", Data(31 downto 0), PktErrorStatus, CmplStatus) ;
+    PcieCfgSpaceRead(UpstreamRec, X"00000010", Data(31 downto 0), PcieStatus) ;
 
     AffirmIfEqual(Data(31 downto 0), X"fffff008", "Config Space Read Completion #3: ") ;
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Config Space Read Error Status #3: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config Space Read Completion Status #3: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #3: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Read Completion Status #3: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieCfgSpaceRead(UpstreamRec, X"00000014", Data(31 downto 0), PktErrorStatus, CmplStatus) ;
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Config Space Read Error Status #4: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config Space Read Completion Status #4: ") ;
+    PcieCfgSpaceRead(UpstreamRec, X"00000014", Data(31 downto 0), PcieStatus) ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #4: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Read Completion Status #4: ") ;
     AffirmIfEqual(Data(31 downto 0), X"fffffc08", "Read data #4: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- Set BAR0 to be at 0x00010000, with bus =2, device = 0, func = 0
-    PcieCfgSpaceWrite(UpstreamRec, X"0010", X"02_0_0", X"0001_0000", PktErrorStatus, CmplStatus) ;
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Config Space Read Error Status #5: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Config Space Write Completion Status #5: ") ;
+    PcieCfgSpaceWrite(UpstreamRec, X"0010", X"02_0_0", X"0001_0000", PcieStatus) ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #5: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #5: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** I/O writes and reads *****
 
-    PcieIoWrite(UpstreamRec, X"12345678", X"87654321", PktErrorStatus, CmplStatus) ;
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "I/O Write Error Status #1: ") ;
-    AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "I/O Write Completion Status #1: ") ;
+    PcieIoWrite(UpstreamRec, X"12345678", X"87654321", PcieStatus) ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "I/O Write Error Status #1: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_UNSUPPORTED, "I/O Write Completion Status #1: ") ;
 
-    PcieIoRead(UpstreamRec,  X"12345678", Data(31 downto 0), PktErrorStatus, CmplStatus) ;
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "I/O Read Error Status #1: ") ;
-    AffirmIfEqual(CmplStatus, CPL_UNSUPPORTED, "I/O Read Completion Status #1: ") ;
+    PcieIoRead(UpstreamRec,  X"12345678", Data(31 downto 0), PcieStatus) ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "I/O Read Error Status #1: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_UNSUPPORTED, "I/O Read Completion Status #1: ") ;
 
     -- ***** messages *****
 
@@ -204,9 +202,9 @@ begin
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- Read back bytes from 0x00010201
-    PcieMemRead(UpstreamRec, X"0001_0201", 126, PktErrorStatus, CmplStatus) ;
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Burst Read Error Status #1: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Burst Read Completion Status #1: ") ;
+    PcieMemRead(UpstreamRec, X"0001_0201", 126, PcieStatus) ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Burst Read Error Status #1: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Burst Read Completion Status #1: ") ;
 
     for i in 0 to 125 loop
       Pop(UpstreamRec.ReadBurstFifo, Data(7 downto 0)) ;
@@ -223,33 +221,33 @@ begin
     -- Expect completions in any order
     for cmplidx in 0 to 1 loop
 
-      PcieMemReadData(UpstreamRec, Data(31 downto 0), PktErrorStatus, CmplStatus, CmplTag);
+      PcieMemReadData(UpstreamRec, Data(31 downto 0), PcieStatus);
 
-      AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #3: ") ;
-      AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #3: ") ;
+      AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #3: ") ;
+      AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #3: ") ;
 
-      if CmplTag = 16#a0# then
+      if PcieStatus.Tag = 16#a0# then
         AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #3: ") ;
-      elsif CmplTag = 16#a1# then
+      elsif PcieStatus.Tag = 16#a1# then
         AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #3: ") ;
       else
-        Alert("Read data #3 unexpected TAG " & integer'image(CmplTag) & " Read data #3", ERROR) ;
+        Alert("Read data #3 unexpected TAG " & integer'image(PcieStatus.Tag) & " Read data #3", ERROR) ;
       end if ;
     end loop ;
 
     -- ***** Locked read *****
 
-    PcieMemReadLock(UpstreamRec,  X"00000080", Data, PktErrorStatus, CmplStatus) ;
+    PcieMemReadLock(UpstreamRec,  X"00000080", Data, PcieStatus) ;
 
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #5: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #5: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #5: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #5: ") ;
     AffirmIfEqual(Data, X"900dc0de", "Read data #6: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieMemReadLock(UpstreamRec,  X"00000106", Data(15 downto 0), PktErrorStatus, CmplStatus) ;
+    PcieMemReadLock(UpstreamRec,  X"00000106", Data(15 downto 0), PcieStatus) ;
 
-    AffirmIfEqual(PktErrorStatus, PKT_STATUS_GOOD, "Read Error Status #6: ") ;
-    AffirmIfEqual(CmplStatus, CPL_SUCCESS, "Read Completion Status #6: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #6: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #6: ") ;
     AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #6: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
@@ -804,11 +802,11 @@ begin
       WaitForClock(DownstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     end loop ;
-    
+
     -- ******************************************
     -- ************* locked reads ***************
     -- ******************************************
-    
+
     -- Wait for the reception of a transaction
     PcieGetTrans(DownstreamRec, TransType, PktErrorStatus);
 
