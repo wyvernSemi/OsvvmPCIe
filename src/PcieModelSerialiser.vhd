@@ -84,7 +84,7 @@ begin
       if SerialCount = 0 then
         SerialCount <= ENCODEDWIDTH-1;
         for idx in 0 to NUMOFLANES-1 loop
-          if not has_an_x(ParIn(idx)) then
+          if not is_X(ParIn(idx)) then
             SerialShift(idx) <= ParIn(idx);
           end if;
         end loop;

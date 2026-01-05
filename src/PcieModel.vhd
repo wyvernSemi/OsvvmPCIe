@@ -233,7 +233,7 @@ begin
               LinkOutVec(LinkOffset) <= SafeResize(std_logic_vector(to_signed(VPData, 32)), LinkOutVec(LinkOffset)'length) xor InvertOutVec ;
             end if;
 
-            if not has_an_x(LinkInVec(LinkOffset)) then
+            if not is_X(LinkInVec(LinkOffset)) then
               RdData := SafeResize(LinkInVec(LinkOffset) xor InvertInVec, RdData'length) ;
             end if ;
 
@@ -416,7 +416,7 @@ begin
     for idx in 0 to LINKWIDTH-1 loop
 
       ElecIdleIn(idx)   <= '1' when has_all_z(PcieLinkIn(idx))  else '0';
-      RxDetect(idx)     <= '1' when has_an_x(PcieLinkOut(idx)) else '0';
+      RxDetect(idx)     <= '1' when is_X(PcieLinkOut(idx)) else '0';
       LinkInVec(idx)    <= PcieLinkIn(LINKWIDTH - 1 - idx) when ReverseIn = '1' else PcieLinkIn(idx) after 1 ps ;
       PcieLinkOut(idx)  <= ELECIDLE when ElecIdleOut(0)  = '1' else LinkOutVec(LINKWIDTH - 1 - idx) when ReverseOut else LinkOutVec(idx) ;
 
