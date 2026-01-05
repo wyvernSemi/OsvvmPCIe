@@ -59,7 +59,7 @@ architecture TestHarness of TbPcie is
   constant EN_TLP_REQ_DIGEST : boolean := false ;
   constant PIPE              : boolean := true ;
   constant PCIE_LINK_WIDTH   : integer := 2 ; -- valid values: 1, 2, 4, 8 and 16
-  constant PCIE_LANE_WIDTH   : integer := selconst(PIPE, 9, 10) ; -- 9 when PIPE else 10
+  constant PCIE_LANE_WIDTH   : integer := IfElse(PIPE, 9, 10) ; -- 9 when PIPE else 10
   
   -- Downstream (EP) device configuration
   constant DS_NODE_NUM       : integer := 63 ;
@@ -83,8 +83,8 @@ architecture TestHarness of TbPcie is
 
 --  -- PCIe Functional Interface
   signal   PcieDnLink, PcieUpLink : PcieRecType(
-    LinkOut (0 to MAX_PCIE_LINK_WIDTH-1)(PCIE_LANE_WIDTH-1 downto 0),
-    LinkIn  (0 to MAX_PCIE_LINK_WIDTH-1)(PCIE_LANE_WIDTH-1 downto 0)
+    LinkOut (0 to MAXLINKWIDTH-1)(PCIE_LANE_WIDTH-1 downto 0),
+    LinkIn  (0 to MAXLINKWIDTH-1)(PCIE_LANE_WIDTH-1 downto 0)
 
   ) ;
 

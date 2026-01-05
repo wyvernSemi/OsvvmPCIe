@@ -59,7 +59,7 @@ architecture TestHarness of TbPcieSerial is
   constant EN_TLP_REQ_DIGEST : boolean := false ;
   constant PIPE              : boolean := false ;
   constant PCIE_LINK_WIDTH   : integer := 1 ; -- valid values: 1, 2, 4, 8 and 16
-  constant PCIE_LANE_WIDTH   : integer := selconst(PIPE, 9, 10) ; -- 9 when PIPE else 10
+  constant PCIE_LANE_WIDTH   : integer := IfElse(PIPE, 9, 10) ; -- 9 when PIPE else 10
   
   -- Downstream (EP) device configuration
   constant DS_NODE_NUM       : integer := 63 ;
