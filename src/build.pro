@@ -32,6 +32,9 @@
 #
 
 library osvvm_pcie
+analyze ./PcieInterfacePkg.vhd
+analyze ./PcieOptionsPkg.vhd
+analyze ./PcieComponentPkg.vhd
 analyze ./PcieModel.vhd
 analyze ./PcieMonitor_dummy.vhd
 analyze ./PciePassThru.vhd
