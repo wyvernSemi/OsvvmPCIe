@@ -39,7 +39,6 @@ library ieee ;
   use ieee.numeric_std.all ;
   use ieee.numeric_std_unsigned.all ;
 
-
 library osvvm ;
   context osvvm.OsvvmContext ;
   use osvvm.ScoreboardPkg_slv.all ;
@@ -49,7 +48,15 @@ library osvvm_common ;
 
 package PcieInterfacePkg is
 
-  -- **** If the below values change, also update ../../code/pcieVcInterface.h ****
+  ------------------------------------------------------------
+  -- Memory map offsets of PcieModel registers
+  ------------------------------------------------------------
+
+ -- **** if the ../include/pcie_vhost_map.h values are updated, update the values below to match ****
+  constant PVH_STOP                          : integer := -3 ;
+  constant PVH_FINISH                        : integer := -2 ;
+  constant PVH_FATAL                         : integer := -1 ;
+
   constant LINKADDR0                         : integer :=  0 ;
   constant LINKADDR1                         : integer :=  1 ;
   constant LINKADDR2                         : integer :=  2 ;
@@ -74,6 +81,12 @@ package PcieInterfacePkg is
   constant CLK_COUNT                         : integer := 204 ;
   constant LINK_STATE                        : integer := 205 ;
   constant RESET_STATE                       : integer := 206 ;
+
+  --   ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^
+  -- **** if the ../include/pcie_vhost_map.h values are updated, update the values above to match ****
+
+  -- **** If the below values change, also update ../../code/pcieVcInterface.h ****
+  --   v    v    v    v    v    v    v    v    v    v    v    v    v    v    v    v
 
   constant REQID_ADDR                        : integer := 300 ;
   constant PIPE_ADDR                         : integer := 301 ;
@@ -101,15 +114,55 @@ package PcieInterfacePkg is
   constant POPRDATA                          : integer := 417 ;
   constant PUSHRDATA                         : integer := 418 ;
 
-  constant PVH_STOP                          : integer := -3 ;
-  constant PVH_FINISH                        : integer := -2 ;
-  constant PVH_FATAL                         : integer := -1 ;
+  ------------------------------------------------------------
+  -- SetModelOptions for PCIe VC
+  ------------------------------------------------------------
+  constant NULLOPTVALUE                      : integer := -1 ;
+  constant VCOPTIONSTART                     : integer :=  1000 ;
 
+  constant SETCFGSPC                         : integer :=  1001 ;
+  constant SETCFGSPCMASK                     : integer :=  1002 ;
+  constant SETCFGSPCOFFSET                   : integer :=  1003 ;
+  constant SETMEMADDRLO                      : integer :=  1004 ;
+  constant SETMEMADDRHI                      : integer :=  1005 ;
+  constant SETMEMDATA                        : integer :=  1006 ;
+  constant SETMEMENDIANNESS                  : integer :=  1007 ;
+
+  ------------------------------------------------------------
+  -- GetModelOptions for internal memory back door access
+  ------------------------------------------------------------
+  constant GETMEMDATA                        : integer :=  2000 ;
+
+  ------------------------------------------------------------
+  -- EXTEND_OP Options
+  ------------------------------------------------------------
+  constant WAIT_FOR_TRANS                    : integer := 0;
+  constant TRY                               : integer := 1;
+
+  ------------------------------------------------------------
+  -- EXTEND_DIRECTIVE_OP options
+  ------------------------------------------------------------
+  constant INITDLL                           : integer := 0 ;
+  constant INITPHY                           : integer := 1 ;
+
+  ------------------------------------------------------------
+  -- Memory endian settings
+  ------------------------------------------------------------
+  constant LITTLE_END                        : integer := 1 ;
+  constant BIG_END                           : integer := 0 ;
+
+  --   ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^
+  -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
+
+  ------------------------------------------------------------
   -- 10 bit COMMA codes
+  ------------------------------------------------------------
   constant PCOMMA                            : std_logic_vector (9 downto 0) := 10b"1010000011";   -- 0x283
   constant NCOMMA                            : std_logic_vector (9 downto 0) := 10b"0101111100";   -- 0x17c
 
+  ------------------------------------------------------------
   -- SetModelOptions for pcievhost model
+  ------------------------------------------------------------
   constant CONFIG_FC_HDR_RATE                : integer :=  0 ;
   constant CONFIG_FC_DATA_RATE               : integer :=  1 ;
 
@@ -166,35 +219,16 @@ package PcieInterfacePkg is
 
   constant CONFIG_DISP_BCK_NODE_NUM          : integer := 38 ;
 
-  -- SetModelOptions for PCIe VC
-  constant NULLOPTVALUE                      : integer := -1 ;
-  constant VCOPTIONSTART                     : integer :=  1000 ;
-
-  constant SETCFGSPC                         : integer :=  1001 ;
-  constant SETCFGSPCMASK                     : integer :=  1002 ;
-  constant SETCFGSPCOFFSET                   : integer :=  1003 ;
-  constant SETMEMADDRLO                      : integer :=  1004 ;
-  constant SETMEMADDRHI                      : integer :=  1005 ;
-  constant SETMEMDATA                        : integer :=  1006 ;
-  constant SETMEMENDIANNESS                  : integer :=  1007 ;
-
-  -- EXTEND_OP Options
-  constant WAIT_FOR_TRANS                    : integer := 0;
-  constant TRY                               : integer := 1;
-
-  -- EXTEND_DIRECTIVE_OP options
-  constant INITDLL                           : integer := 0 ;
-  constant INITPHY                           : integer := 1 ;
-
-  -- GetModelOptions for internal memory backdoor access
-  constant GETMEMDATA                        : integer :=  2000 ;
-
-  -- **** If the above values change, also update ../../code/pcieVcInterface.h ****
-
+  ------------------------------------------------------------
+  -- Simulation control
+  ------------------------------------------------------------
   constant FREERUNSIM                        : integer :=  0 ;
   constant STOPSIM                           : integer :=  1 ;
   constant FINISHSIM                         : integer :=  2 ;
 
+  ------------------------------------------------------------
+  -- TLP packet type
+  ------------------------------------------------------------
   constant MEM_TRANS                         : integer :=  0 ;
   constant IO_TRANS                          : integer :=  1 ;
   constant CFG_SPC_TRANS                     : integer :=  2 ;
@@ -202,12 +236,15 @@ package PcieInterfacePkg is
   constant CPL_TRANS                         : integer :=  4 ;
   constant PART_CPL_TRANS                    : integer :=  5 ;
 
+  ------------------------------------------------------------
+  -- TLP request tag auto-generation value
+  ------------------------------------------------------------
   constant TLP_TAG_AUTO                      : integer :=  16#100# ;
 
-  constant LITTLE_END                        : integer := 1 ;
-  constant BIG_END                           : integer := 0 ;
-
-  -- Parameters when generating transactions and returned status
+  ------------------------------------------------------------
+  -- Parameters when generating transactions and returned
+  -- status
+  ------------------------------------------------------------
   constant PARAM_TRANS_MODE                  : integer := 0 ;
   constant PARAM_RDLCK                       : integer := 1 ;
   constant PARAM_CMPLRID                     : integer := 2 ;
@@ -246,7 +283,9 @@ package PcieInterfacePkg is
   -- PARAM_REQ_ADDRHI not included in parameter count but still required for decoding
   constant PARAM_REQ_ADDRHI                  : integer := PARAM_REQ_ADDR + 1;
 
+  ------------------------------------------------------------
   -- TLP types
+  ------------------------------------------------------------
   constant TL_MRD32                          : integer := 16#00# ;
   constant TL_MRD64                          : integer := 16#20# ;
   constant TL_MRDLCK32                       : integer := 16#01# ;
@@ -266,8 +305,9 @@ package PcieInterfacePkg is
   constant TL_CPLLK                          : integer := 16#0b# ;
   constant TL_CPLDLK                         : integer := 16#4b# ;
 
+  ------------------------------------------------------------
   -- PCIe Message codes
-
+  ------------------------------------------------------------
   constant MSG_UNLOCK                        : std_logic_vector(31 downto 0) := X"00000000" ;
 
   constant MSG_ASSERT_INTA                   : std_logic_vector(31 downto 0) := X"00000020" ;
@@ -294,6 +334,9 @@ package PcieInterfacePkg is
 
   constant MSG_DATA_NULL                     : std_logic_vector(31 downto 0) := X"00000000" ;
 
+  ------------------------------------------------------------
+  -- Completion packet error status values
+  ------------------------------------------------------------
   constant PKT_STATUS_GOOD                   : integer                       :=  0 ;
   constant PKT_STATUS_BAD_LCRC               : integer                       :=  1 ;
   constant PKT_STATUS_BAD_DLLP_CRC           : integer                       :=  1 ;
@@ -301,38 +344,55 @@ package PcieInterfacePkg is
   constant PKT_STATUS_UNSUPPORTED            : integer                       :=  4 ;
   constant PKT_STATUS_NULLIFIED              : integer                       :=  8 ;
 
+  ------------------------------------------------------------
+  -- Completion status values
+  ------------------------------------------------------------
   constant CPL_SUCCESS                       : integer                       :=  0 ;
   constant CPL_UNSUPPORTED                   : integer                       :=  1 ;
   constant CPL_CRS                           : integer                       :=  2 ;
   constant CPL_ABORT                         : integer                       :=  4 ;
 
-  constant GETLASTCMPLSTATUS                 : integer                       :=  0 ;
-  constant GETLASTRXREQTAG                   : integer                       :=  1 ;
-
-  constant MAX_PCIE_LINK_WIDTH               : integer                       := 16 ;
-
+  ------------------------------------------------------------
+  -- Link dimension limits
+  ------------------------------------------------------------
   constant MAXLINKWIDTH                      : integer                       := 16 ;
   constant ENCODEDWIDTH                      : integer                       := 10 ;
 
+  ------------------------------------------------------------
+  -- Sub-type for setting tag of request TLP, or specifying
+  -- model to auto-generate
+  ------------------------------------------------------------
   subtype TagType is integer range 0 to 256;
 
+  ------------------------------------------------------------
+  -- Basic uni-directional PCIe link type
+  ------------------------------------------------------------
   type LinkType is array (natural range <>) of std_logic_vector ;
 
+  ------------------------------------------------------------
   type PcieRecType is record
+  -- PCIe link type
+  ------------------------------------------------------------
     LinkOut       : LinkType ;
     LinkIn        : LinkType ;
   end record PcieRecType;
 
+
+  ------------------------------------------------------------
   type PcieStatusRecType is record
+  -- Non-posted TLP completion status type
+  ------------------------------------------------------------
     Packet     : integer ;
     Completion : integer ;
     Tag        : TagType ;
   end record PcieStatusRecType ;
 
-  function has_an_x (vec : std_logic_vector) return boolean ;
-  function has_all_z  (vec : std_logic_vector) return boolean ;
-
-  function selconst (cond : boolean; valtrue, valfalse : integer) return integer ;
+  ------------------------------------------------------------
+  function has_all_z  (
+  -- Function to flag that *all* link inputs are Z
+  ------------------------------------------------------------
+    vec                     : std_logic_vector
+  ) return boolean ;
 
   ------------------------------------------------------------
   procedure PcieInitLink (
@@ -758,22 +818,6 @@ end package PcieInterfacePkg ;
 package body PcieInterfacePkg is
 
   ------------------------------------------------------------
-  function has_an_x (vec : std_logic_vector) return boolean is
-  ------------------------------------------------------------
-  begin
-
-    for idx in vec'range loop
-      case vec(idx) is
-        when 'U' | 'X' | 'Z' | 'W' | '-' => return true ;
-        when others                      => null ;
-      end case;
-    end loop;
-
-    return false ;
-
-  end function has_an_x ;
-
-  ------------------------------------------------------------
   function has_all_z (vec : std_logic_vector) return boolean is
   ------------------------------------------------------------
   variable zcount : integer := 0 ;
@@ -789,17 +833,6 @@ package body PcieInterfacePkg is
     return zcount = vec'length ;
 
   end function has_all_z ;
-
-  ------------------------------------------------------------
-  function selconst (cond : boolean;valtrue, valfalse : integer) return integer is
-  ------------------------------------------------------------
-  begin
-    if cond then
-      return valtrue ;
-    else
-      return valfalse ;
-    end if ;
-  end function selconst;
 
   ------------------------------------------------------------
   procedure PcieInitLink (
