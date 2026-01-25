@@ -50,5 +50,12 @@ ChangeWorkingDirectory ../TbPcieSerial
 analyze TbPcieSerial.vhd
 analyze Tb_PcieSerial.vhd
 
+ChangeWorkingDirectory ../TbPcieAltera
+
+build ../thirdparty/alterapcie/
+
+analyze TbPcieAltera.vhd
+analyze Tb_PcieAltera.vhd
+
 
 
