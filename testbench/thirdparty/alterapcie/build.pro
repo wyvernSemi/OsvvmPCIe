@@ -48,6 +48,9 @@ if {[DirectoryExists altpcie_cv_hip_avmm_hwtcl]} {
   
   # Source the build script
   if {($::osvvm::ToolName eq "ActiveHDL") || ($::osvvm::ToolName eq "VSimSA") || ($::osvvm::ToolName eq "RivieraPRO")} {
+  
+    set USER_DEFINED_VERILOG_COMPILE_OPTIONS [AlteraLibArgsVlog]
+    set USER_DEFINED_VHDL_COMPILE_OPTIONS [AlteraLibArgsVhdl]
     source $QSYS_SIMDIR/aldec/rivierapro_setup.tcl
   } else {
     source $QSYS_SIMDIR/mentor/msim_setup.tcl
@@ -61,7 +64,7 @@ if {[DirectoryExists altpcie_cv_hip_avmm_hwtcl]} {
   
   # Compile the wrapper
   
-  eval vlog $QSYS_SIMDIR/../Pcie1EpAvmm.v -work pcie_cv_hip_avmm_0
+  eval vlog -l pcie_cv_hip_avmm_0 $QSYS_SIMDIR/../Pcie1EpAvmm.v -work pcie_cv_hip_avmm_0
 }
 
 #

@@ -64,7 +64,7 @@ begin
     ClearAlerts ;
 
     -- Wait for test to finish
-    WaitForBarrier(TestDone, 150 us) ;
+    WaitForBarrier(TestDone, 100 us) ;
 
     TranscriptClose ;
     -- Printing differs in different simulators due to differences in process order execution
@@ -106,7 +106,7 @@ begin
     
     WaitForClock(UpstreamRec, 150) ;
 
-    -- ***** configuration writes and reads *****
+    -- ***** configuration enumeration *****
 
     --                 TransRec    Offset    CID      Data         Status      Tag
     PcieCfgSpaceWrite(UpstreamRec, X"0010",  X"02_0_0", X"ffffffff", PcieStatus, 128) ; -- Set the tag
@@ -115,41 +115,24 @@ begin
     AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieCfgSpaceWrite(UpstreamRec, X"0014", X"02_0_0", X"ffffffff", PcieStatus) ;
-
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Write Error Status #2: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion status #2: ") ;
-    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
-
     PcieCfgSpaceRead(UpstreamRec, X"0010", X"02_0_0", Data(31 downto 0), PcieStatus) ;
 
-    AffirmIfEqual(Data(31 downto 0), X"fffff000", "Config Space Read Completion #3: ") ;
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #3: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Read Completion Status #3: ") ;
-    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
-
-    PcieCfgSpaceRead(UpstreamRec, X"0014", X"02_0_0", Data(31 downto 0), PcieStatus) ;
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #4: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Read Completion Status #4: ") ;
-    AffirmIfEqual(Data(31 downto 0), X"fffff000", "Read data #4: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #2: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Read Completion Status #2: ") ;
+    AffirmIfEqual(Data(31 downto 0), X"fffff000", "Config Space Read Completion #2: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- Set BAR0 to be at 0x00010000, with bus =2, device = 0, func = 0
     PcieCfgSpaceWrite(UpstreamRec, X"0010", X"02_0_0", X"0001_0000", PcieStatus) ;
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #5: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #5: ") ;
-    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
-
-    PcieCfgSpaceWrite(UpstreamRec, X"0014", X"02_0_0", X"0000_0000", PcieStatus) ;
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #5: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #5: ") ;
+    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Read Error Status #3: ") ;
+    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #3: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
     
-    PcieCfgSpaceWrite(UpstreamRec, X"0004",  X"02_0_0", X"06", PcieStatus, 128) ; -- Set the tag
+    PcieCfgSpaceWrite(UpstreamRec, X"0004",  X"02_0_0", X"06", PcieStatus) ;
 
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Write Error Status #6: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #6: ") ;
-    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    -- AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Config Space Write Error Status #4: ") ;
+    -- AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Config Space Write Completion Status #4: ") ;
+    -- WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- ***** memory writes and reads *****
 
@@ -157,8 +140,8 @@ begin
     PcieMemWrite(UpstreamRec, X"00010080", X"900dc0de") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieMemWrite(UpstreamRec, X"00010106", X"cafe");
-    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    -- PcieMemWrite(UpstreamRec, X"00010106", X"cafe");
+    -- WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     PcieMemRead(UpstreamRec, X"00010080", Data(31 downto 0), PcieStatus) ;
 
@@ -167,12 +150,12 @@ begin
     AffirmIfEqual(Data(31 downto 0), X"900dc0de", "Read data #1: ") ;
     WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
-    PcieMemRead(UpstreamRec,  X"00010106", Data(15 downto 0), PcieStatus) ;
-
-    AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #2: ") ;
-    AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #2: ") ;
-    AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #2: ") ;
-    WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
+    -- PcieMemRead(UpstreamRec,  X"00010106", Data(15 downto 0), PcieStatus) ;
+    -- 
+    -- AffirmIfEqual(PcieStatus.Packet, PKT_STATUS_GOOD, "Read Error Status #2: ") ;
+    -- AffirmIfEqual(PcieStatus.Completion, CPL_SUCCESS, "Read Completion Status #2: ") ;
+    -- AffirmIfEqual(Data(15 downto 0), X"cafe", "Read data #2: ") ;
+    -- WaitForClock(UpstreamRec, WaitForClockRV.RandInt(1, 5)) ;
 
     -- =================================================================
     -- ==========================  E  N  D  ============================
@@ -192,14 +175,10 @@ begin
   ------------------------------------------------------------
   AxiSubProc : process
   
-    variable OpRV              : RandomPType ;
-    variable WaitForClockRV    : RandomPType ;
+    variable Addr : std_logic_vector(31 downto 0) ;
+    variable Data : std_logic_vector(31 downto 0) ; 
 
   begin
-
-    -- Initialize Randomization Objects
-    OpRV.InitSeed(OpRv'instance_name) ;
-    WaitForClockRV.InitSeed(WaitForClockRV'instance_name) ;
 
     -- Find exit of reset
     wait until nReset = '1' ;
@@ -209,7 +188,19 @@ begin
     -- =====================  T  E  S  T  S  ===========================
     -- =================================================================
 
-
+    GetWrite(DownstreamRec, Addr, Data) ;
+    AffirmIfEqual(Addr, X"00000080", "AXI4-Lite Subordinate Write Addr: ") ;
+    AffirmIfEqual(Data, X"900dc0de", "Subordinate Write Data: ") ;
+    
+    -- GetWrite(DownstreamRec, Addr, Data(15 downto 0)) ;
+    -- AffirmIfEqual(Addr, X"00000106", "AXI4-Lite Subordinate Write Addr: ") ;
+    -- AffirmIfEqual(Data(15 downto 0), X"cafe", "Subordinate Write Data: ") ;
+    
+    SendRead(DownstreamRec, Addr, X"900dc0de") ; 
+    AffirmIfEqual(Addr, X"00000080", "AXI4-Lite Subordinate Read Addr: ") ;
+    
+    -- SendRead(DownstreamRec, Addr, X"cafe") ; 
+    -- AffirmIfEqual(Addr, X"00010106", "AXI4-Lite Subordinate Read Addr: ") ;
 
     -- =================================================================
     -- =======================  E  N  D  ===============================

@@ -34,7 +34,7 @@
 //  limitations under the License.
 //
 
-module Pcie1EpAvmm
+module pcie1epavmm
 (
 
   input                RefClk,
@@ -44,22 +44,13 @@ module Pcie1EpAvmm
   // BAR0 Avalon memory mapped master
   output [31:0]        Bar0Address,
   output               Bar0Read,
-  output               Bar0WaitRequest,
+  input                Bar0WaitRequest,
   output               Bar0Write,
   input                Bar0ReadDataValid,
-  input  [31:0]        Bar0ReadData,
-  output [31:0]        Bar0WriteData,
-  output  [3:0]        Bar0ByteEnable,
-
-  // BAR1 Avalon memory mapped master
-  output [31:0]        Bar1Address,
-  output               Bar1Read,
-  output               Bar1WaitRequest,
-  output               Bar1Write,
-  input                Bar1ReadDataValid,
-  input  [31:0]        Bar1ReadData,
-  output [31:0]        Bar1WriteData,
-  output  [3:0]        Bar1ByteEnable,
+  input  [63:0]        Bar0ReadData,
+  output [63:0]        Bar0WriteData,
+  output  [7:0]        Bar0ByteEnable,
+  output  [6:0]        Bar0BurstCount,
 
   // PIPE lane 0
   output  [7:0]        TxData,
@@ -84,9 +75,13 @@ module Pcie1EpAvmm
 
   // Useful debug signals
   output [4:0]         LtssmState,
-  output [2:0]         EidleInferSel
+  output [2:0]         EidleInferSel,
+  output               coreclkout
+  
 );
 
+localparam reconfig_to_xcvr_width   = 350;
+localparam reconfig_from_xcvr_width = 230;
 
   altpcie_cv_hip_avmm_hwtcl # (
 
@@ -98,10 +93,10 @@ module Pcie1EpAvmm
     .single_rx_detect_hwtcl                            (1),
     .use_crc_forwarding_hwtcl                          (0),
     .ast_width_hwtcl                                   ("rx_tx_64"),
-    .gen123_lane_rate_mode_hwtcl                       ("gen1"),           // ???
+    .gen123_lane_rate_mode_hwtcl                       ("gen1"),
     .lane_mask_hwtcl                                   ("x1"),
     .disable_link_x2_support_hwtcl                     ("false"),
-    .hip_hard_reset_hwtcl                              ("enable"),
+    .hip_hard_reset_hwtcl                              (1),
     .wrong_device_id_hwtcl                             ("disable"),
     .data_pack_rx_hwtcl                                ("disable"),
     .use_ast_parity                                    (0),
@@ -110,7 +105,7 @@ module Pcie1EpAvmm
     .deskew_comma_hwtcl                                ("skp_eieos_deskw"),
     .port_link_number_hwtcl                            (0),
     .device_number_hwtcl                               (0),
-    .bypass_clk_switch_hwtcl                           ("disabled"),
+    .bypass_clk_switch_hwtcl                           ("disable"),
     .pipex1_debug_sel_hwtcl                            ("disable"),
     .pclk_out_sel_hwtcl                                ("pclk"),
     .vendor_id_hwtcl                                   (5372),
@@ -195,7 +190,7 @@ module Pcie1EpAvmm
     .bar1_io_space_hwtcl                               ("Disabled"),
     .bar1_64bit_mem_space_hwtcl                        ("Disabled"),
     .bar1_prefetchable_hwtcl                           ("Disabled"),
-    .bar1_size_mask_hwtcl                              (12),
+    .bar1_size_mask_hwtcl                              (0),
     .bar2_io_space_hwtcl                               ("Disabled"),
     .bar2_64bit_mem_space_hwtcl                        ("Disabled"),
     .bar2_prefetchable_hwtcl                           ("Disabled"),
@@ -222,7 +217,7 @@ module Pcie1EpAvmm
     .rx_l0s_count_idl_hwtcl                            (0),
     .cdc_dummy_insert_limit_hwtcl                      (11),
     .ei_delay_powerdown_count_hwtcl                    (10),
-    .millisecond_cycle_count_hwtcl                     (250000), //(248500),
+    .millisecond_cycle_count_hwtcl                     (248500),
     .skp_os_schedule_count_hwtcl                       (0),
     .fc_init_timer_hwtcl                               (1024),
     .l01_entry_latency_hwtcl                           (31),
@@ -244,16 +239,16 @@ module Pcie1EpAvmm
     .vc0_rx_buffer_memory_settings_hwtcl               (0),
     .in_cvp_mode_hwtcl                                 (0),
     .slotclkcfg_hwtcl                                  (1),
-    .reconfig_to_xcvr_width                            (140),
+    .reconfig_to_xcvr_width                            (reconfig_to_xcvr_width),
     .set_pld_clk_x1_625MHz_hwtcl                       (0),
-    .reconfig_from_xcvr_width                          (92),
+    .reconfig_from_xcvr_width                          (reconfig_from_xcvr_width),
     .enable_l0s_aspm_hwtcl                             ("true"),
     .cpl_spc_header_hwtcl                              (67),
     .cpl_spc_data_hwtcl                                (269),
     .coreclkout_hip_phaseshift_hwtcl                   ("0 ps"),
     .pldclk_hip_phase_shift_hwtcl                      ("0 ps"),
     .port_width_be_hwtcl                               (8),
-    .port_width_data_hwtcl                             (64),
+    .port_width_data_hwtcl                             (32),
     .reserved_debug_hwtcl                              (0),
     .hip_reconfig_hwtcl                                (0),
     .user_id_hwtcl                                     (0),
@@ -269,7 +264,7 @@ module Pcie1EpAvmm
     .cvp_clk_reset_hwtcl                               ("false"),
     .cseb_cpl_status_during_cvp_hwtcl                  ("config_retry_status"),
     .core_clk_sel_hwtcl                                ("pld_clk"),
-    
+
     .rpre_emph_a_val_hwtcl                             (11),
     .rpre_emph_b_val_hwtcl                             (0),
     .rpre_emph_c_val_hwtcl                             (22),
@@ -281,7 +276,7 @@ module Pcie1EpAvmm
     .rvod_sel_d_val_hwtcl                              (50),
     .rvod_sel_e_val_hwtcl                              (9),
     .register_pipe_signals_hwtcl                       ("true"),
-    .no_command_completed_hwtcl                        ("false"),
+    .no_command_completed_hwtcl                        ("true"),
     .use_tl_cfg_sync_hwtcl                             (1),
 
     /// Bridge Parameters
@@ -289,53 +284,53 @@ module Pcie1EpAvmm
     .CG_RXM_IRQ_NUM                                    (16),
     .CB_PCIE_MODE                                      (1),
     .CB_PCIE_RX_LITE                                   (0),
-    .CB_RXM_DATA_WIDTH                                 (32),
+    //.CB_RXM_DATA_WIDTH                                 (32),
     .CB_A2P_ADDR_MAP_IS_FIXED                          (0),
     .CB_A2P_ADDR_MAP_NUM_ENTRIES                       (2),
     .CG_AVALON_S_ADDR_WIDTH                            (13),
     .CG_IMPL_CRA_AV_SLAVE_PORT                         (0),
     .a2p_pass_thru_bits                                (12),
-    .CB_P2A_AVALON_ADDR_B0                             (32'h00000000),
-    .CB_P2A_AVALON_ADDR_B1                             (32'h00000000),
-    .CB_P2A_AVALON_ADDR_B2                             (32'h00000000),
-    .CB_P2A_AVALON_ADDR_B3                             (32'h00000000),
-    .CB_P2A_AVALON_ADDR_B4                             (32'h00000000),
-    .CB_P2A_AVALON_ADDR_B5                             (32'h00000000),
-    .CB_P2A_AVALON_ADDR_B6                             (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_0_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_0_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_1_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_1_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_2_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_2_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_3_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_3_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_4_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_4_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_5_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_5_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_6_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_6_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_7_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_7_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_8_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_8_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_9_LOW                 (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_9_HIGH                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_10_LOW                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_10_HIGH               (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_11_LOW                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_11_HIGH               (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_12_LOW                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_12_HIGH               (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_13_LOW                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_13_HIGH               (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_14_LOW                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_14_HIGH               (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_15_LOW                (32'h00000000),
-    .CB_A2P_ADDR_MAP_FIXED_TABLE_15_HIGH               (32'h00000000),
-    .bar_prefetchable                                  (1),
-    .avmm_width_hwtcl                                  (32),
+    //.CB_P2A_AVALON_ADDR_B0                             (32'h00000000),
+    //.CB_P2A_AVALON_ADDR_B1                             (32'h00000000),
+    //.CB_P2A_AVALON_ADDR_B2                             (32'h00000000),
+    //.CB_P2A_AVALON_ADDR_B3                             (32'h00000000),
+    //.CB_P2A_AVALON_ADDR_B4                             (32'h00000000),
+    //.CB_P2A_AVALON_ADDR_B5                             (32'h00000000),
+    //.CB_P2A_AVALON_ADDR_B6                             (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_0_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_0_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_1_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_1_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_2_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_2_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_3_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_3_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_4_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_4_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_5_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_5_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_6_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_6_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_7_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_7_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_8_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_8_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_9_LOW                 (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_9_HIGH                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_10_LOW                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_10_HIGH               (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_11_LOW                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_11_HIGH               (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_12_LOW                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_12_HIGH               (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_13_LOW                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_13_HIGH               (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_14_LOW                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_14_HIGH               (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_15_LOW                (32'h00000000),
+    //.CB_A2P_ADDR_MAP_FIXED_TABLE_15_HIGH               (32'h00000000),
+    //.bar_prefetchable                                  (0),
+    .avmm_width_hwtcl                                  (64),
     .avmm_burst_width_hwtcl                            (7),
     .AVALON_ADDR_WIDTH                                 (32),
     .BYPASSS_A2P_TRANSLATION                           (0),
@@ -575,10 +570,10 @@ module Pcie1EpAvmm
     .currentrxpreset5                                   (),                // output [2 : 0]
     .currentrxpreset6                                   (),                // output [2 : 0]
     .currentrxpreset7                                   (),                // output [2 : 0]
-    .coreclkout                                         (),                // output
+    .coreclkout                                         (coreclkout),      // output
 
     // Reconfig GXB
-    .reconfig_to_xcvr                                   (0),               // input                [reconfig_to_xcvr_width-1:0]
+    .reconfig_to_xcvr                                   ({reconfig_to_xcvr_width{1'b0}}),               // input                [reconfig_to_xcvr_width-1:0]
     .busy_xcvr_reconfig                                 (1'b0),            // input
     .reconfig_from_xcvr                                 (),                // output               [reconfig_from_xcvr_width-1:0]
     .fixedclk_locked                                    (),
@@ -606,9 +601,9 @@ module Pcie1EpAvmm
     .TxsChipSelect_i                                    (1'b0),            // input
     .TxsRead_i                                          (1'b0),            // input
     .TxsWrite_i                                         (1'b0),            // input
-    .TxsWriteData_i                                     (64'h0),           // input  [avmm_width_hwtcl-1:0]
+    .TxsWriteData_i                                     (32'h0),           // input  [avmm_width_hwtcl-1:0]
     .TxsBurstCount_i                                    (7'h0),            // input  [avmm_burst_width_hwtcl-1:0]
-    .TxsAddress_i                                      (24'h0),            // input  [CG_AVALON_S_ADDR_WIDTH-1:0]
+    .TxsAddress_i                                      (13'h0),            // input  [CG_AVALON_S_ADDR_WIDTH-1:0]
     .TxsByteEnable_i                                    (8'h0),            // input  [(avmm_width_hwtcl/8)-1:0]
     .TxsReadDataValid_o                                     (),            // output
     .TxsReadData_o                                          (),            // output  [avmm_width_hwtcl-1:0]
@@ -622,23 +617,23 @@ module Pcie1EpAvmm
     .RxmAddress_0_o                                    (Bar0Address),      // output [AVALON_ADDR_WIDTH-1:0]
     .RxmWriteData_0_o                                  (Bar0WriteData),    // output [avmm_width_hwtcl-1:0]
     .RxmByteEnable_0_o                                 (Bar0ByteEnable),   // output [(avmm_width_hwtcl/8)-1:0]
-    .RxmBurstCount_0_o                                 (),                 // output [avmm_burst_width_hwtcl-1:0]
+    .RxmBurstCount_0_o                                 (Bar0BurstCount),   // output [avmm_burst_width_hwtcl-1:0]
     .RxmWaitRequest_0_i                                (Bar0WaitRequest),  // input
     .RxmRead_0_o                                       (Bar0Read),         // output
     .RxmReadData_0_i                                   (Bar0ReadData),     // input  [avmm_width_hwtcl-1:0]
     .RxmReadDataValid_0_i                              (Bar0ReadDataValid),// input
-    
+
     // Avalon Rx Master interface 1
-    .RxmWrite_1_o                                      (Bar1Write),        // output
-    .RxmAddress_1_o                                    (Bar1Address),      // output [AVALON_ADDR_WIDTH-1:0]
-    .RxmWriteData_1_o                                  (Bar1WriteData),    // output [avmm_width_hwtcl-1:0]
-    .RxmByteEnable_1_o                                 (Bar1ByteEnable),   // output [(avmm_width_hwtcl/8)-1:0]
-    .RxmBurstCount_1_o                                 (),                 // output [avmm_burst_width_hwtcl-1:0]
-    .RxmWaitRequest_1_i                                (Bar1WaitRequest),  // input
-    .RxmRead_1_o                                       (Bar1Read),         // output
-    .RxmReadData_1_i                                   (Bar1ReadData),     // input  [avmm_width_hwtcl-1:0]
-    .RxmReadDataValid_1_i                              (Bar1ReadDataValid),// input
-    
+    .RxmWrite_1_o                                      (),                // output
+    .RxmAddress_1_o                                    (),                // output [AVALON_ADDR_WIDTH-1:0]
+    .RxmWriteData_1_o                                  (),                // output [avmm_width_hwtcl-1:0]
+    .RxmByteEnable_1_o                                 (),                // output [(avmm_width_hwtcl/8)-1:0]
+    .RxmBurstCount_1_o                                 (),                // output [avmm_burst_width_hwtcl-1:0]
+    .RxmWaitRequest_1_i                                (1'b0),            // input
+    .RxmRead_1_o                                       (),                // output
+    .RxmReadData_1_i                                   (),                // input  [avmm_width_hwtcl-1:0]
+    .RxmReadDataValid_1_i                              (1'b0),            // input
+
     // Avalon Rx Master interface 2
     .RxmWrite_2_o                                      (),                 // output
     .RxmAddress_2_o                                    (),                 // output [AVALON_ADDR_WIDTH-1:0]
@@ -649,7 +644,7 @@ module Pcie1EpAvmm
     .RxmRead_2_o                                       (),                 // output
     .RxmReadData_2_i                                   (),                 // input  [avmm_width_hwtcl-1:0]
     .RxmReadDataValid_2_i                              (1'b0),             // input
-    
+
     // Avalon Rx Master interface 3
     .RxmWrite_3_o                                      (),                 // output
     .RxmAddress_3_o                                    (),                 // output [AVALON_ADDR_WIDTH-1:0]
@@ -660,7 +655,7 @@ module Pcie1EpAvmm
     .RxmRead_3_o                                       (),                 // output
     .RxmReadData_3_i                                   (),                 // input  [avmm_width_hwtcl-1:0]
     .RxmReadDataValid_3_i                              (1'b0),             // input
-    
+
     // Avalon Rx Master interface 4
     .RxmWrite_4_o                                      (),                 // output
     .RxmAddress_4_o                                    (),                 // output [AVALON_ADDR_WIDTH-1:0]
@@ -671,7 +666,7 @@ module Pcie1EpAvmm
     .RxmRead_4_o                                       (),                 // output
     .RxmReadData_4_i                                   (),                 // input  [avmm_width_hwtcl-1:0]
     .RxmReadDataValid_4_i                              (1'b0),             // input
-    
+
     // Avalon Rx Master interface 5
     .RxmWrite_5_o                                      (),                 // output
     .RxmAddress_5_o                                    (),                 // output [AVALON_ADDR_WIDTH-1:0]
@@ -682,7 +677,7 @@ module Pcie1EpAvmm
     .RxmRead_5_o                                       (),                 // output
     .RxmReadData_5_i                                   (),                 // input  [avmm_width_hwtcl-1:0]
     .RxmReadDataValid_5_i                              (1'b0),             // input
-    
+
     // Avalon Rx Master interface 6
     .RxmWrite_6_o                                      (),                 // output
     .RxmAddress_6_o                                    (),                 // output [AVALON_ADDR_WIDTH-1:0]

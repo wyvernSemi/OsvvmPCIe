@@ -77,6 +77,7 @@ architecture TestHarness of TbPcieAltera is
                                
   signal Clk                   : std_logic := '1';
   signal RefClk                : std_logic := '1';
+  signal CoreClk               : std_logic := '1';
   signal nReset                : std_logic := '0';
                                
   signal Count                 : integer := 0 ;
@@ -122,12 +123,12 @@ begin
   ------------------------------------------------------------
   Osvvm.ClockResetPkg.CreateClock (
     Clk                => Clk,
-    Period             => Tperiod_PClk
+    Period             => tperiod_PClk
   )  ;
 
   Osvvm.ClockResetPkg.CreateClock (
     Clk                => RefClk,
-    Period             => Tperiod_RClk
+    Period             => tperiod_RClk
   )  ;
 
   ------------------------------------------------------------
@@ -181,6 +182,7 @@ Pipe0.RxValid         <= not Pipe0.RxElecIdle ;
     -- Globals
     RefClk      => RefClk,
     PipeClk     => Clk,
+    CoreClk     => CoreClk,
     nReset      => nReset,
 
     AxiBus      => AxiBus,
@@ -194,7 +196,7 @@ Pipe0.RxValid         <= not Pipe0.RxElecIdle ;
 
   port map (
     -- Globals
-    Clk         => Clk,
+    Clk         => CoreClk,
     nReset      => nReset,
 
     -- AXI Manager Functional Interface

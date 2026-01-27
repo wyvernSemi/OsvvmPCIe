@@ -759,7 +759,6 @@ void InitLink(const int link_width, const int node)
     do
     {
         ltssm_state = LinkState(ltssm_state, LTSSM_L0, link_width, node);
-        if (!ltssm_disable_disp_state[node]) VPrint("ltssm_state = %d\n", ltssm_state);
     } while (ltssm_state != LTSSM_L0);
 }
 
