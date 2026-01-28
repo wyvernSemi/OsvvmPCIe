@@ -76,9 +76,11 @@ signal WaitReqRead             : std_logic ;
 signal WaitReqWrite            : std_logic ;
 
 signal LtssmState              : std_logic_vector  (4 downto 0) ;
-signal EidleInferSel           : std_logic_vector  (2 downto 0);
+signal EidleInferSel           : std_logic_vector  (2 downto 0) ;
 
-signal LowWordAddress          : std_logic ;
+signal LowWordAddress          : boolean ;
+signal WordAddrAdj             : std_logic_vector  (31 downto 0) ;
+signal ReadDataMask            : std_logic_vector  (31 downto 0)  := (others => '1') ;
 
 begin
 
@@ -90,26 +92,34 @@ begin
   BAR0.WriteData               <= (others => 'L') ;
   
   -- Flag if addressing the lower 32-bit word
-  LowWordAddress               <= not BAR0.Address(2);             
+  LowWordAddress               <= BAR0.ByteEnable(3 downto 0) /= "0000";      
+  WordAddrAdj                  <= 32x"00000000" when BAR0.ByteEnable(0) else 
+                                  32x"00000001" when BAR0.ByteEnable(1) else
+                                  32x"00000002" when BAR0.ByteEnable(2) else
+                                  32x"00000003" when BAR0.ByteEnable(3) else
+                                  32x"00000004" when BAR0.ByteEnable(4) else
+                                  32x"00000005" when BAR0.ByteEnable(5) else
+                                  32x"00000006" when BAR0.ByteEnable(6) else
+                                  32x"00000007" ;
 
-  AxiBus.ReadAddress.Valid     <= BAR0.Read;
-  AxiBus.ReadAddress.Addr      <= BAR0.Address ;
+  AxiBus.ReadAddress.Valid     <= BAR0.Read ;
+  AxiBus.ReadAddress.Addr      <= BAR0.Address or WordAddrAdj ;
   Axibus.ReadAddress.Prot      <= (others => '0') ;
 
   -- Return AXI read data to appropriate Avalon interface
-  BAR0.ReadData                <= AxiBus.ReadData.Data & AxiBus.ReadData.Data ;
+  BAR0.ReadData                <= (AxiBus.ReadData.Data and ReadDataMask) & (AxiBus.ReadData.Data and ReadDataMask) ;
   BAR0.ReadDataValid           <= AxiBus.ReadData.Valid ;
 
   -- Avalon bus can always accept data for a read it has issued
   AxiBus.ReadData.Ready        <= '1' ;
 
-  AxiBus.WriteAddress.Valid    <= BAR0.Write and not DataPending;
-  AxiBus.WriteAddress.Addr     <= BAR0.Address ;
+  AxiBus.WriteAddress.Valid    <= BAR0.Write and not DataPending ;
+  AxiBus.WriteAddress.Addr     <= BAR0.Address or WordAddrAdj ;
   Axibus.WriteAddress.Prot     <= (others => '0') ;
 
   AxiBus.WriteData.Valid       <= BAR0.Write ;
-  AxiBus.WriteData.Data        <= BAR0.WriteData(31 downto 0) when LowWordAddress = '1' else  BAR0.WriteData(63 downto 32);
-  AxiBus.WriteData.Strb        <= BAR0.ByteEnable(3 downto 0) when LowWordAddress = '1' else  BAR0.ByteEnable(7 downto 4);
+  AxiBus.WriteData.Data        <= BAR0.WriteData(31 downto 0) when LowWordAddress else  BAR0.WriteData(63 downto 32) ;
+  AxiBus.WriteData.Strb        <= BAR0.ByteEnable(3 downto 0) when LowWordAddress else  BAR0.ByteEnable(7 downto 4) ;
 
   -- Always accept the write response
   AxiBus.WriteResponse.Ready   <= '1' ;
@@ -130,7 +140,16 @@ begin
   ------------------------------------------------------------
   begin
     if CoreClk'event and CoreClk = '1' then
-      DataPending      <= ((AxiBus.WriteAddress.Valid and AxiBus.WriteAddress.Ready) and not (AxiBus.WriteData.Valid and AxiBus.WriteData.Ready));
+      DataPending      <= ((AxiBus.WriteAddress.Valid and AxiBus.WriteAddress.Ready) and not (AxiBus.WriteData.Valid and AxiBus.WriteData.Ready)) ;
+      
+      -- Data returned from AXI4-Lite VC is X for non addressed bytes, so create
+      -- a mask based on AXI read address low bits
+      if AxiBus.ReadAddress.Valid and AxiBus.ReadAddress.Ready then
+        ReadDataMask   <= 32x"ffffffff" when AxiBus.ReadAddress.Addr(1 downto 0) = 2x"0" else
+                          32x"ffffff00" when AxiBus.ReadAddress.Addr(1 downto 0) = 2x"1" else
+                          32x"ffff0000" when AxiBus.ReadAddress.Addr(1 downto 0) = 2x"2" else
+                          32x"ff000000" ;
+      end if ;        
     end if ;
   end process PendingProc ;
 
