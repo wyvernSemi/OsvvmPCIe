@@ -86,26 +86,26 @@ begin
   -- Combinatorial logic
   ------------------------------------------------------------
   
-  BAR0.ByteEnable              <= (others => 'H') ;
+  BAR0.ByteEnable              <= (others => 'L') ;
   BAR0.WriteData               <= (others => 'L') ;
   
   -- Flag if addressing the lower 32-bit word
   LowWordAddress               <= not BAR0.Address(2);             
 
-  AxiBus.ReadAddress.Valid     <= BAR0.Read and not DataPending;
+  AxiBus.ReadAddress.Valid     <= BAR0.Read;
   AxiBus.ReadAddress.Addr      <= BAR0.Address ;
   Axibus.ReadAddress.Prot      <= (others => '0') ;
 
   -- Return AXI read data to appropriate Avalon interface
   BAR0.ReadData                <= AxiBus.ReadData.Data & AxiBus.ReadData.Data ;
-  BAR0.ReadDataValid           <= AxiBus.ReadData.Valid and BAR0.Read ;
+  BAR0.ReadDataValid           <= AxiBus.ReadData.Valid ;
 
+  -- Avalon bus can always accept data for a read it has issued
   AxiBus.ReadData.Ready        <= '1' ;
 
   AxiBus.WriteAddress.Valid    <= BAR0.Write and not DataPending;
   AxiBus.WriteAddress.Addr     <= BAR0.Address ;
   Axibus.WriteAddress.Prot     <= (others => '0') ;
-
 
   AxiBus.WriteData.Valid       <= BAR0.Write ;
   AxiBus.WriteData.Data        <= BAR0.WriteData(31 downto 0) when LowWordAddress = '1' else  BAR0.WriteData(63 downto 32);
@@ -114,11 +114,11 @@ begin
   -- Always accept the write response
   AxiBus.WriteResponse.Ready   <= '1' ;
 
-  -- Wait on Avalon reads until the AXI read data was transferred
-  WaitReqRead                  <= BAR0.Read  and not (AxiBus.ReadData.Valid  and AxiBus.ReadData.Ready) ;
+  -- Wait on Avalon reads until the AXI read address was transferred
+  WaitReqRead                  <= BAR0.Read  and not AxiBus.ReadAddress.Ready;
 
-  -- Wait on Avalon writes until the AXI write data was transferred
-  WaitReqWrite                 <= BAR0.Write and not (AxiBus.WriteData.Valid and AxiBus.WriteData.Ready) ;
+  -- Wait on Avalon writes until the AXI write address and data was transferred
+  WaitReqWrite                 <= BAR0.Write and ((AxiBus.WriteAddress.Valid and not AxiBus.WriteAddress.Ready) or (AxiBus.WriteData.Valid and not AxiBus.WriteData.Ready)) ;
 
   -- Drive the Avalon bus wait requests
   BAR0.WaitRequest             <= (BAR0.Read and WaitReqRead) or (BAR0.Write and WaitReqWrite) ;
@@ -130,11 +130,7 @@ begin
   ------------------------------------------------------------
   begin
     if CoreClk'event and CoreClk = '1' then
-      -- Set when address transferred and cleared when data transferred.
-      -- Used to mask Avalon strobes driving AXI address valid after AXI
-      -- address accepted
-      DataPending      <= ((DataPending or (AxiBus.ReadAddress.Valid  and AxiBus.ReadAddress.Ready))  and not (AxiBus.ReadData.Valid  and AxiBus.ReadData.Ready)) or
-                          ((AxiBus.WriteAddress.Valid and AxiBus.WriteAddress.Ready) and not (AxiBus.WriteData.Valid and AxiBus.WriteData.Ready));
+      DataPending      <= ((AxiBus.WriteAddress.Valid and AxiBus.WriteAddress.Ready) and not (AxiBus.WriteData.Valid and AxiBus.WriteData.Ready));
     end if ;
   end process PendingProc ;
 
