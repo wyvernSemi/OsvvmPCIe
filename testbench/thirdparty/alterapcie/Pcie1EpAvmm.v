@@ -80,9 +80,6 @@ module pcie1epavmm
 
 );
 
-localparam reconfig_to_xcvr_width   = 350;
-localparam reconfig_from_xcvr_width = 230;
-
   altpcie_cv_hip_avmm_hwtcl # (
 
     .port_type_hwtcl                                   ("Native endpoint"),    // DEFAULT "Native endpoint"
