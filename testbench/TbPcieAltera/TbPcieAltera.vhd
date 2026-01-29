@@ -54,7 +54,7 @@ end entity TbPcieAltera ;
 
 architecture TestHarness of TbPcieAltera is
 
-  constant tperiod_RClk        : time    :=  10 ns ; -- 100MHz
+  constant tperiod_RClk        : time    :=   8 ns ; -- 125MHz
   constant tperiod_PClk        : time    :=   4 ns ; -- 250Hz  for GEN1
   constant tpd                 : time    := 100 ps ;
 

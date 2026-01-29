@@ -37,9 +37,13 @@
 module pcie1epavmm
 (
 
+  // Clock inputs and POR
   input                RefClk,
   input                PipeClk,
   input                nReset,
+
+  // Output clock to drive logic attached to Avalon bus
+  output               coreclkout,
 
   // BAR0 Avalon memory mapped master
   output [31:0]        Bar0Address,
@@ -52,10 +56,9 @@ module pcie1epavmm
   output  [7:0]        Bar0ByteEnable,
   output  [6:0]        Bar0BurstCount,
 
-  // PIPE lane 0
+  // PIPE interface for lane 0
   output  [7:0]        TxData,
   output               TxDataK,
-
   output               TxDetectRx,
   output               TxElecIdle,
   output               TxCompliance,
@@ -74,33 +77,34 @@ module pcie1epavmm
   input                PhyStatus,
 
   // Useful debug signals
-  output [4:0]         LtssmState,
-  output [2:0]         EidleInferSel,
-  output               coreclkout
+  output  [4:0]        LtssmState,
+  output  [2:0]        EidleInferSel
 
 );
 
+  // Instantiate the Altera Cyclone V Hard IP for PCI Express simulation model
   altpcie_cv_hip_avmm_hwtcl # (
 
+    // Define general specification
     .port_type_hwtcl                                   ("Native endpoint"),    // DEFAULT "Native endpoint"
     .gen123_lane_rate_mode_hwtcl                       ("gen1"),               // DEFAULT "gen1"
-    .pll_refclk_freq_hwtcl                             ("100 MHz"),            // DEFAULT "100 MHz"
+    .pll_refclk_freq_hwtcl                             ("125 MHz"),            // DEFAULT "100 MHz"
     .lane_mask_hwtcl                                   ("x1"),                 // default "x4"
 
+    // Set fields in configuration space
     .vendor_id_hwtcl                                   (5372),                 // default 4466
     .device_id_hwtcl                                   (1),                    // default 57345
     .revision_id_hwtcl                                 (1),                    // default 1
     .class_code_hwtcl                                  (163841),               // default 16711680
     .subsystem_vendor_id_hwtcl                         (0),                    // default 4466
     .subsystem_device_id_hwtcl                         (0),                    // default 57345
-
     .max_payload_size_hwtcl                            (128),                  // default 256
-
     .bar0_io_space_hwtcl                               ("Disabled"),           // DEFAULT "Disabled"
     .bar0_64bit_mem_space_hwtcl                        ("Disabled"),           // DEFAULT "Disabled"
     .bar0_prefetchable_hwtcl                           ("Disabled"),           // DEFAULT "Disabled"
     .bar0_size_mask_hwtcl                              (12),                   // default "256 MBytes - 28 bits"
 
+    // Define flow control parameters
     .vc0_rx_flow_ctrl_posted_header_hwtcl              (16),                   // default 50
     .vc0_rx_flow_ctrl_posted_data_hwtcl                (16),                   // default 360
     .vc0_rx_flow_ctrl_nonposted_header_hwtcl           (16),                   // default 54
@@ -110,10 +114,14 @@ module pcie1epavmm
     .cpl_spc_header_hwtcl                              (67),                   // default 195
     .cpl_spc_data_hwtcl                                (269),                  // default 781
 
+    // A single receive detector for the 1 lane
     .single_rx_detect_hwtcl                            (1),                    // default 0
 
-    .CB_A2P_ADDR_MAP_NUM_ENTRIES                       (2),                    // default 1
+    // We don't need a configuration space Avalon access port
     .CG_IMPL_CRA_AV_SLAVE_PORT                         (0),                    // default 1
+
+    // Some required parameters for Avalon to PCIe bridge settings
+    .CB_A2P_ADDR_MAP_NUM_ENTRIES                       (2),                    // default 1
     .a2p_pass_thru_bits                                (20)                    // default 24
 
   ) altpcie_i  (
@@ -122,34 +130,34 @@ module pcie1epavmm
     .pin_perst                                         (nReset),               // input
     .npor                                              (nReset),               // input
 
-    // Serdes related
+    // Clocks
     .refclk                                            (RefClk),               // input
     .coreclkout                                        (coreclkout),           // output
 
-    // Input PIPE simulation for simulation only
+    // PIPE signals for simulation only
     .simu_mode_pipe                                    (1'b1),                 // input
-    .sim_pipe_rate                                     (Rate),                 // output [1 : 0]
+    .sim_pipe_rate                                     (Rate),                 // output [1:0]
     .sim_pipe_pclk_in                                  (PipeClk),              // input
-    .sim_ltssmstate                                    (LtssmState),           // output [4 : 0]
+    .sim_ltssmstate                                    (LtssmState),           // output [4:0]
 
     // Input Pipe interface
     .phystatus0                                        (PhyStatus),            // input
-    .rxdata0                                           (RxData),               // input  [7 : 0]
+    .rxdata0                                           (RxData),               // input  [7:0]
     .rxdatak0                                          (RxDataK),              // input
     .rxelecidle0                                       (RxElecIdle),           // input
-    .rxstatus0                                         (RxStatus),             // input  [2 : 0]
+    .rxstatus0                                         (RxStatus),             // input  [2:0]
     .rxvalid0                                          (RxValid),              // input
 
     // Output Pipe interface
-    .eidleinfersel0                                    (EidleInferSel),        // output [2 : 0]
-    .powerdown0                                        (PowerDown),            // output [1 : 0]
+    .eidleinfersel0                                    (EidleInferSel),        // output [2:0]
+    .powerdown0                                        (PowerDown),            // output [1:0]
     .rxpolarity0                                       (RxPolarity),           // output
     .txcompl0                                          (TxCompliance),         // output
-    .txdata0                                           (TxData),               // output [7 : 0]
+    .txdata0                                           (TxData),               // output [7:0]
     .txdatak0                                          (TxDataK),              // output
     .txdetectrx0                                       (TxDetectRx),           // output
     .txelecidle0                                       (TxElecIdle),           // output
-    .txmargin0                                         (TxMargin),             // output [2 : 0]
+    .txmargin0                                         (TxMargin),             // output [2:0]
     .txdeemph0                                         (TxDemph),              // output
     .txswing0                                          (TxSwing),              // output
 
@@ -164,7 +172,7 @@ module pcie1epavmm
     .RxmReadData_0_i                                   (Bar0ReadData),         // input  [avmm_width_hwtcl-1:0]
     .RxmReadDataValid_0_i                              (Bar0ReadDataValid),    // input
 
-     // Tie off unused Avalon bus inputs
+     // Tie off unused Avalon bus inputs else Avalon data transfers corrupted
     .RxmWaitRequest_1_i                                (1'b0),                 // input
     .RxmReadDataValid_1_i                              (1'b0),                 // input
     .RxmWaitRequest_2_i                                (1'b0),                 // input
