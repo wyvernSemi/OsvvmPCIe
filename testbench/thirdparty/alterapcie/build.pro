@@ -32,48 +32,20 @@
 #  limitations under the License.
 #
 
-#
-# Compile the Altera model and its OSVVM Verilog wrapper
-# if the IP model directory is present
-#
+library osvvm_TbPcie
 
-library pcie_cv_hip_avmm_0
+# Map the pre-compiled Altera PCIe model library 
 
-if {[DirectoryExists altpcie_cv_hip_avmm_hwtcl]} { 
+vmap pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/libraries/pcie_cv_hip_avmm_0/
 
-  ChangeWorkingDirectory ./altpcie_cv_hip_avmm_hwtcl
+# Compile the Verilog wrapper
   
-  # Point to the generated IP's top level directory
-  set QSYS_SIMDIR $CurrentWorkingDirectory
-  
-  # Source the build script
-  if {($::osvvm::ToolName eq "ActiveHDL") || ($::osvvm::ToolName eq "VSimSA") || ($::osvvm::ToolName eq "RivieraPRO")} {
-  
-    set USER_DEFINED_VERILOG_COMPILE_OPTIONS [AlteraLibArgsVlog]
-    set USER_DEFINED_VHDL_COMPILE_OPTIONS [AlteraLibArgsVhdl]
-    source $QSYS_SIMDIR/aldec/rivierapro_setup.tcl
-  } else {
-    source $QSYS_SIMDIR/mentor/msim_setup.tcl
-  }
-  
-  # Compile the Altera libraries
-  dev_com
-  
-  # Compile the Altera auto-generated source code
-  com
-  
-  # Compile the wrapper
-  
-  eval vlog -l pcie_cv_hip_avmm_0 $QSYS_SIMDIR/../Pcie1EpAvmm.v -work pcie_cv_hip_avmm_0
-}
+eval vlog -l pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/Pcie1EpAvmm.v -work osvvm_TbPcie
 
 #
 # Compile the VHDl wrapper for AXI Lite
 #
 
-library osvvm_TbPcie
-
-ChangeWorkingDirectory ../
 
 analyze Pcie1EpAvPkg.vhd
 analyze Pcie1EpAxi4Lite.vhd
