@@ -1758,7 +1758,7 @@ package body PcieInterfacePkg is
                      Log("              : Cache Line Size         " & to_hstring(RegData( 7 downto  0)), INFO, TRUE) ;
 
       when 4 | 5 | 6 | 7 | 8 | 9 =>
-                     Log("    PCI REG" & integer'image(RegNumber) & "  : BAR "& integer'image(RegNumber-4) & "           " & to_hstring(RegData), INFO, TRUE) ;
+                     Log("    PCI REG" & integer'image(RegNumber) & "  : BAR "& integer'image(RegNumber-4) & "                   " & to_hstring(RegData), INFO, TRUE) ;
 
       when 10 =>     Log("    PCI REG10 : Cardbus CIS Ptr         " & to_hstring(RegData), INFO, TRUE) ;
                                                                   
