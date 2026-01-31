@@ -40,7 +40,7 @@ vmap pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/libraries/pcie_cv_hip_avmm_0/
 
 # Compile the Verilog wrapper
   
-eval vlog -l pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/Pcie1EpAvmm.v -work osvvm_TbPcie
+eval vlog -sv -l pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/pcie1epavmm.sv -work osvvm_TbPcie
 
 #
 # Compile the VHDl wrapper for AXI Lite
