@@ -35,8 +35,7 @@
 library osvvm_TbPcie
 
 # Map the pre-compiled Altera PCIe model library 
-
-vmap pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/libraries/pcie_cv_hip_avmm_0/
+vmap pcie_cv_hip_avmm_0 $CurrentWorkingDirectory/pcie1_ep_avmm/libraries/pcie_cv_hip_avmm_0/
 
 # Compile the Verilog wrapper
   
