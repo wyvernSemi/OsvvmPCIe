@@ -15,15 +15,15 @@
 #
 #
 #  This file is part of OSVVM.
-#  
-#  Copyright (c) 2026 by [OSVVM Authors](../../../../../AUTHORS.md). 
-#  
+#
+#  Copyright (c) 2026 by [OSVVM Authors](../../../../../AUTHORS.md).
+#
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
-#  
+#
 #      https://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,29 +31,45 @@
 #  limitations under the License.
 #
 
-exec -ignorestderr qsys-generate --simulation=VERILOG --output-directory=$CurrentWorkingDirectory/../pcie1_ep_avmm $CurrentWorkingDirectory/pcie1_ep_avmm.qsys
+# Altera Quartus Prime needs to be installed to build the Cyclone V Hard IP for PCIe
+# from the QSYS file.
 
-ChangeWorkingDirectory ../pcie1_ep_avmm/simulation
 
-# Point to the generated IP's top level directory
-set QSYS_SIMDIR $CurrentWorkingDirectory
+set error [catch {  
+  exec -ignorestderr qsys-generate --simulation=VERILOG --output-directory=$CurrentWorkingDirectory/../pcie1_ep_avmm $CurrentWorkingDirectory/pcie1_ep_avmm.qsys
 
-# Source the build script
-if {($::osvvm::ToolName eq "ActiveHDL") || ($::osvvm::ToolName eq "VSimSA") || ($::osvvm::ToolName eq "RivieraPRO")} {
+  ChangeWorkingDirectory ../pcie1_ep_avmm/simulation
 
-  set USER_DEFINED_VERILOG_COMPILE_OPTIONS [AlteraLibArgsVlog]
-  set USER_DEFINED_VHDL_COMPILE_OPTIONS [AlteraLibArgsVhdl]
-  source $QSYS_SIMDIR/aldec/rivierapro_setup.tcl
-} else {
-  source $QSYS_SIMDIR/mentor/msim_setup.tcl
+  # Point to the generated IP's top level directory
+  set QSYS_SIMDIR $CurrentWorkingDirectory
+
+  # Source the build script
+  if {($::osvvm::ToolName eq "ActiveHDL") || ($::osvvm::ToolName eq "VSimSA") || ($::osvvm::ToolName eq "RivieraPRO")} {
+
+    set USER_DEFINED_VERILOG_COMPILE_OPTIONS [AlteraLibArgsVlog]
+    set USER_DEFINED_VHDL_COMPILE_OPTIONS [AlteraLibArgsVhdl]
+    source $QSYS_SIMDIR/aldec/rivierapro_setup.tcl
+  } else {
+    source $QSYS_SIMDIR/mentor/msim_setup.tcl
+  }
+
+  # Compile the Altera libraries
+  dev_com
+
+  # Compile the Altera auto-generated source code
+  com
+  
+  # The script puts the library folder in local the
+  # local directory, so update that checked-in in the 
+  # PCIe repository
+  exec rm -rf $QSYS_SIMDIR/../libraries
+  exec mv libraries  $QSYS_SIMDIR/..
+
+} msg]
+
+if { $error != 0 } {
+
+  # Generate an error if no Quartus installed or not found
+  error "**** Quartus not found! Can't build Altera PCIe from QSYS file"
+  
 }
-
-# Compile the Altera libraries
-dev_com
-
-# Compile the Altera auto-generated source code
-com
-
-
-exec rm -rf $QSYS_SIMDIR/../libraries
-exec mv libraries  $QSYS_SIMDIR/..
