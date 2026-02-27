@@ -31,6 +31,8 @@
 #  limitations under the License.
 #
 
+TestSuite  CoSim_Pcie
+
 library    osvvm_TbPcie
 
 analyze TestCtrl_e.vhd
