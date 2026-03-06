@@ -49,6 +49,18 @@ library osvvm_pcie ;
 
 package PcieComponentPkg is
 
+    ------------------------------------------------------------
+    component clkmux is
+    ------------------------------------------------------------
+    port (
+      aresetn           : in  std_logic;
+      sel               : in  std_logic;
+      clka              : in  std_logic;
+      clkb              : in  std_logic;
+      clkout            : out std_logic
+    );
+    end component clkmux ;
+
   ------------------------------------------------------------
   component PcieModel is
   ------------------------------------------------------------

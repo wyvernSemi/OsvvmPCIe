@@ -82,6 +82,9 @@ package PcieInterfacePkg is
   constant CLK_COUNT                         : integer := 204 ;
   constant LINK_STATE                        : integer := 205 ;
   constant RESET_STATE                       : integer := 206 ;
+  constant DISABLE_SCRAMBLE_ADDR             : integer := 207 ;
+  constant DISABLE_8B10B_ADDR                : integer := 208 ;
+  constant GEN2_CLK_ADDR                     : integer := 209 ;
 
   --   ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^
   -- **** if the ../include/pcie_vhost_map.h values are updated, update the values above to match ****
@@ -94,7 +97,6 @@ package PcieInterfacePkg is
   constant EN_ECRC_ADDR                      : integer := 302 ;
   constant INITPHY_ADDR                      : integer := 303 ;
   constant ENABLE_AUTO_ADDR                  : integer := 304 ;
-  constant SCRAMBLE_ADDR                     : integer := 305 ;
 
   constant GETNEXTTRANS                      : integer := 400 ;
   constant GETINTTOMODEL                     : integer := 401 ;
