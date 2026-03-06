@@ -1,6 +1,6 @@
 // =========================================================================
 //
-//  File Name:         mem.h
+//  File Name:         pcie_express.h
 //  Design Unit Name:
 //  Revision:          OSVVM MODELS STANDARD VERSION
 //
