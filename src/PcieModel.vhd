@@ -71,6 +71,9 @@ port (
   -- Globals
   Clk         : in   std_logic ;
   nReset      : in   std_logic ;
+  
+  ClkOut      : out  std_logic ;
+  Gen2ClkSel  : out  std_logic := '0' ;
 
   -- Testbench Transaction Interface
   TransRec    : inout AddressBusRecType ;
@@ -112,8 +115,6 @@ architecture behavioral of PcieModel is
   signal   LinkInVec     : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
   signal   LinkOutVec    : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
 
-  signal   Clk2GenSel    : std_logic                                        := '0' ;
-  signal   ClkMain       : std_logic                                        := '0' ;
   signal   ClkDiv2       : std_logic                                        := '0' ;
   
 begin
@@ -169,13 +170,13 @@ begin
         aresetn                  => nReset,
         clka                     => Clk,
         clkb                     => ClkDiv2,
-        clkout                   => ClkMain,
-        sel                      => Clk2GenSel
+        clkout                   => ClkOut,
+        sel                      => Gen2ClkSel
     );
     
   else generate
     
-    ClkMain                      <= Clk ;
+    ClkOut                      <= Clk ;
     
   end generate ;
   
@@ -248,7 +249,14 @@ begin
         when INITPHY_ADDR          => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
         when ENABLE_AUTO_ADDR      => RdData := 64x"00000001" when ENABLE_AUTO     else 64x"00000000";
         
-        when GEN2_CLK_ADDR         => RdData := 64x"00000001" when GEN2_CLK           else 64x"00000000";
+        when GEN2_CLK_ADDR         => 
+            if WE then
+              Gen2ClkSel <= '1' when (VPData mod 2) = 1 else '0' ;
+            end if ;
+            
+            RdData(0) := Gen2ClkSel;
+            RdData(1) := '1' when GEN2_CLK else '0';
+            RdData(63 downto 3) := (others => '0');
 
         -- -----------------------------------------------------
         -- Process global state
@@ -422,7 +430,7 @@ begin
 
           if WE then
             WaitForTransaction(
-               Clk      => ClkMain,
+               Clk      => ClkOut,
                Rdy      => TransRec.Rdy,
                Ack      => TransRec.Ack
             ) ;
@@ -438,7 +446,7 @@ begin
 
       -- If not a delta access, wait for next clock edge, else loop round immediately
       if not Delta then
-        wait until rising_edge(ClkMain) ;
+        wait until rising_edge(ClkOut) ;
       end if ;
 
     end loop ;

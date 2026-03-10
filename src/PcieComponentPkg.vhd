@@ -79,6 +79,9 @@ package PcieComponentPkg is
       -- Globals
       Clk         : in   std_logic ;
       nReset      : in   std_logic ;
+      
+      ClkOut      : out  std_logic ;
+      Gen2ClkSel  : out  std_logic := '0' ;
 
       -- Testbench Transaction Interface
       TransRec    : inout AddressBusRecType ;
