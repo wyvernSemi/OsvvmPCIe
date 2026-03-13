@@ -34,8 +34,11 @@
 # Altera Quartus Prime needs to be installed to build the Cyclone V Hard IP for PCIe
 # from the QSYS file.
 
+set error [catch {
 
-set error [catch {  
+  # Ensure a clean build
+  exec rm -rf ./libraries
+
   exec -ignorestderr qsys-generate --simulation=VERILOG --output-directory=$CurrentWorkingDirectory/../pcie1_ep_avmm $CurrentWorkingDirectory/pcie1_ep_avmm.qsys
 
   ChangeWorkingDirectory ../pcie1_ep_avmm/simulation
@@ -44,13 +47,15 @@ set error [catch {
   set QSYS_SIMDIR $CurrentWorkingDirectory
 
   # Source the build script
-  if {($::osvvm::ToolName eq "ActiveHDL") || ($::osvvm::ToolName eq "VSimSA") || ($::osvvm::ToolName eq "RivieraPRO")} {
+  if {($::osvvm::ToolName eq "RivieraPRO")} {
 
     set USER_DEFINED_VERILOG_COMPILE_OPTIONS [AlteraLibArgsVlog]
-    set USER_DEFINED_VHDL_COMPILE_OPTIONS [AlteraLibArgsVhdl]
     source $QSYS_SIMDIR/aldec/rivierapro_setup.tcl
+
   } else {
+
     source $QSYS_SIMDIR/mentor/msim_setup.tcl
+
   }
 
   # Compile the Altera libraries
@@ -58,12 +63,21 @@ set error [catch {
 
   # Compile the Altera auto-generated source code
   com
-  
-  # The script puts the library folder in local the
-  # local directory, so update that checked-in in the 
-  # PCIe repository
-  exec rm -rf $QSYS_SIMDIR/../libraries
-  exec mv libraries  $QSYS_SIMDIR/..
+
+  # The script puts the library folder the local directory, 
+  # so update the checked-in library
+  if {($::osvvm::ToolName eq "RivieraPRO")} {
+
+    exec rm -rf $QSYS_SIMDIR/../rvlibraries
+    exec mv libraries  $QSYS_SIMDIR/../rvlibraries
+
+
+  } else {
+
+    exec rm -rf $QSYS_SIMDIR/../libraries
+    exec mv libraries  $QSYS_SIMDIR/../libraries
+
+  }
 
 } msg]
 
@@ -71,5 +85,5 @@ if { $error != 0 } {
 
   # Generate an error if no Quartus installed or not found
   error "**** Quartus not found! Can't build Altera PCIe from QSYS file"
-  
+
 }
