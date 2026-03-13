@@ -56,7 +56,8 @@ port (
   AxiBus                       : inout Axi4LiteRecType ;
 
   -- PIPE lane 0
-  Pipe0                        : inout PipeRecType
+  PipeTx0                      : out PipeTxRecType ;
+  PipeRx0                      : in  PipeRxRecType
 
 ) ;
 end entity Pcie1EpAxi4Lite ;
@@ -175,25 +176,25 @@ begin
     Bar0BurstCount       => BAR0.BurstCount,
 
     -- PIPE lane 0
-    TxData               => Pipe0.TxData,
-    TxDataK              => Pipe0.TxDataK,
+    TxData               => PipeTx0.TxData,
+    TxDataK              => PipeTx0.TxDataK,
 
-    TxDetectRx           => Pipe0.TxDetectRx,
-    TxElecIdle           => Pipe0.TxElecIdle,
-    TxCompliance         => Pipe0.TxCompliance,
-    RxPolarity           => Pipe0.RxPolarity,
-    PowerDown            => Pipe0.PowerDown,
-    Rate                 => Pipe0.Rate,
-    TxDemph              => Pipe0.TxDemph,
-    TxMargin             => Pipe0.TxMargin,
-    TxSwing              => Pipe0.TxSwing,
+    TxDetectRx           => PipeTx0.TxDetectRx,
+    TxElecIdle           => PipeTx0.TxElecIdle,
+    TxCompliance         => PipeTx0.TxCompliance,
+    RxPolarity           => PipeTx0.RxPolarity,
+    PowerDown            => PipeTx0.PowerDown,
+    Rate                 => PipeTx0.Rate,
+    TxDemph              => PipeTx0.TxDemph,
+    TxMargin             => PipeTx0.TxMargin,
+    TxSwing              => PipeTx0.TxSwing,
 
-    RxData               => Pipe0.RxData,
-    RxDataK              => Pipe0.RxDataK,
-    RxValid              => Pipe0.RxValid,
-    RxElecIdle           => Pipe0.RxElecIdle,
-    RxStatus             => Pipe0.RxStatus,
-    PhyStatus            => Pipe0.PhyStatus,
+    RxData               => PipeRx0.RxData,
+    RxDataK              => PipeRx0.RxDataK,
+    RxValid              => PipeRx0.RxValid,
+    RxElecIdle           => PipeRx0.RxElecIdle,
+    RxStatus             => PipeRx0.RxStatus,
+    PhyStatus            => PipeRx0.PhyStatus,
 
     LtssmState           => LtssmState,
     EidleInferSel        => EidleInferSel,

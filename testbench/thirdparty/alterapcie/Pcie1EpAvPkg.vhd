@@ -64,7 +64,7 @@ package Pcie1EpAvPkg is
 
     end record AvMemMappedMasterRecType ;
 
-    type PipeRecType is record
+    type PipeTxRecType is record
 
         -- Transmit signals
         TxData             : std_logic_vector(7 downto 0) ;
@@ -79,6 +79,10 @@ package Pcie1EpAvPkg is
         TxDemph            : std_logic ;
         TxMargin           : std_logic_vector(2 downto 0) ;
         TxSwing            : std_logic;
+        
+    end record PipeTxRecType ;
+    
+    type PipeRxRecType is record
 
         -- Receive signals
         RxData             : std_logic_vector(7 downto 0) ;
@@ -88,6 +92,13 @@ package Pcie1EpAvPkg is
         RxStatus           : std_logic_vector(2 downto 0) ;
         PhyStatus          : std_logic ;
 
+    end record PipeRxRecType ;
+    
+    type PipeRecType is record
+    
+       TX                  : PipeTxRecType ;
+       RX                  : PipeRxRecType ;
+    
     end record PipeRecType ;
 
     component Pcie1EpAxi4Lite is
@@ -101,7 +112,8 @@ package Pcie1EpAvPkg is
       AxiBus               : inout Axi4LiteRecType ;
 
       -- PIPE lane 0
-      Pipe0                : inout PipeRecType
+      PipeTx0              : out PipeTxRecType ;
+      PipeRx0              : in  PipeRxRecType
 
     ) ;
     end component Pcie1EpAxi4Lite ;

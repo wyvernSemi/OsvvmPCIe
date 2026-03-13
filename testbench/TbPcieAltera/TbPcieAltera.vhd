@@ -89,7 +89,7 @@ architecture TestHarness of TbPcieAltera is
         ) ;
 
 --  -- PCIe Functional Interface
-  signal   PcieDnLink, PcieUpLink : PcieRecType(
+  signal PcieUpLink : PcieRecType(
     LinkOut (0 to MAXLINKWIDTH-1)(PCIE_LANE_WIDTH-1 downto 0),
     LinkIn  (0 to MAXLINKWIDTH-1)(PCIE_LANE_WIDTH-1 downto 0)
 
@@ -169,10 +169,10 @@ begin
   ) ;
 
 -- Connect the PIPE interfaces
-PcieUpLink.LinkIn(0)  <= Pipe0.TxDataK & Pipe0.TxData ;
-Pipe0.RxDataK         <= PcieUpLink.LinkOut(0)(PcieUpLink.LinkOut(0)'length-1) ;
-Pipe0.RxData          <= PcieUpLink.LinkOut(0)(PcieUpLink.LinkOut(0)'length-2 downto 0) ;
-Pipe0.RxValid         <= not Pipe0.RxElecIdle ;
+PcieUpLink.LinkIn(0)  <= Pipe0.TX.TxDataK & Pipe0.TX.TxData ;
+Pipe0.RX.RxDataK      <= PcieUpLink.LinkOut(0)(PcieUpLink.LinkOut(0)'length-1) ;
+Pipe0.RX.RxData       <= PcieUpLink.LinkOut(0)(PcieUpLink.LinkOut(0)'length-2 downto 0) ;
+Pipe0.RX.RxValid      <= not Pipe0.RX.RxElecIdle ;
 
   ------------------------------------------------------------
   Downstream_1 : Pcie1EpAxi4Lite
@@ -187,7 +187,8 @@ Pipe0.RxValid         <= not Pipe0.RxElecIdle ;
 
     AxiBus      => AxiBus,
 
-    Pipe0       => Pipe0
+    PipeTx0     => Pipe0.TX,
+    PipeRx0     => Pipe0.RX
   ) ;
 
   ------------------------------------------------------------
@@ -249,31 +250,31 @@ Pipe0.RxValid         <= not Pipe0.RxElecIdle ;
 
     if nReset = '0' then
 
-      Pipe0.RxElecIdle      <= '1' ;
-      Pipe0.RxStatus        <= "100" ;
-      Pipe0.PhyStatus       <= '1' ;
+      Pipe0.RX.RxElecIdle      <= '1' ;
+      Pipe0.RX.RxStatus        <= "100" ;
+      Pipe0.RX.PhyStatus       <= '1' ;
 
     elsif Clk'event and Clk = '1' then
 
       -- Capture the count that the TxDetectRx was asserted for timings
       -- relative to this
-      if TxDetectTime = 0 and Pipe0.TxDetectRx = '1' then
+      if TxDetectTime = 0 and Pipe0.TX.TxDetectRx = '1' then
         TxDetectTime     := Count ;
       end if;
 
       if Count = 54 or (Count - TxDetectTime) = 5 or (Count - TxDetectTime) = 6 then
-        Pipe0.PhyStatus <= not Pipe0.PhyStatus ;
+        Pipe0.RX.PhyStatus <= not Pipe0.RX.PhyStatus ;
       end if ;
 
       if (Count - TxDetectTime) = 2 or (Count - TxDetectTime) =  6 then
-        Pipe0.RxStatus   <= "000" ;
+        Pipe0.RX.RxStatus   <= "000" ;
       elsif (Count - TxDetectTime) = 5 then
-        Pipe0.RxStatus   <= "011" ;
+        Pipe0.RX.RxStatus   <= "011" ;
       elsif (Count - TxDetectTime) = 8 then
-        Pipe0.RxStatus   <= "100" ;
+        Pipe0.RX.RxStatus   <= "100" ;
       elsif (Count - TxDetectTime) = 25 then
-        Pipe0.RxStatus   <= "000" ;
-        Pipe0.RxElecIdle <= '0' ;
+        Pipe0.RX.RxStatus   <= "000" ;
+        Pipe0.RX.RxElecIdle <= '0' ;
       end if;
     end if ;
 
