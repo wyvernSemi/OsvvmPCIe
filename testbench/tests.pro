@@ -1,3 +1,4 @@
+TestSuite  CoSim_Pcie
 library    osvvm_TbPcie
 
 ChangeWorkingDirectory ../tests
@@ -17,7 +18,8 @@ if {($::osvvm::ToolName eq "Questa") || ($::osvvm::ToolName eq "FPGA")} {
   SetExtendedSimulateOptions +nowarnPCDPC
   SetExtendedOptimizeOptions [AlteraLibArgs]
 
-  TestName CoSim_PcieAltera
-  simulate Tb_PCIeAltera [CoSim]
+} elseif {($::osvvm::ToolName eq "RivieraPRO")} {
+
+  SetExtendedSimulateOptions [AlteraLibArgsAldec]
 }
 
