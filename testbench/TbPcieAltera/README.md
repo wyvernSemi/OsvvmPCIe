@@ -1,8 +1,8 @@
 # VHDL Test Environment for Altera Cyclone V Hard IP for PCI Express
 
-This directory contains an example VHDL test bench for driving the simulation model of the _Altera Cyclone V Hard IP for PCI Express_ using the CoSimPCIe VC. The test bench has been constructed for use with the _Quartus Prime SC Lite Edition version 25.1std_, including the _Questa Altera Starter FPGA Edition-64 2025.2_ simulator. Pre-compiled libraries for the PCIe IP are provided for these editions. For different editions, the pre-compiled libraries may not function and a QSYS file is provided to generate the simulation source files and build the libraries from scratch. .
+This directory contains an example VHDL test bench for driving the simulation model of the _Altera Cyclone V Hard IP for PCI Express_ using the CoSimPCIe VC. The test bench has been constructed for use with the _Quartus Prime SC Lite Edition version 25.1std_, including the _Questa Altera Starter FPGA Edition-64 2025.2_ simulator. Pre-compiled libraries for the PCIe IP are provided for these editions and for Aldec's Riviera-PRO version 2025.10. For different editions, the pre-compiled libraries may not function and a QSYS file is provided to generate the simulation source files and build the libraries from scratch.
 
-<span style="color:red">**THIS TESTBENCH IS FOR QUESTA SIMULATOR ONLY.**</span>
+<span style="color:red">**THIS TESTBENCH IS SUPPORTED FOR QUESTA AND RIVIERA-PRO SIMULATORS ONLY.**</span>
 
 # Test Bench Structure
 
@@ -221,7 +221,7 @@ Build: testbench_vc PASSED,  Passed: 1,  Failed: 0,  Skipped: 0,  Analyze Errors
 ```
 ## Building the Altera IP from Scratch
 
-To build the Altera PCIe IP  from scratch a Platform Designer file, `pcie1_ep_avmm.qsys`, is supplied. Assuming that Quartus Prime Lite is installed, then the following command can be executed from a Questa TCL prompt.
+To build the Altera PCIe IP  from scratch a Platform Designer file, `pcie1_ep_avmm.qsys`, is supplied. Assuming that Quartus Prime Lite is installed, then the following command can be executed from the simulator's console TCL prompt, whether from Questa or from Riviera-PRO.
 
 ```
 build <path to OsvvmLibraries>/CoSimPCIe/testbench/thirdparty/alterapcie/qsys
