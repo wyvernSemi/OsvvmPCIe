@@ -23,3 +23,5 @@ if {($::osvvm::ToolName eq "Questa") || ($::osvvm::ToolName eq "FPGA")} {
   SetExtendedSimulateOptions [AlteraLibArgsAldec]
 }
 
+TestName CoSim_PcieAltera
+simulate Tb_PCIeAltera [CoSim]
