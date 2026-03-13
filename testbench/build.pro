@@ -31,8 +31,6 @@
 #  limitations under the License.
 #
 
-TestSuite  CoSim_Pcie
-
 library    osvvm_TbPcie
 
 analyze TestCtrl_e.vhd
@@ -52,7 +50,7 @@ ChangeWorkingDirectory ../TbPcieSerial
 analyze TbPcieSerial.vhd
 analyze Tb_PcieSerial.vhd
 
-if {($::osvvm::ToolName eq "Questa")} {
+if {($::osvvm::ToolName eq "Questa") || ($::osvvm::ToolName eq "RivieraPRO")} {
 
   ChangeWorkingDirectory ../TbPcieAltera
   
