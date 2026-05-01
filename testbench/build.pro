@@ -50,5 +50,14 @@ ChangeWorkingDirectory ../TbPcieSerial
 analyze TbPcieSerial.vhd
 analyze Tb_PcieSerial.vhd
 
+if {($::osvvm::ToolName eq "Questa") || ($::osvvm::ToolName eq "RivieraPRO")} {
+
+  ChangeWorkingDirectory ../TbPcieAltera
+  
+  build ../thirdparty/alterapcie/
+  
+  analyze TbPcieAltera.vhd
+  analyze Tb_PcieAltera.vhd
+}
 
 

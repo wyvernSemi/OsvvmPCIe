@@ -1,0 +1,216 @@
+V 000062 56 249 1773392821426 common_28nm_ram_pulse_generator
+(_unit common_28nm_ram_pulse_generator
+	(_specify
+		(_specparam t_decode integer 0)
+		(_specparam t_access integer 0)
+		(_modpath parallel positive 0 2786
+			(_port clk in posedge)
+			(_port pulse out posedge)
+			(_datain state in posedge)
+		)
+	)
+)
+V 000056 56 1183 1773392821428 common_28nm_ram_register
+(_unit common_28nm_ram_register
+	(_specify
+		(_tchk setup 0 2849
+			(_port d ())
+			(_port clk (posedge) (_code  11 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 2850
+			(_port aclr ())
+			(_port clk (posedge))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 2851
+			(_port ena ())
+			(_port clk (posedge) (_code  12 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 2852
+			(_port stall ())
+			(_port clk (posedge) (_code  13 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 2853
+			(_port clk (posedge) (_code  14 reset))
+			(_port d ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 2854
+			(_port clk (posedge))
+			(_port aclr ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 2855
+			(_port clk (posedge) (_code  15 reset))
+			(_port ena ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 2856
+			(_port clk (posedge) (_code  16 reset))
+			(_port stall ())
+	(_register (viol_notifier))
+		)
+		(_modpath parallel positive 0 2857
+			(_port clk in posedge)
+			(_port q out posedge)
+			(_datain q_reg in posedge)
+		)
+		(_modpath parallel positive 0 2858
+			(_port aclr in posedge)
+			(_port q out posedge)
+			(_datain q_reg in posedge)
+		)
+	)
+)
+V 000068 56 255 1773392821436 common_28nm_mlab_cell_pulse_generator
+(_unit common_28nm_mlab_cell_pulse_generator
+	(_specify
+		(_specparam t_decode integer 0)
+		(_specparam t_access integer 0)
+		(_modpath parallel positive 0 4513
+			(_port clk in posedge)
+			(_port pulse out posedge)
+			(_datain state in posedge)
+		)
+	)
+)
+V 000061 56 144 1773392821444 generic_28nm_hp_mlab_cell_impl
+(_unit generic_28nm_hp_mlab_cell_impl
+	(_specify
+		(_modpath full unknown 0 4942
+			(_port portbaddr in )
+			(_port portbdataout out )
+		)
+	)
+)
+V 000061 56 144 1773392821448 generic_28nm_lc_mlab_cell_impl
+(_unit generic_28nm_lc_mlab_cell_impl
+	(_specify
+		(_modpath full unknown 0 5194
+			(_port portbaddr in )
+			(_port portbdataout out )
+		)
+	)
+)
+V 000059 56 1183 1773392821450 common_28nm_lutram_register
+(_unit common_28nm_lutram_register
+	(_specify
+		(_tchk setup 0 5281
+			(_port d ())
+			(_port clk (posedge) (_code  11 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 5282
+			(_port clr ())
+			(_port clk (posedge))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 5283
+			(_port ena ())
+			(_port clk (posedge) (_code  12 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 5284
+			(_port stall ())
+			(_port clk (posedge) (_code  13 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5285
+			(_port clk (posedge) (_code  14 reset))
+			(_port d ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5286
+			(_port clk (posedge))
+			(_port clr ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5287
+			(_port clk (posedge) (_code  15 reset))
+			(_port ena ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5288
+			(_port clk (posedge) (_code  16 reset))
+			(_port stall ())
+	(_register (viol_notifier))
+		)
+		(_modpath parallel positive 0 5289
+			(_port clk in posedge)
+			(_port q out posedge)
+			(_datain q_reg in posedge)
+		)
+		(_modpath parallel positive 0 5290
+			(_port clr in posedge)
+			(_port q out posedge)
+			(_datain q_reg in posedge)
+		)
+	)
+)
+V 000058 56 141 1773392821452 generic_14nm_mlab_cell_impl
+(_unit generic_14nm_mlab_cell_impl
+	(_specify
+		(_modpath full unknown 0 5453
+			(_port portbaddr in )
+			(_port portbdataout out )
+		)
+	)
+)
+V 000059 56 1183 1773392821454 common_14nm_lutram_register
+(_unit common_14nm_lutram_register
+	(_specify
+		(_tchk setup 0 5543
+			(_port d ())
+			(_port clk (posedge) (_code  11 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 5544
+			(_port clr ())
+			(_port clk (posedge))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 5545
+			(_port ena ())
+			(_port clk (posedge) (_code  12 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk setup 0 5546
+			(_port stall ())
+			(_port clk (posedge) (_code  13 reset))
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5547
+			(_port clk (posedge) (_code  14 reset))
+			(_port d ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5548
+			(_port clk (posedge))
+			(_port clr ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5549
+			(_port clk (posedge) (_code  15 reset))
+			(_port ena ())
+	(_register (viol_notifier))
+		)
+		(_tchk hold 0 5550
+			(_port clk (posedge) (_code  16 reset))
+			(_port stall ())
+	(_register (viol_notifier))
+		)
+		(_modpath parallel positive 0 5551
+			(_port clk in posedge)
+			(_port q out posedge)
+			(_datain q_reg in posedge)
+		)
+		(_modpath parallel positive 0 5552
+			(_port clr in posedge)
+			(_port q out posedge)
+			(_datain q_reg in posedge)
+		)
+	)
+)

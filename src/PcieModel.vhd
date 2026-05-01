@@ -52,6 +52,7 @@ library osvvm_cosim ;
   context osvvm_cosim.CoSimContext ;
 
   use work.PcieInterfacePkg.all ;
+  use work.PcieComponentPkg.all ;
 
 entity PcieModel is
 generic (
@@ -62,6 +63,7 @@ generic (
   EN_TLP_REQ_DIGEST  : boolean := false ; -- true to enable ECRC on TLP requests (completions will add in response to req with ECRC---can be disabled)
   PIPE               : boolean := false ; -- true if output to be PIPE compatible (no 8b10b encoding; lane width is 9 bits instead of 10)
   DISABLE_SCRAMBLING : boolean := false ; -- true if output to have no scrambling
+  GEN2_CLK           : boolean := false ; -- true if input clock at GEN2 speed (500MHz)
   ENABLE_INIT_PHY    : boolean := true  ; -- true if PHY layer link training is to be enabled
   ENABLE_AUTO        : boolean := false   -- true if PCIe automatic features are to be enabled
 ) ;
@@ -69,6 +71,9 @@ port (
   -- Globals
   Clk         : in   std_logic ;
   nReset      : in   std_logic ;
+  
+  ClkOut      : out  std_logic ;
+  Gen2ClkSel  : out  std_logic := '0' ;
 
   -- Testbench Transaction Interface
   TransRec    : inout AddressBusRecType ;
@@ -110,6 +115,8 @@ architecture behavioral of PcieModel is
   signal   LinkInVec     : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
   signal   LinkOutVec    : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
 
+  signal   ClkDiv2       : std_logic                                        := '0' ;
+  
 begin
 
   ClockCounter : process(Clk)
@@ -144,6 +151,35 @@ begin
     wait ;
   end process Initialise ;
 
+  ------------------------------------------------------------
+  -- Clock control
+  ------------------------------------------------------------
+  
+  g_CLKMUX : if GEN2_CLK generate
+  
+    p_CLKDIV2 : process (Clk)
+    begin
+      if Clk'event and Clk = '1' then 
+        ClkDiv2                 <= not ClkDiv2 ;
+      end if ;
+    end process p_CLKDIV2 ;
+    
+    clkmux_i : clkmux
+    port map
+    (
+        aresetn                  => nReset,
+        clka                     => Clk,
+        clkb                     => ClkDiv2,
+        clkout                   => ClkOut,
+        sel                      => Gen2ClkSel
+    );
+    
+  else generate
+    
+    ClkOut                      <= Clk ;
+    
+  end generate ;
+  
   ------------------------------------------------------------
   --  Transaction Dispatcher
   ------------------------------------------------------------
@@ -203,15 +239,24 @@ begin
         -- Process parameters
         -- -----------------------------------------------------
 
-        when NODENUMADDR      => RdData := std_logic_vector(to_unsigned(NODE_NUM, RdData'length)) ;
-        when LANESADDR        => RdData := std_logic_vector(to_unsigned(LINKWIDTH, RdData'length)) ;
-        when EP_ADDR          => RdData := 64x"00000001" when ENDPOINT else 64x"00000000";
-        when REQID_ADDR       => RdData := std_logic_vector(to_unsigned(REQ_ID, RdData'length)) ;
-        when PIPE_ADDR        => RdData := 64x"00000001" when PIPE else 64x"00000000";
-        when SCRAMBLE_ADDR    => RdData := 64x"00000001" when DISABLE_SCRAMBLING else 64x"00000000";
-        when EN_ECRC_ADDR     => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
-        when INITPHY_ADDR     => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
-        when ENABLE_AUTO_ADDR => RdData := 64x"00000001" when ENABLE_AUTO     else 64x"00000000";
+        when NODENUMADDR           => RdData := std_logic_vector(to_unsigned(NODE_NUM, RdData'length)) ;
+        when LANESADDR             => RdData := std_logic_vector(to_unsigned(LINKWIDTH, RdData'length)) ;
+        when EP_ADDR               => RdData := 64x"00000001" when ENDPOINT else 64x"00000000";
+        when REQID_ADDR            => RdData := std_logic_vector(to_unsigned(REQ_ID, RdData'length)) ;
+        when DISABLE_8B10B_ADDR    => RdData := 64x"00000001" when PIPE else 64x"00000000";
+        when DISABLE_SCRAMBLE_ADDR => RdData := 64x"00000001" when DISABLE_SCRAMBLING else 64x"00000000";
+        when EN_ECRC_ADDR          => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
+        when INITPHY_ADDR          => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
+        when ENABLE_AUTO_ADDR      => RdData := 64x"00000001" when ENABLE_AUTO     else 64x"00000000";
+        
+        when GEN2_CLK_ADDR         => 
+            if WE then
+              Gen2ClkSel <= '1' when (VPData mod 2) = 1 else '0' ;
+            end if ;
+            
+            RdData(0) := Gen2ClkSel;
+            RdData(1) := '1' when GEN2_CLK else '0';
+            RdData(63 downto 3) := (others => '0');
 
         -- -----------------------------------------------------
         -- Process global state
@@ -385,7 +430,7 @@ begin
 
           if WE then
             WaitForTransaction(
-               Clk      => Clk,
+               Clk      => ClkOut,
                Rdy      => TransRec.Rdy,
                Ack      => TransRec.Ack
             ) ;
@@ -401,7 +446,7 @@ begin
 
       -- If not a delta access, wait for next clock edge, else loop round immediately
       if not Delta then
-        wait until rising_edge(Clk) ;
+        wait until rising_edge(ClkOut) ;
       end if ;
 
     end loop ;

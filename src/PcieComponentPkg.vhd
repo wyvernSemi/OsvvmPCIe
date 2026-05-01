@@ -49,6 +49,18 @@ library osvvm_pcie ;
 
 package PcieComponentPkg is
 
+    ------------------------------------------------------------
+    component clkmux is
+    ------------------------------------------------------------
+    port (
+      aresetn           : in  std_logic;
+      sel               : in  std_logic;
+      clka              : in  std_logic;
+      clkb              : in  std_logic;
+      clkout            : out std_logic
+    );
+    end component clkmux ;
+
   ------------------------------------------------------------
   component PcieModel is
   ------------------------------------------------------------
@@ -67,6 +79,9 @@ package PcieComponentPkg is
       -- Globals
       Clk         : in   std_logic ;
       nReset      : in   std_logic ;
+      
+      ClkOut      : out  std_logic ;
+      Gen2ClkSel  : out  std_logic := '0' ;
 
       -- Testbench Transaction Interface
       TransRec    : inout AddressBusRecType ;

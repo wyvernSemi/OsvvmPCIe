@@ -38,6 +38,7 @@ library ieee ;
   use ieee.std_logic_1164.all ;
   use ieee.numeric_std.all ;
   use ieee.numeric_std_unsigned.all ;
+  use ieee.std_logic_textio.all ;
 
 library osvvm ;
   context osvvm.OsvvmContext ;
@@ -81,6 +82,9 @@ package PcieInterfacePkg is
   constant CLK_COUNT                         : integer := 204 ;
   constant LINK_STATE                        : integer := 205 ;
   constant RESET_STATE                       : integer := 206 ;
+  constant DISABLE_SCRAMBLE_ADDR             : integer := 207 ;
+  constant DISABLE_8B10B_ADDR                : integer := 208 ;
+  constant GEN2_CLK_ADDR                     : integer := 209 ;
 
   --   ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^    ^
   -- **** if the ../include/pcie_vhost_map.h values are updated, update the values above to match ****
@@ -93,7 +97,6 @@ package PcieInterfacePkg is
   constant EN_ECRC_ADDR                      : integer := 302 ;
   constant INITPHY_ADDR                      : integer := 303 ;
   constant ENABLE_AUTO_ADDR                  : integer := 304 ;
-  constant SCRAMBLE_ADDR                     : integer := 305 ;
 
   constant GETNEXTTRANS                      : integer := 400 ;
   constant GETINTTOMODEL                     : integer := 401 ;
@@ -535,7 +538,7 @@ package PcieInterfacePkg is
              oStatus         : Out   PcieStatusRecType ;
              iTag            : In    TagType := TLP_TAG_AUTO
   ) ;
-  
+
   ------------------------------------------------------------
   procedure PcieCfgSpaceRead (
   -- do PCIe Configuration Space Read Cycle
@@ -821,6 +824,14 @@ package PcieInterfacePkg is
              oTag               : Out   integer ;
              oPayloadByteLength : Out   integer
   );
+
+  ------------------------------------------------------------
+  procedure PcieDecodePciRegisters (
+  -- Decode and log PCI configuration space register values
+  ------------------------------------------------------------
+             RegData            : In    std_logic_vector ;
+             RegNumber          : In    integer
+  ) ;
 
 end package PcieInterfacePkg ;
 
@@ -1136,7 +1147,7 @@ package body PcieInterfacePkg is
     oStatus.Tag        := Get(TransactionRec.Params, PARAM_CMPL_RX_TAG) ;
 
   end procedure PcieCfgSpaceRead ;
-  
+
   ------------------------------------------------------------
   procedure PcieCfgSpaceRead (
   -- do PCIe Configuration Space Read Cycle
@@ -1721,6 +1732,55 @@ package body PcieInterfacePkg is
     end if ;
 
   end procedure PcieExtractMsg ;
+
+  ------------------------------------------------------------
+  procedure PcieDecodePciRegisters (
+  -- Decode and log PCI configuration space register values
+  ------------------------------------------------------------
+             RegData            : In    std_logic_vector ;
+             RegNumber          : In    integer
+  ) is
+  begin
+
+    case RegNumber is
+      when 0      => Log("    PCI REG0  : Device ID               " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
+                     Log("              : Vendor ID               " & to_hstring(RegData(15 downto  0)), INFO, TRUE) ;
+                                                                  
+      when 1      => Log("    PCI REG1  : Status                  " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
+                     Log("              : Command                 " & to_hstring(RegData(15 downto  0)), INFO, TRUE) ;
+                                                                  
+      when 2      => Log("    PCI REG2  : Class Code              " & to_hstring(RegData(31 downto 24)), INFO, TRUE) ;
+                     Log("              : Subclass                " & to_hstring(RegData(23 downto 16)), INFO, TRUE) ;
+                     Log("              : Prog IF                 " & to_hstring(RegData(15 downto  8)), INFO, TRUE) ;
+                     Log("              : Revision ID             " & to_hstring(RegData( 7 downto  0)), INFO, TRUE) ;
+                                                                  
+      when 3      => Log("    PCI REG3  : BIST                    " & to_hstring(RegData(31 downto 24)), INFO, TRUE) ;
+                     Log("              : Header Type             " & to_hstring(RegData(23 downto 16)), INFO, TRUE) ;
+                     Log("              : Latency Timer           " & to_hstring(RegData(15 downto  8)), INFO, TRUE) ;
+                     Log("              : Cache Line Size         " & to_hstring(RegData( 7 downto  0)), INFO, TRUE) ;
+
+      when 4 | 5 | 6 | 7 | 8 | 9 =>
+                     Log("    PCI REG" & integer'image(RegNumber) & "  : BAR "& integer'image(RegNumber-4) & "                   " & to_hstring(RegData), INFO, TRUE) ;
+
+      when 10 =>     Log("    PCI REG10 : Cardbus CIS Ptr         " & to_hstring(RegData), INFO, TRUE) ;
+                                                                  
+      when 11 =>     Log("    PCI REG11 : Subsystem ID            " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
+                     Log("              : Subsystem Vendor ID     " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
+                     
+      when 12 =>     Log("    PCI REG12 : Expansion ROM Base Addr " & to_hstring(RegData), INFO, TRUE) ;
+      
+      when 13 =>     Log("    PCI REG13 : Capabilities Ptr        " & to_hstring(RegData(7 downto 0)), INFO, TRUE) ;
+      
+      when 15 =>     Log("    PCI REG15 : Max Latency             " & to_hstring(RegData(31 downto 24)), INFO, TRUE) ;
+                     Log("              : Min Grant               " & to_hstring(RegData(23 downto 16)), INFO, TRUE) ;
+                     Log("              : Interrupt Pin           " & to_hstring(RegData(15 downto  8)), INFO, TRUE) ;
+                     Log("              : Interrupt Line          " & to_hstring(RegData( 7 downto  0)), INFO, TRUE) ;
+
+      when others => Log("    PCI REG" & integer'image(RegNumber) & "                           " & to_hstring(RegData), INFO, TRUE) ;
+
+     end case ;
+
+  end procedure PcieDecodePciRegisters ;
 
 end package body PcieInterfacePkg ;
 

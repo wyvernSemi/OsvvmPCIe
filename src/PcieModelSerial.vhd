@@ -60,14 +60,15 @@ entity PcieModelSerial is
     REQ_ID                : integer := 0 ;
     EN_TLP_REQ_DIGEST     : boolean := false ;
     ENABLE_INIT_PHY       : boolean := true  ;
-    ENABLE_AUTO           : boolean := false
+    ENABLE_AUTO           : boolean := false ;
+    GEN2_CLK              : boolean := false
   );
   port (
     Clk                   : in  std_logic;
     SerClk                : in  std_logic;
     nReset                : in  std_logic;
 
-    -- Testbench Transaction Interface
+    -- Test bench Transaction Interface
     TransRec              : inout AddressBusRecType ;
 
     SerLinkIn             : in  std_logic_vector;
@@ -83,7 +84,41 @@ signal PcieLink : PcieRecType(
     LinkIn  (0 to SerLinkIn'length -1)(ENCODEDWIDTH-1 downto 0)
   ) ;
 
+signal ClkOut             : std_logic ;
+signal serclk_main        : std_logic := '0';
+signal serclk_div2        : std_logic := '0';
+signal serclk_sel         : std_logic := '0';
+
 begin
+
+  -- -------------------------------------------------------------
+  -- Internal clock selection
+  -- -------------------------------------------------------------
+  
+  P_CLKS : if not GEN2_CLK generate
+    -- When using GEN1 clock rate, route port straight through to internal clock
+    serclk_main            <= SerClk;
+  else generate
+
+    -- Generate a half speed clock for GEN1
+    process(SerClk)
+    begin
+      if SerClk'event and SerClk = '1' then
+        serclk_div2        <= not serclk_div2;
+      end if;
+    end process;
+
+    -- Select between GEN1 and GEN2 clocks
+    clkmux_i : entity work.clkmux
+    port map (
+      aresetn          => nReset,
+      clka             => SerClk,
+      clkb             => serclk_div2,
+      sel              => serclk_sel,
+      clkout           => serclk_main
+    );
+
+  end generate;
 
   ------------------------------------------------------------
   pciemodel_i : entity osvvm_pcie.PcieModel
@@ -102,6 +137,9 @@ begin
     -- Globals
     Clk                => Clk,
     nReset             => nReset,
+    
+    ClkOut             => ClkOut,
+    Gen2ClkSel         => serclk_sel,
 
     -- Test bench Transaction Interface
     TransRec           => TransRec,
@@ -118,7 +156,7 @@ begin
     NUMOFLANES         => SerLinkOut'length
   )
   port map (
-    SerClk             => SerClk,
+    SerClk             => serclk_main,
 
     ParIn              => PcieLink.LinkOut,
     SerOut             => SerLinkOut,

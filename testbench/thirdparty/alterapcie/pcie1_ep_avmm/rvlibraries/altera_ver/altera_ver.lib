@@ -1,0 +1,368 @@
+timestamp=1773392814238
+
+[~A]
+C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v=0*11343*19261
+LastVerilogToplevel=alt_bidir_buf
+ModifyID=1
+Version=74
+
+[~MFT]
+0=46|0altera_ver.mgf|19261|0
+1=44|1altera_ver.mgf|98308|0
+3=88|3altera_ver.mgf|46642|0
+4=2|4altera_ver.mgf|1138|0
+
+[$root]
+A/$root=22|||1*0
+BinW64/$root=3*0
+SLP=3*115
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|c73a565f2ade592f8ac1c68f484c9216bfa24578b74ee6136ac1a15645defaa2
+
+[PRIM_GDFF_HIGH]
+A/PRIM_GDFF_HIGH=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1337|1*37609
+BinW64/PRIM_GDFF_HIGH=3*13456
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1337
+SLP=3*13786
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|70e326a0ae2d87051faa9a45793611d09137a4245026c2b9307b1fe3558ae18b2a91ab38b26594c2dcbbffa489283068
+
+[PRIM_GDFF_HIGH_SCLR_PRIORITY]
+A/PRIM_GDFF_HIGH_SCLR_PRIORITY=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1380|1*40191
+BinW64/PRIM_GDFF_HIGH_SCLR_PRIORITY=3*13946
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1380
+SLP=3*14290
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|70e326a0ae2d87051faa9a45793611d0bcc426b7fdde41e59c179113153f50c3d17c07092fe9c84baee7ec6fc64b09d25bfe2a692d15c7b39057120a6589d626
+
+[PRIM_GDFF_LOW]
+A/PRIM_GDFF_LOW=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1251|1*32397
+BinW64/PRIM_GDFF_LOW=3*12444
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1251
+SLP=3*12772
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|6644d3431e378c4251ff4c7156243e573c8881aa38f54b5394ac07974b4be906f13f65486c696ab1a491fd753a49624e
+
+[PRIM_GDFF_LOW_SCLR_PRIORITY]
+A/PRIM_GDFF_LOW_SCLR_PRIORITY=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1294|1*34975
+BinW64/PRIM_GDFF_LOW_SCLR_PRIORITY=3*12931
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1294
+SLP=3*13273
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|6644d3431e378c4251ff4c7156243e5716089c99139bbe5ffec9166ec4d5dc61f1c1c79a19d11e7fd1009623e543e0412f66fa4149bb416a0d2aae50d8fcdebd
+
+[TRI]
+A/TRI=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|114|1*8007
+BinW64/TRI=3*3514
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|114
+SLP=3*3627
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|584b04f7de1f44e011b52d09cafe872f4b17d146d604335ab32af3401cb9d6b4
+
+[alt_bidir_buf]
+A/alt_bidir_buf=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1218|1*98308
+BinW64/alt_bidir_buf=3*45731
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1218
+SLP=3*46642
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|d988558db19b1000d6b5f90b945b2748bfc8e62f9c4873f45c9999fbfde9b3bce61fb2ea27b7795d152c4e774cdaf9c4
+
+[alt_bidir_diff]
+A/alt_bidir_diff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1180|1*95192
+BinW64/alt_bidir_diff=3*43973
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1180
+SLP=3*45151
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|97b235da27926036b20995442085b479bf42fc03731fc0c6ad2a8297514994cf56b94ad16110f6fefd4cdaaf8db4a7c1
+
+[alt_inbuf]
+A/alt_inbuf=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|985|1*74370
+BinW64/alt_inbuf=3*37478
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|985
+SLP=3*37808
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|31ac415be30461c8a5ab41113eaf0bc8d11a51508dfe70bf9efaf19ddf0be0fdfa15ea4afdbfa38a32723d866eda40d7
+
+[alt_inbuf_diff]
+A/alt_inbuf_diff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1068|1*84455
+BinW64/alt_inbuf_diff=3*39793
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1068
+SLP=3*40549
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|d0bd63600c21bf649d5ede721fe89bbf903c2b79568faa25fc89a124d624208699ba2e29a7a7a03a9f7dfda4a66782b5
+
+[alt_iobuf]
+A/alt_iobuf=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1039|1*81407
+BinW64/alt_iobuf=3*38892
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1039
+SLP=3*39517
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|56286a729aac2ab29d159f004a5ca3673b7fd6471a083072b1d7305c6137d67323ce78d070b4f41d228e49de6996744c
+
+[alt_iobuf_diff]
+A/alt_iobuf_diff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1141|1*91994
+BinW64/alt_iobuf_diff=3*42326
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1141
+SLP=3*43429
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|0cd92dda68df26949cdce566ac9ed0159309c62bc186e29af9545741f769a1d0185ff08a929af12e861ff5dc2df6f77d
+
+[alt_outbuf]
+A/alt_outbuf=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1000|1*76257
+BinW64/alt_outbuf=3*37975
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1000
+SLP=3*38306
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|b2d4f73bf2567350da90a2a8847d97a182d1a211da2d1a850547f94940ffc9c43fe77dc19152da5b8b2e0b424bb43923
+
+[alt_outbuf_diff]
+A/alt_outbuf_diff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1098|1*86634
+BinW64/alt_outbuf_diff=3*40937
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1098
+SLP=3*41315
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|f2870537cb1c81688f32bbf344683990bb50b9e1c6d139c9b9610773e7f84917a789bf09788ba2266d95fb262318ea17
+
+[alt_outbuf_tri]
+A/alt_outbuf_tri=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1019|1*78779
+BinW64/alt_outbuf_tri=3*38485
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1019
+SLP=3*38734
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|f1f307b2f70d3e6279f7b4f203411a15214e8c2ab3765cdfb97ccdd78643d221a196fb8821cefb1922facd1927a57d0b
+
+[alt_outbuf_tri_diff]
+A/alt_outbuf_tri_diff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1119|1*89125
+BinW64/alt_outbuf_tri_diff=3*41536
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|1119
+SLP=3*42082
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|f1f307b2f70d3e6279f7b4f203411a15d089347a0690c7629ae2a6bc63971864a6438b40dd831108294912da78d15759
+
+[carry]
+A/carry=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|49|1*1519
+BinW64/carry=3*627
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|49
+SLP=3*920
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|bfe93747ce552961188dae1d7c347f0984203cd3373e89ed17b6681265285d34
+
+[carry_sum]
+A/carry_sum=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|65|1*3297
+BinW64/carry_sum=3*1481
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|65
+SLP=3*1833
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|a1c4ca4a766f5b795d67a6f5d0ffc7914fff32ca6be2d86a22eaa69897de254a0c3f626afe8170b537ba10760a00f733
+
+[cascade]
+A/cascade=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|57|1*2404
+BinW64/cascade=3*1051
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|57
+SLP=3*1346
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|0a553179f6b63f0082823b6008e5d75326527262ddaa47cb266f3a3c4d9b973a0295c270969fa20187f569e14b251d8d
+
+[clklock]
+A/clklock=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|590|1*68798
+BinW64/clklock=3*25110
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|590
+SLP=3*32297
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|aa79dd6d1cdb15720c7fe5d3f6f8cf5626527262ddaa47cb266f3a3c4d9b973a69988c65f69158deb165f1c2efc9ad2b
+
+[dff]
+A/dff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|203|1*14710
+BinW64/dff=3*7438
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|203
+SLP=3*7797
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|6a4f0a87167aa7fed99534ff2dffab1b2a94095e46e52a1b387b91b7dc8b2983
+
+[dffe]
+A/dffe=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|214|1*16696
+BinW64/dffe=3*7971
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|214
+SLP=3*8331
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|01d4a72707ae89965d6e4e60b42996a3447e5dbbfd79c0df54c8b335ebdda2ae
+
+[dffea]
+A/dffea=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|225|1*18684
+BinW64/dffea=3*8508
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|225
+SLP=3*9111
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|20742f3a47625e49cc96bf6615b247b03dbf8564de191533c0648703bc296ea4
+
+[dffeas]
+A/dffeas=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|247|1*20952
+BinW64/dffeas=3*9407
+D/dffeas=4*0
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|247
+SLP=3*11471
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|e8b9f586f561944bc426a3d620d97cf2f7c90d853e61d3e1c035f7c14f5357fe
+
+[dffeas_pr]
+A/dffeas_pr=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|341|1*42829
+BinW64/dffeas_pr=3*14477
+D/dffeas_pr=4*1138
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|341
+SLP=3*17269
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|86d7f0c205e92e82624e565aff7363d5ca3f2bfb9615ce8da1628794c98150fee78a94bed8bb5a3460241f804e5c6a07
+
+[dlatch]
+A/dlatch=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|153|1*11833
+BinW64/dlatch=3*5289
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|153
+SLP=3*5845
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|c858ac2bee9ead80db437eaa42b9af65bdd4959209983f83a09b466ec60b4b92
+
+[exp]
+A/exp=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|76|1*4449
+BinW64/exp=3*1998
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|76
+SLP=3*2300
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|6100221c91cc8fe894e67160f19f84d84d70f9f39025df0601d5aea1442b4468
+
+[global]
+A/global=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|38|1*630
+BinW64/global=3*199
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|38
+SLP=3*493
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|c0f9e5003eec43bd96b47574636b6e2b41f4643c00e40c5ee21c7c9bb969d566
+
+[jkff]
+A/jkff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|514|1*60557
+BinW64/jkff=3*21711
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|514
+SLP=3*22071
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|83a7367c1e9cf1cfe1707edefaa119e890576f9c32625057bb3b071a2c67c340
+
+[jkffe]
+A/jkffe=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|525|1*62270
+BinW64/jkffe=3*22247
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|525
+SLP=3*22609
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|d405a073ad12bd7cd5a8196f34b812ef3df353d6a668157a371105b443d2def7
+
+[latch]
+A/latch=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|139|1*10776
+BinW64/latch=3*4602
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|139
+SLP=3*5063
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|a22d876ebebee021e55c6f2aa5a429666ea4c740b5e664f37f556b990a47e0cb
+
+[lut_input]
+A/lut_input=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|123|1*8958
+BinW64/lut_input=3*3726
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|123
+SLP=3*4023
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|efa4bba023c336e5efeaa4d65146857d9dd4038800ea7627f6858577fd3be4ba93a5066926560a56de1b38ff263f540d
+
+[lut_output]
+A/lut_output=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|131|1*9865
+BinW64/lut_output=3*4163
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|131
+SLP=3*4461
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|96ba0a968c281119128f133afa2ef13c3554cb63af590c7b18f670a1fb250a97af1591a6f14ae381c838b2bbe5f6b551
+
+[opndrn]
+A/opndrn=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|98|1*6207
+BinW64/opndrn=3*2856
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|98
+SLP=3*2972
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|ae4f29a9ff2827b80769384ef0060e8b9ef1f3e3ffa528ee3163a04ac50b6bc3
+
+[prim_gdff]
+A/prim_gdff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|171|1*13043
+BinW64/prim_gdff=3*6156
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|171
+SLP=3*6907
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|624c1ed215642af43668c485d3fe0147fe08ec5dd4a9166b7b73853feca17806808a97ad4358eaa332477e7cbb64ad35
+
+[prim_gjkff]
+A/prim_gjkff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|484|1*59112
+BinW64/prim_gjkff=3*20469
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|484
+SLP=3*21232
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|ae98167fb39144235c314b26c3ba55e7a1a4b2da5f81a1b18251bed6457d9668e0bd95ad5b8e65741f84aa7a9a2a6e7a
+
+[prim_gsrff]
+A/prim_gsrff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|536|1*63955
+BinW64/prim_gsrff=3*22793
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|536
+SLP=3*23552
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|a625ad3f3e15b72e2a5c2396a20f1290109df2cd4aa456566bd79f13f7410aeebe367dd5042a8bb4c611142fbe112a8c
+
+[prim_gtff]
+A/prim_gtff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|436|1*54511
+BinW64/prim_gtff=3*18290
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|436
+SLP=3*18971
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|e4c40de7fb515f9e467df53b888ba6a0d3653051ad52a43dcf83c4813aa3d7d0e78a94bed8bb5a3460241f804e5c6a07
+
+[row_global]
+A/row_global=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|106|1*7096
+BinW64/row_global=3*3073
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|106
+SLP=3*3371
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|59048e08c9e6367d964a44a7e098add72148c4825ea6393e4e1a2b958244ed357ebf8c7ffde4709013cc748cefe04dd8
+
+[soft]
+A/soft=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|87|1*5326
+BinW64/soft=3*2436
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|87
+SLP=3*2728
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|2f699b4b18eda94a3ffe06979e81e06967dd024826fe23b6b68b4f9e1f191c82
+
+[srff]
+A/srff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|566|1*65400
+BinW64/srff=3*24025
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|566
+SLP=3*24385
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|718095396e2505172fb9ae63fc31fbd48e8c1d16b67c43b6d20626cd044b0837
+
+[srffe]
+A/srffe=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|577|1*67113
+BinW64/srffe=3*24563
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|577
+SLP=3*24925
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|09dcd5576415d11287b7a96b4e5a2cd82c504d02e9b3f04125ee635c9b9164bf
+
+[tff]
+A/tff=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|462|1*55880
+BinW64/tff=3*19397
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|462
+SLP=3*19756
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|0c00345ad7fb6fd0846289e8b5bbfd44d94518621243afad3eb2508ea91c69c0
+
+[tffe]
+A/tffe=22|C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|473|1*57510
+BinW64/tffe=3*19930
+R=C:/altera/ver/quartus/eda/sim_lib/altera_primitives.v|473
+SLP=3*20290
+Version=2025.10.126 (Windows64)|000000ac789c658e5d0a80201084afe20584083acfb2c896e2fa83ca46b72f0323ea69e6fbe665b4cc7e519ad59e8aef998d233002d665400901a66e911b1504a1f2a2b07e04c7eac2709c9f5a376c34c01c865324f9b1add5fde47da77fb98613817f3e86|3fc05f1313292003e7211380e09cfa363b60f52a88931499cc5847ffd3c11a79
+
+[~U]
+$root=12|0*0|
+PRIM_GDFF_HIGH=12|0*4732||0x20
+PRIM_GDFF_HIGH_SCLR_PRIORITY=12|0*5007||0x20
+PRIM_GDFF_LOW=12|0*4162||0x20
+PRIM_GDFF_LOW_SCLR_PRIORITY=12|0*4434||0x20
+TRI=12|0*1895||0x10
+alt_bidir_buf=12|0*10995||0x10
+alt_bidir_diff=12|0*10641||0x10
+alt_inbuf=12|0*8013||0x10
+alt_inbuf_diff=12|0*9307||0x10
+alt_iobuf=12|0*8957||0x10
+alt_iobuf_diff=12|0*10284||0x10
+alt_outbuf=12|0*8293||0x10
+alt_outbuf_diff=12|0*9604||0x10
+alt_outbuf_tri=12|0*8619||0x10
+alt_outbuf_tri_diff=12|0*9938||0x10
+carry=12|0*604||0x10
+carry_sum=12|0*968||0x10
+cascade=12|0*784||0x10
+clklock=12|0*7755||0x10
+dff=12|0*3106||0x10
+dffe=12|0*3325||0x10
+dffea=12|0*3555||0x10
+dffeas=12|0*3805||0x10
+dffeas_pr=12|0*5306||0x10
+dlatch=12|0*2645||0x10
+exp=12|0*1169||0x10
+global=12|0*422||0x10
+jkff=12|0*6599||0x10
+jkffe=12|0*6825||0x10
+latch=12|0*2453||0x10
+lut_input=12|0*2078||0x10
+lut_output=12|0*2265||0x10
+opndrn=12|0*1523||0x10
+prim_gdff=12|0*2854|
+prim_gjkff=12|0*6370|
+prim_gsrff=12|0*7062|
+prim_gtff=12|0*5698|
+row_global=12|0*1705||0x10
+soft=12|0*1345||0x10
+srff=12|0*7292||0x10
+srffe=12|0*7518||0x10
+tff=12|0*5921||0x10
+tffe=12|0*6140||0x10
