@@ -148,6 +148,11 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
   constant INITDLL                           : integer := 0 ;
   constant INITPHY                           : integer := 1 ;
+  constant GEN_OS                            : integer := 2 ;
+  constant GEN_TS                            : integer := 3 ;
+  constant GET_EVENT                         : integer := 4 ;
+  constant RST_EVENT                         : integer := 6 ;
+  constant GET_LANE_TS                       : integer := 7 ;
 
   ------------------------------------------------------------
   -- Memory endian settings
@@ -240,6 +245,12 @@ package PcieInterfacePkg is
   constant CPL_TRANS                         : integer :=  4 ;
   constant PART_CPL_TRANS                    : integer :=  5 ;
 
+  constant ACK_NAK_DLL                       : integer :=  6 ;
+  constant PM_DLL                            : integer :=  7 ;
+  constant VENDOR_DLL                        : integer :=  8 ;
+  constant INITFC_DLL                        : integer :=  9 ;
+  constant UPDATEFC_DLL                      : integer := 10 ;
+
   ------------------------------------------------------------
   -- TLP request tag auto-generation value
   ------------------------------------------------------------
@@ -261,7 +272,9 @@ package PcieInterfacePkg is
   constant PARAM_CMPL_STATUS                 : integer := 9;
   constant PARAM_CMPL_RX_TAG                 : integer := 10 ;
 
+  ------------------------------------------------------------
   -- Parameters when receiving transactions
+  ------------------------------------------------------------
   constant PARAM_REQ_TYPE                    : integer := 0 ;
   constant PARAM_REQ_TAG                     : integer := 1 ;
   constant PARAM_REQ_RID                     : integer := 2 ;
@@ -287,6 +300,27 @@ package PcieInterfacePkg is
   -- PARAM_REQ_ADDRHI not included in parameter count but still required for decoding
   constant PARAM_REQ_ADDRHI                  : integer := PARAM_REQ_ADDR + 1;
 
+
+  ------------------------------------------------------------
+  -- Parameters when generating ordered sets
+  ------------------------------------------------------------
+  constant PARAM_OS_TYPE                     : integer  := 0 ;
+
+  ------------------------------------------------------------
+  -- Parameters when generating training sequences
+  ------------------------------------------------------------
+  constant PARAM_TS_TYPE                     : integer  := 0 ;
+  constant PARAM_LINK                        : integer  := 1 ;
+  constant PARAM_LANE                        : integer  := 2 ;
+  constant PARAM_NFTS                        : integer  := 3 ;
+  constant PARAM_GEN                         : integer  := 4 ;
+  constant PARAM_CTL                         : integer  := 5 ;
+
+  ------------------------------------------------------------
+  -- Parameters when accessing TS/OS RX events
+  ------------------------------------------------------------
+  constant PARAM_EVENT_TYPE                  : integer  := 0 ;
+
   ------------------------------------------------------------
   -- TLP types
   ------------------------------------------------------------
@@ -308,6 +342,26 @@ package PcieInterfacePkg is
   constant TL_CPLD                           : integer := 16#4a# ;
   constant TL_CPLLK                          : integer := 16#0b# ;
   constant TL_CPLDLK                         : integer := 16#4b# ;
+
+  ------------------------------------------------------------
+  -- Training sequence types
+  ------------------------------------------------------------
+  constant TS1_ID                            : integer := 16#4a# ;
+  constant TS2_ID                            : integer := 16#45# ;
+  
+  constant TS_PAD                            : integer := 16#1f7# ;
+  constant TS_SEQ                            : integer := 0;
+
+  ------------------------------------------------------------
+  -- Ordered set codes
+  ------------------------------------------------------------
+
+  constant OS_SKP                            : integer := 16#11c# ;
+  constant OS_FTS                            : integer := 16#13c# ;
+  constant OS_IDL                            : integer := 16#17c# ;
+  constant OS_EIE                            : integer := 16#1fc# ;
+
+  constant ELEC_IDLE                         : integer := 0 ;
 
   ------------------------------------------------------------
   -- PCIe Message codes
@@ -390,6 +444,19 @@ package PcieInterfacePkg is
     Completion : integer ;
     Tag        : TagType ;
   end record PcieStatusRecType ;
+
+  ------------------------------------------------------------
+  ------------------------------------------------------------
+
+  type PcieTsRecType is record
+    Id         : integer ;
+    Linknum    : integer ;
+    Lanenum    : integer ;
+    Nfts       : integer ;
+    Datarate   : integer ;
+    Control    : integer;
+
+  end record PcieTsRecType ;
 
   ------------------------------------------------------------
   function has_all_z  (
@@ -831,6 +898,51 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
              RegData            : In    std_logic_vector ;
              RegNumber          : In    integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieOs (
+  -- Generate ordered set
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iOsType            : In    integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieTs (
+  -- Generate Training Sequence
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsParams          : In    PcieTsRecType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieGetOsTsEventCounts (
+  -- Read ordered set/training sequence event counts.
+  -- counts returned in FIFO
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsOsType          : In    integer ;
+             oNumLanes          : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieResetOsTsEventCounts (
+  -- Reset ordered set/training sequence event counts.
+  -- counts returned in FIFO
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsOsType          : In    integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieGetTs (
+  -- Returns a training sequence type (TS_t) which is the
+  -- last TS value received
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iLane              : In    integer ;
+             oLastTs            : Out   PcieTsRecType
   ) ;
 
 end package PcieInterfacePkg ;
@@ -1745,15 +1857,15 @@ package body PcieInterfacePkg is
     case RegNumber is
       when 0      => Log("    PCI REG0  : Device ID               " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
                      Log("              : Vendor ID               " & to_hstring(RegData(15 downto  0)), INFO, TRUE) ;
-                                                                  
+
       when 1      => Log("    PCI REG1  : Status                  " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
                      Log("              : Command                 " & to_hstring(RegData(15 downto  0)), INFO, TRUE) ;
-                                                                  
+
       when 2      => Log("    PCI REG2  : Class Code              " & to_hstring(RegData(31 downto 24)), INFO, TRUE) ;
                      Log("              : Subclass                " & to_hstring(RegData(23 downto 16)), INFO, TRUE) ;
                      Log("              : Prog IF                 " & to_hstring(RegData(15 downto  8)), INFO, TRUE) ;
                      Log("              : Revision ID             " & to_hstring(RegData( 7 downto  0)), INFO, TRUE) ;
-                                                                  
+
       when 3      => Log("    PCI REG3  : BIST                    " & to_hstring(RegData(31 downto 24)), INFO, TRUE) ;
                      Log("              : Header Type             " & to_hstring(RegData(23 downto 16)), INFO, TRUE) ;
                      Log("              : Latency Timer           " & to_hstring(RegData(15 downto  8)), INFO, TRUE) ;
@@ -1763,14 +1875,14 @@ package body PcieInterfacePkg is
                      Log("    PCI REG" & integer'image(RegNumber) & "  : BAR "& integer'image(RegNumber-4) & "                   " & to_hstring(RegData), INFO, TRUE) ;
 
       when 10 =>     Log("    PCI REG10 : Cardbus CIS Ptr         " & to_hstring(RegData), INFO, TRUE) ;
-                                                                  
+
       when 11 =>     Log("    PCI REG11 : Subsystem ID            " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
                      Log("              : Subsystem Vendor ID     " & to_hstring(RegData(31 downto 16)), INFO, TRUE) ;
-                     
+
       when 12 =>     Log("    PCI REG12 : Expansion ROM Base Addr " & to_hstring(RegData), INFO, TRUE) ;
-      
+
       when 13 =>     Log("    PCI REG13 : Capabilities Ptr        " & to_hstring(RegData(7 downto 0)), INFO, TRUE) ;
-      
+
       when 15 =>     Log("    PCI REG15 : Max Latency             " & to_hstring(RegData(31 downto 24)), INFO, TRUE) ;
                      Log("              : Min Grant               " & to_hstring(RegData(23 downto 16)), INFO, TRUE) ;
                      Log("              : Interrupt Pin           " & to_hstring(RegData(15 downto  8)), INFO, TRUE) ;
@@ -1781,6 +1893,133 @@ package body PcieInterfacePkg is
      end case ;
 
   end procedure PcieDecodePciRegisters ;
+
+  ------------------------------------------------------------
+  procedure PcieOs (
+  -- Generate ordered set
+  --
+  -- Valid iOsType values :
+  --    OS_IDL, OS_EIE, OS_FTS, OS_SKP
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iOsType            : In    integer
+  ) is
+  begin
+
+    -- Put values in record
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GEN_OS ;
+    TransactionRec.IntToModel    <= iOsType ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieOs ;
+
+  ------------------------------------------------------------
+  procedure PcieTs (
+  -- Generate Training Sequence
+  --
+  -- Valid iTsParams.Id values      : TS1_ID, TS2_ID
+  -- Valid iTsParams.Linknum values : TS_PAD, 0 to 255
+  -- Valid iTsParams.Lanenum values : TS_PAD, TS_SEQ
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsParams          : In    PcieTsRecType
+  ) is
+  begin
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GEN_TS ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    Set(TransactionRec.Params, PARAM_TS_TYPE, iTsParams.Id) ;
+    Set(TransactionRec.Params, PARAM_LINK,    iTsParams.Linknum) ;
+    Set(TransactionRec.Params, PARAM_LANE,    iTsParams.Lanenum) ;
+    Set(TransactionRec.Params, PARAM_NFTS,    iTsParams.Nfts) ;
+    Set(TransactionRec.Params, PARAM_GEN,     iTsParams.Datarate) ;
+    Set(TransactionRec.Params, PARAM_CTL,     iTsParams.Control) ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieTs ;
+
+  ------------------------------------------------------------
+  procedure PcieGetOsTsEventCounts (
+  -- Read ordered set/training sequence event counts.
+  -- counts returned in FIFO with oNumLanes entries
+  --
+  -- Valid iTsOsType values :
+  --    TS1_ID, TS2_ID, OS_IDL, OS_EIE, OS_FTS,
+  --    OS_SKP, ELEC_IDLE
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsOsType          : In    integer ;
+             oNumLanes          : Out   integer
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GET_EVENT ;
+    TransactionRec.IntToModel    <= iTsOsType ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+    oNumLanes                    := TransactionRec.IntFromModel ;
+
+  end procedure PcieGetOsTsEventCounts ;
+
+  ------------------------------------------------------------
+  procedure PcieResetOsTsEventCounts (
+  -- Reset ordered set/training sequence event counts.
+  -- counts returned in FIFO
+  --
+  -- Valid iTsOsType values :
+  --    TS1_ID, TS2_ID, OS_IDL, OS_EIE, OS_FTS,
+  --    OS_SKP, ELEC_IDLE
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsOsType          : In    integer
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= RST_EVENT ;
+    TransactionRec.IntToModel    <= iTsOsType ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieResetOsTsEventCounts ;
+
+  ------------------------------------------------------------
+  procedure PcieGetTs (
+  -- Returns a training sequence type (PcieTsRecType) which is the
+  -- last TS value received on specified lane
+  --
+  -- Valid iLane values: 1, 2, 4, 8, 12 and 16
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iLane              : In    integer ;
+             oLastTs            : Out   PcieTsRecType
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GET_LANE_TS ;
+    TransactionRec.IntToModel    <= iLane ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+    oLastTs.Id                   := Get(TransactionRec.Params, PARAM_TS_TYPE);
+    oLastTs.Linknum              := Get(TransactionRec.Params, PARAM_LINK);
+    oLastTs.Lanenum              := Get(TransactionRec.Params, PARAM_LANE);
+    oLastTs.Nfts                 := Get(TransactionRec.Params, PARAM_NFTS);
+    oLastTs.Datarate             := Get(TransactionRec.Params, PARAM_GEN);
+    oLastTs.Control              := Get(TransactionRec.Params, PARAM_CTL);
+
+  end procedure PcieGetTs ;
 
 end package body PcieInterfacePkg ;
 
