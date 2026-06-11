@@ -426,6 +426,16 @@ begin
 
           RdData(7 downto 0) := Pop(TransRec.ReadBurstFifo) ;
 
+        when PUSHRDATA32 =>
+
+          WrData(31 downto 0) := SafeResize(std_logic_vector(to_signed(VPData, 32)), 32) ;
+
+          Push(TransRec.ReadBurstFifo, WrData(31 downto 0)) ;
+
+        when POPRDATA32 =>
+
+          RdData(31 downto 0) := Pop(TransRec.ReadBurstFifo) ;
+          
         when ACKTRANS =>
 
           if WE then

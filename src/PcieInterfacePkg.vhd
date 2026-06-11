@@ -117,6 +117,8 @@ package PcieInterfacePkg is
   constant PUSHWDATA                         : integer := 416 ;
   constant POPRDATA                          : integer := 417 ;
   constant PUSHRDATA                         : integer := 418 ;
+  constant PUSHRDATA32                       : integer := 419 ;
+  constant POPRDATA32                        : integer := 420 ;
 
   ------------------------------------------------------------
   -- SetModelOptions for PCIe VC
@@ -146,13 +148,21 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
   -- EXTEND_DIRECTIVE_OP options
   ------------------------------------------------------------
-  constant INITDLL                           : integer := 0 ;
-  constant INITPHY                           : integer := 1 ;
-  constant GEN_OS                            : integer := 2 ;
-  constant GEN_TS                            : integer := 3 ;
-  constant GET_EVENT                         : integer := 4 ;
-  constant RST_EVENT                         : integer := 6 ;
-  constant GET_LANE_TS                       : integer := 7 ;
+  constant INITDLL                           : integer :=  0 ;
+  constant INITPHY                           : integer :=  1 ;
+  constant GEN_OS                            : integer :=  2 ;
+  constant GEN_TS                            : integer :=  3 ;
+  constant GET_EVENT                         : integer :=  4 ;
+  constant RST_EVENT                         : integer :=  5 ;
+  constant GET_LANE_TS                       : integer :=  6 ;
+  constant SEND_DLL_ACK                      : integer :=  7 ;
+  constant SEND_DLL_NAK                      : integer :=  8 ;
+  constant SEND_DLL_FC                       : integer :=  9 ;
+  constant SEND_DLL_PM                       : integer := 10 ;
+  constant SEND_DLL_VEND_NODATA              : integer := 11 ;
+  constant SEND_DLL_VEND_DATA                : integer := 12 ;
+  constant WAIT_FOR_DLL                      : integer := 13 ;
+  constant TRY_DLL                           : integer := 14 ;
 
   ------------------------------------------------------------
   -- Memory endian settings
@@ -257,8 +267,8 @@ package PcieInterfacePkg is
   constant TLP_TAG_AUTO                      : integer :=  16#100# ;
 
   ------------------------------------------------------------
-  -- Parameters when generating transactions and returned
-  -- status
+  -- Parameter offsets when generating transactions and
+  -- returned status
   ------------------------------------------------------------
   constant PARAM_TRANS_MODE                  : integer := 0 ;
   constant PARAM_RDLCK                       : integer := 1 ;
@@ -273,7 +283,7 @@ package PcieInterfacePkg is
   constant PARAM_CMPL_RX_TAG                 : integer := 10 ;
 
   ------------------------------------------------------------
-  -- Parameters when receiving transactions
+  -- Parameter offsets when receiving transactions
   ------------------------------------------------------------
   constant PARAM_REQ_TYPE                    : integer := 0 ;
   constant PARAM_REQ_TAG                     : integer := 1 ;
@@ -300,26 +310,44 @@ package PcieInterfacePkg is
   -- PARAM_REQ_ADDRHI not included in parameter count but still required for decoding
   constant PARAM_REQ_ADDRHI                  : integer := PARAM_REQ_ADDR + 1;
 
+  ------------------------------------------------------------
+  -- Parameter offsets when generating ordered sets
+  ------------------------------------------------------------
+  constant PARAM_OS_TYPE                     : integer := 0 ;
 
   ------------------------------------------------------------
-  -- Parameters when generating ordered sets
+  -- Parameter offsets when generating training sequences
   ------------------------------------------------------------
-  constant PARAM_OS_TYPE                     : integer  := 0 ;
+  constant PARAM_TS_TYPE                     : integer := 0 ;
+  constant PARAM_LINK                        : integer := 1 ;
+  constant PARAM_LANE                        : integer := 2 ;
+  constant PARAM_NFTS                        : integer := 3 ;
+  constant PARAM_GEN                         : integer := 4 ;
+  constant PARAM_CTL                         : integer := 5 ;
 
   ------------------------------------------------------------
-  -- Parameters when generating training sequences
+  -- Parameters offsets when sending DLLP flow control packets
   ------------------------------------------------------------
-  constant PARAM_TS_TYPE                     : integer  := 0 ;
-  constant PARAM_LINK                        : integer  := 1 ;
-  constant PARAM_LANE                        : integer  := 2 ;
-  constant PARAM_NFTS                        : integer  := 3 ;
-  constant PARAM_GEN                         : integer  := 4 ;
-  constant PARAM_CTL                         : integer  := 5 ;
+  constant PARAM_FC_TYPE                     : integer := 0 ;
+  constant PARAM_FC_HDR_CREDITS              : integer := 1 ;
+  constant PARAM_FC_DATA_CREDITS             : integer := 2 ;
+  constant PARAM_FC_VC                       : integer := 3 ;
 
   ------------------------------------------------------------
-  -- Parameters when accessing TS/OS RX events
+  -- Parameter offsets when accessing TS/OS RX events
   ------------------------------------------------------------
-  constant PARAM_EVENT_TYPE                  : integer  := 0 ;
+  constant PARAM_EVENT_TYPE                  : integer := 0 ;
+
+  ------------------------------------------------------------
+  -- Parameter offsets when receiving a DLLP
+  ------------------------------------------------------------
+  constant PARAM_DLLP_TYPE                   : integer := 0 ;
+  constant PARAM_DLLP_STATUS                 : integer := 1 ;
+  constant PARAM_DLLP_VC                     : integer := 2 ;
+  constant PARAM_DLLP_HDR_CREDITS            : integer := 3 ;
+  constant PARAM_DLLP_DATA_CREDITS           : integer := 4 ;
+  constant PARAM_DLLP_SEQ_NUM                : integer := 5 ;
+  constant PARAM_DLLP_VEND_DATA              : integer := 6 ;
 
   ------------------------------------------------------------
   -- TLP types
@@ -344,11 +372,32 @@ package PcieInterfacePkg is
   constant TL_CPLDLK                         : integer := 16#4b# ;
 
   ------------------------------------------------------------
+  -- DLL types
+  ------------------------------------------------------------
+  constant DL_ACK                            : integer := 16#00#;
+  constant DL_NAK                            : integer := 16#10#;
+  constant DL_INITFC1_P                      : integer := 16#40#;
+  constant DL_INITFC1_NP                     : integer := 16#50#;
+  constant DL_INITFC1_CPL                    : integer := 16#60#;
+  constant DL_INITFC2_P                      : integer := 16#c0#;
+  constant DL_INITFC2_NP                     : integer := 16#d0#;
+  constant DL_INITFC2_CPL                    : integer := 16#e0#;
+  constant DL_UPDATEFC_P                     : integer := 16#80#;
+  constant DL_UPDATEFC_NP                    : integer := 16#90#;
+  constant DL_UPDATEFC_CPL                   : integer := 16#a0#;
+  constant DL_PM_ENTER_L1                    : integer := 16#20#;
+  constant DL_PM_ENTER_L23                   : integer := 16#21#;
+  constant DL_PM_REQ_L0S                     : integer := 16#22#;
+  constant DL_PM_REQ_L1                      : integer := 16#23#;
+  constant DL_PM_REQ_ACK                     : integer := 16#24#;
+  constant DL_VENDOR                         : integer := 16#30#;
+
+  ------------------------------------------------------------
   -- Training sequence types
   ------------------------------------------------------------
   constant TS1_ID                            : integer := 16#4a# ;
   constant TS2_ID                            : integer := 16#45# ;
-  
+
   constant TS_PAD                            : integer := 16#1f7# ;
   constant TS_SEQ                            : integer := 0;
 
@@ -411,6 +460,23 @@ package PcieInterfacePkg is
   constant CPL_ABORT                         : integer                       :=  4 ;
 
   ------------------------------------------------------------
+  -- TS GEN byte bit field definitions
+  ------------------------------------------------------------
+  constant PCIE_GEN1                         : integer                       := 16#02# ;
+  constant PCIE_GEN2                         : integer                       := 16#04# ;
+  constant PCIE_AUTO_CHANGE                  : integer                       := 16#40# ;
+  constant PCIE_SPEED_CHANGE                 : integer                       := 16#80# ;
+
+  ------------------------------------------------------------
+  -- TS CTL byte bit field definitions
+  ------------------------------------------------------------
+  constant PCIE_HOT_RESET                    : integer                       := 16#01# ;
+  constant PCIE_DISABLE_LINK                 : integer                       := 16#02# ;
+  constant PCIE_LOOPBACK                     : integer                       := 16#04# ;
+  constant PCIE_DISABLE_SCRAMBLING           : integer                       := 16#08# ;
+  constant PCIE_COMPLIANCE_RX                : integer                       := 16#10# ;
+
+  ------------------------------------------------------------
   -- Link dimension limits
   ------------------------------------------------------------
   constant MAXLINKWIDTH                      : integer                       := 16 ;
@@ -446,9 +512,9 @@ package PcieInterfacePkg is
   end record PcieStatusRecType ;
 
   ------------------------------------------------------------
-  ------------------------------------------------------------
-
   type PcieTsRecType is record
+  -- Training Sequence symbol fields
+  ------------------------------------------------------------
     Id         : integer ;
     Linknum    : integer ;
     Lanenum    : integer ;
@@ -457,6 +523,39 @@ package PcieInterfacePkg is
     Control    : integer;
 
   end record PcieTsRecType ;
+
+  ------------------------------------------------------------
+  type PcieTestSyncType is protected
+  -- Protected type for PCIe test synchronisation whilst still
+  -- generating output
+  ------------------------------------------------------------
+    procedure Sync;
+    procedure Ack;
+    impure function Val return boolean;
+  end protected PcieTestSyncType ;
+
+  ------------------------------------------------------------
+  procedure PcieWaitAck (
+  -- Wait until clear and then set
+  ------------------------------------------------------------
+    signal TransRec : InOut AddressBusRecType ;
+    sy              : InOut PcieTestSyncType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieSync (
+  -- Clear without wait
+  ------------------------------------------------------------
+    sy : InOut PcieTestSyncType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieWaitSync (
+  -- Wait until set and then clear
+  ------------------------------------------------------------
+    signal TransRec : InOut AddressBusRecType ;
+           sy       : InOut PcieTestSyncType
+  ) ;
 
   ------------------------------------------------------------
   function has_all_z  (
@@ -892,6 +991,7 @@ package PcieInterfacePkg is
              oPayloadByteLength : Out   integer
   );
 
+
   ------------------------------------------------------------
   procedure PcieDecodePciRegisters (
   -- Decode and log PCI configuration space register values
@@ -901,7 +1001,104 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure PcieOs (
+  procedure PcieDllSendAck (
+  -- Send DLL ACK with specified Sequence
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iSeqNum            : In    integer range 0 to 4095
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieDllSendNak (
+  -- Send DLL NAK with specified Sequence
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iSeqNum            : In    integer range 0 to 4095
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieDllSendFc (
+  -- Send DLL flow control
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iFcType            : In    integer ;
+             iHdrCredits        : In    integer range 0 to 127 ;
+             iDataCredits       : In    integer range 0 to 2047 ;
+             iVc                : In    integer range 0 to 7     := 0
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieDllSendPm (
+  -- Send DLL power management DLL
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iPmType            : In    integer ;
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieDllVendor (
+  -- Send Vendor DLL (no data)
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieDllVendor (
+  -- Send Vendor DLL (with data)
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iData              : In    integer range 0 to 4095
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieGetDllp (
+  -- Blocking fetch of received DLLP
+  ------------------------------------------------------------
+    signal   TransactionRec   : InOut AddressBusRecType ;
+             oDllpType        : Out   integer ;
+             oDllpErrorStatus : Out   integer ;
+    constant StatusMsgOn      : In    boolean := false
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieTryGetDllp (
+  -- Non-blocking test for a received DLLP
+  ------------------------------------------------------------
+    signal   TransactionRec   : InOut AddressBusRecType ;
+             oDllpType        : Out   integer ;
+             oDllpErrorStatus : Out   integer ;
+             oAvailable       : Out   boolean ;
+    constant StatusMsgOn      : In    boolean := false
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractDllpSeqNum (
+  -- Extract the sequence number for ACK/NAk DLLPs
+  ------------------------------------------------------------
+  signal   TransactionRec  : InOut AddressBusRecType ;
+           oDllpSeqNum     : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractDllpFc (
+  -- Extract the sequence number for ACK/NAk DLLPs
+  ------------------------------------------------------------
+  signal   TransactionRec  : InOut AddressBusRecType ;
+           oDllpVc         : Out   integer ;
+           oDllpHdrFc      : Out   integer ;
+           oDllpDataFc     : Out   integer
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractDllpVendData (
+  -- Extract the sequence number for ACK/NAk DLLPs
+  ------------------------------------------------------------
+  signal   TransactionRec  : InOut AddressBusRecType ;
+           oDllpVendData   : Out   integer ;
+  ) ;
+
+  ------------------------------------------------------------
+  procedure PciePhyOs (
   -- Generate ordered set
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
@@ -909,7 +1106,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure PcieTs (
+  procedure PciePhyTs (
   -- Generate Training Sequence
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
@@ -917,7 +1114,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure PcieGetOsTsEventCounts (
+  procedure PciePhyGetOsTsEventCounts (
   -- Read ordered set/training sequence event counts.
   -- counts returned in FIFO
   ------------------------------------------------------------
@@ -927,7 +1124,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure PcieResetOsTsEventCounts (
+  procedure PciePhyResetOsTsEventCounts (
   -- Reset ordered set/training sequence event counts.
   -- counts returned in FIFO
   ------------------------------------------------------------
@@ -936,7 +1133,7 @@ package PcieInterfacePkg is
   ) ;
 
   ------------------------------------------------------------
-  procedure PcieGetTs (
+  procedure PciePhyGetTs (
   -- Returns a training sequence type (TS_t) which is the
   -- last TS value received
   ------------------------------------------------------------
@@ -945,6 +1142,7 @@ package PcieInterfacePkg is
              oLastTs            : Out   PcieTsRecType
   ) ;
 
+
 end package PcieInterfacePkg ;
 
 -- ***********************************************************
@@ -952,6 +1150,30 @@ end package PcieInterfacePkg ;
 -- ***********************************************************
 
 package body PcieInterfacePkg is
+
+  ------------------------------------------------------------
+  type PcieTestSyncType is protected body
+  -- Define a protected type with shared variable to use to
+  -- sync test processes and still allow PCIe input extraction
+  ------------------------------------------------------------
+    variable Vsync : boolean ;
+
+    procedure Sync is
+    begin
+      Vsync := TRUE ;
+    end procedure Sync ;
+
+    procedure Ack is
+    begin
+      Vsync := FALSE ;
+    end procedure Ack ;
+
+    impure function Val return boolean is
+    begin
+      return Vsync ;
+    end function Val ;
+
+  end protected body PcieTestSyncType ;
 
   ------------------------------------------------------------
   function has_all_z (vec : std_logic_vector) return boolean is
@@ -971,8 +1193,43 @@ package body PcieInterfacePkg is
   end function has_all_z ;
 
   ------------------------------------------------------------
+  procedure PcieWaitAck (
+  ------------------------------------------------------------
+    signal  TransRec : InOut AddressBusRecType ;
+            sy       : InOut PcieTestSyncType
+  ) is
+  begin
+    while sy.Val loop
+      WaitForClock(TransRec, 1) ;
+    end loop ;
+    sy.Sync ;
+  end procedure PcieWaitAck;
+
+  ------------------------------------------------------------
+  procedure PcieSync (
+  ------------------------------------------------------------
+            sy : InOut PcieTestSyncType
+  ) is
+  begin
+    sy.Ack ;
+  end procedure PcieSync;
+
+  ------------------------------------------------------------
+  procedure PcieWaitSync (
+  ------------------------------------------------------------
+    signal  TransRec : InOut AddressBusRecType ;
+            sy       : InOut PcieTestSyncType
+  ) is
+  begin
+    while not sy.Val loop
+      WaitForClock(TransRec, 1) ;
+    end loop ;
+    sy.Ack ;
+  end procedure PcieWaitSync ;
+
+  ------------------------------------------------------------
   procedure PcieInitLink (
-  -- do PCIe Memory Write Cycle
+  -- do PCIe PHY link initialisation
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType
   ) is
@@ -988,7 +1245,7 @@ package body PcieInterfacePkg is
 
   ------------------------------------------------------------
   procedure PcieInitDll (
-  -- do PCIe Memory Write Cycle
+  -- do PCIe DLL flow control initialisation
   ------------------------------------------------------------
     signal   TransactionRec : InOut AddressBusRecType
   ) is
@@ -1895,7 +2152,7 @@ package body PcieInterfacePkg is
   end procedure PcieDecodePciRegisters ;
 
   ------------------------------------------------------------
-  procedure PcieOs (
+  procedure PciePhyOs (
   -- Generate ordered set
   --
   -- Valid iOsType values :
@@ -1914,10 +2171,10 @@ package body PcieInterfacePkg is
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
-  end procedure PcieOs ;
+  end procedure PciePhyOs ;
 
   ------------------------------------------------------------
-  procedure PcieTs (
+  procedure PciePhyTs (
   -- Generate Training Sequence
   --
   -- Valid iTsParams.Id values      : TS1_ID, TS2_ID
@@ -1941,10 +2198,10 @@ package body PcieInterfacePkg is
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
-  end procedure PcieTs ;
+  end procedure PciePhyTs ;
 
   ------------------------------------------------------------
-  procedure PcieGetOsTsEventCounts (
+  procedure PciePhyGetOsTsEventCounts (
   -- Read ordered set/training sequence event counts.
   -- counts returned in FIFO with oNumLanes entries
   --
@@ -1967,10 +2224,10 @@ package body PcieInterfacePkg is
 
     oNumLanes                    := TransactionRec.IntFromModel ;
 
-  end procedure PcieGetOsTsEventCounts ;
+  end procedure PciePhyGetOsTsEventCounts ;
 
   ------------------------------------------------------------
-  procedure PcieResetOsTsEventCounts (
+  procedure PciePhyResetOsTsEventCounts (
   -- Reset ordered set/training sequence event counts.
   -- counts returned in FIFO
   --
@@ -1990,10 +2247,10 @@ package body PcieInterfacePkg is
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
-  end procedure PcieResetOsTsEventCounts ;
+  end procedure PciePhyResetOsTsEventCounts ;
 
   ------------------------------------------------------------
-  procedure PcieGetTs (
+  procedure PciePhyGetTs (
   -- Returns a training sequence type (PcieTsRecType) which is the
   -- last TS value received on specified lane
   --
@@ -2019,7 +2276,208 @@ package body PcieInterfacePkg is
     oLastTs.Datarate             := Get(TransactionRec.Params, PARAM_GEN);
     oLastTs.Control              := Get(TransactionRec.Params, PARAM_CTL);
 
-  end procedure PcieGetTs ;
+  end procedure PciePhyGetTs ;
+
+
+  ------------------------------------------------------------
+  procedure PcieDllSendAck (
+  -- Send DLL ACK with specified Sequence
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iSeqNum            : In    integer range 0 to 4095
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= SEND_DLL_ACK ;
+    TransactionRec.IntToModel    <= iSeqNum;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieDllSendAck ;
+
+  ------------------------------------------------------------
+  procedure PcieDllSendNak (
+  -- Send DLL NAK with specified Sequence
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iSeqNum            : In    integer range 0 to 4095
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= SEND_DLL_NAK ;
+    TransactionRec.IntToModel    <= iSeqNum;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieDllSendNak ;
+
+  ------------------------------------------------------------
+  procedure PcieDllSendFc (
+  -- Send DLL flow control
+  -- Valid iFcType values:
+  --    DL_INITFC1_P,  DL_INITFC1_NP,  DL_INITFC1_CPL,
+  --    DL_INITFC2_P,  DL_INITFC2_NP,  DL_INITFC2_CPL,
+  --    DL_UPDATEFC_P, DL_UPDATEFC_NP, DL_UPDATEFC_CPL
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iFcType            : In    integer ;
+             iHdrCredits        : In    integer range 0 to 127 ;
+             iDataCredits       : In    integer range 0 to 2047 ;
+             iVc                : In    integer range 0 to 7     := 0
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= SEND_DLL_FC ;
+
+    Set(TransactionRec.Params, PARAM_FC_TYPE,         iFcType) ;
+    Set(TransactionRec.Params, PARAM_FC_HDR_CREDITS,  iHdrCredits) ;
+    Set(TransactionRec.Params, PARAM_FC_DATA_CREDITS, iDataCredits) ;
+    Set(TransactionRec.Params, PARAM_FC_VC,           iVc) ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieDllSendFc ;
+
+  ------------------------------------------------------------
+  procedure PcieDllSendPm (
+  -- Send DLL power management DLL
+  -- Valid iPmType values:
+  --    DL_PM_ENTER_L1, DL_PM_ENTER_L23, DL_PM_REQ_ACK,
+  --    DL_PM_REQ_L0S, DL_PM_REQ_L1
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iPmType            : In    integer ;
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= SEND_DLL_PM ;
+    TransactionRec.IntToModel    <= iPmType;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieDllSendPm ;
+
+  ------------------------------------------------------------
+  procedure PcieDllVendor (
+  -- Send Vendor DLL (no data)
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= SEND_DLL_VEND_NODATA ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieDllVendor ;
+
+  ------------------------------------------------------------
+  procedure PcieDllVendor (
+  -- Send Vendor DLL (with data)
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iData              : In    integer range 0 to 4095
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= SEND_DLL_VEND_DATA ;
+    TransactionRec.IntToModel    <= iData ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PcieDllVendor ;
+
+  ------------------------------------------------------------
+  procedure PcieGetDllp (
+  -- Blocking fetch of received DLLP
+  ------------------------------------------------------------
+    signal   TransactionRec   : InOut AddressBusRecType ;
+             oDllpType        : Out   integer ;
+             oDllpErrorStatus : Out   integer ;
+    constant StatusMsgOn      : In    boolean := false
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= WAIT_FOR_DLL ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+    oDllpType                    := Get(TransactionRec.Params, PARAM_DLLP_TYPE) ;
+    oDllpErrorStatus             := Get(TransactionRec.Params, PARAM_DLLP_STATUS) ;
+
+  end procedure PcieGetDllp;
+
+  ------------------------------------------------------------
+  procedure PcieTryGetDllp (
+  -- Non-blocking test for a received DLLP
+  ------------------------------------------------------------
+    signal   TransactionRec   : InOut AddressBusRecType ;
+             oDllpType        : Out   integer ;
+             oDllpErrorStatus : Out   integer ;
+             oAvailable       : Out   boolean ;
+    constant StatusMsgOn      : In    boolean := false
+  ) is
+  begin
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= TRY_DLL ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+    oDllpType                    := Get(TransactionRec.Params, PARAM_DLLP_TYPE) ;
+    oDllpErrorStatus             := Get(TransactionRec.Params, PARAM_DLLP_STATUS) ;
+    oAvailable                   := TransactionRec.BoolFromModel ;
+
+  end procedure PcieTryGetDllp;
+
+  ------------------------------------------------------------
+  procedure PcieExtractDllpSeqNum (
+  -- Extract the sequence number for ACK/NAk DLLPs
+  ------------------------------------------------------------
+  signal   TransactionRec  : InOut AddressBusRecType ;
+           oDllpSeqNum     : Out   integer
+  ) is
+  begin
+
+    oDllpSeqNum                  := Get(TransactionRec.Params, PARAM_DLLP_SEQ_NUM) ;
+
+  end procedure PcieExtractDllpSeqNum ;
+
+  ------------------------------------------------------------
+  procedure PcieExtractDllpFc (
+  -- Extract the sequence number for ACK/NAk DLLPs
+  ------------------------------------------------------------
+  signal   TransactionRec  : InOut AddressBusRecType ;
+           oDllpVc         : Out   integer ;
+           oDllpHdrFc      : Out   integer ;
+           oDllpDataFc     : Out   integer
+  ) is
+  begin
+
+    oDllpVc                      := Get(TransactionRec.Params, PARAM_DLLP_VC) ;
+    oDllpHdrFc                   := Get(TransactionRec.Params, PARAM_DLLP_HDR_CREDITS) ;
+    oDllpDataFc                  := Get(TransactionRec.Params, PARAM_DLLP_DATA_CREDITS) ;
+
+  end procedure PcieExtractDllpFc;
+
+  ------------------------------------------------------------
+  procedure PcieExtractDllpVendData (
+  -- Extract the sequence number for ACK/NAk DLLPs
+  ------------------------------------------------------------
+  signal   TransactionRec  : InOut AddressBusRecType ;
+           oDllpVendData   : Out   integer ;
+  ) is
+  begin
+
+    oDllpVendData                :=  Get(TransactionRec.Params, PARAM_DLLP_VEND_DATA) ;
+
+  end procedure PcieExtractDllpVendData;
 
 end package body PcieInterfacePkg ;
 
