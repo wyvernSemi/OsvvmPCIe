@@ -1032,7 +1032,7 @@ package PcieInterfacePkg is
   -- Send DLL power management DLL
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iPmType            : In    integer ;
+             iPmType            : In    integer
   ) ;
 
   ------------------------------------------------------------
@@ -1094,7 +1094,7 @@ package PcieInterfacePkg is
   -- Extract the sequence number for ACK/NAk DLLPs
   ------------------------------------------------------------
   signal   TransactionRec  : InOut AddressBusRecType ;
-           oDllpVendData   : Out   integer ;
+           oDllpVendData   : Out   integer
   ) ;
 
   ------------------------------------------------------------
@@ -1202,6 +1202,7 @@ package body PcieInterfacePkg is
     while sy.Val loop
       WaitForClock(TransRec, 1) ;
     end loop ;
+    wait for 0 ns; -- Wait for all updates to complete
     sy.Sync ;
   end procedure PcieWaitAck;
 
@@ -2349,7 +2350,7 @@ package body PcieInterfacePkg is
   --    DL_PM_REQ_L0S, DL_PM_REQ_L1
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iPmType            : In    integer ;
+             iPmType            : In    integer
   ) is
   begin
 
@@ -2471,7 +2472,7 @@ package body PcieInterfacePkg is
   -- Extract the sequence number for ACK/NAk DLLPs
   ------------------------------------------------------------
   signal   TransactionRec  : InOut AddressBusRecType ;
-           oDllpVendData   : Out   integer ;
+           oDllpVendData   : Out   integer
   ) is
   begin
 
