@@ -4,6 +4,9 @@ library    osvvm_TbPcie
 ChangeWorkingDirectory ../tests
 MkVproc    vc
 
+ChangeWorkingDirectory ../testbench/TbPcie
+RunTest Tb_Pcie_Phy.vhd [CoSim]
+
 TestName   CoSim_Pcie
 simulate   Tb_PCIe [CoSim]
 
