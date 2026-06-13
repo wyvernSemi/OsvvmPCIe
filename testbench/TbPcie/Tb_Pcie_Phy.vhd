@@ -9,7 +9,7 @@
 --
 --
 --  Description:
---      Test transaction source
+--      Test PHY TS/OS traffic generation and receiving events
 --
 --  Revision History:
 --    Date      Version    Description

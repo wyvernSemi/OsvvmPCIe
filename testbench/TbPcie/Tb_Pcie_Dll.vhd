@@ -9,7 +9,7 @@
 --
 --
 --  Description:
---      Test transaction source
+--      Test DLLP transaction handling
 --
 --  Revision History:
 --    Date      Version    Description
