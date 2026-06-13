@@ -237,6 +237,8 @@ package PcieInterfacePkg is
   constant CONFIG_ENABLE_DISPLINK_COLOUR     : integer := 37 ;
 
   constant CONFIG_DISP_BCK_NODE_NUM          : integer := 38 ;
+  
+  constant CONFIG_DONT_CARE                  : integer :=  -1 ;
 
   ------------------------------------------------------------
   -- Simulation control
@@ -329,9 +331,9 @@ package PcieInterfacePkg is
   -- Parameters offsets when sending DLLP flow control packets
   ------------------------------------------------------------
   constant PARAM_FC_TYPE                     : integer := 0 ;
-  constant PARAM_FC_HDR_CREDITS              : integer := 1 ;
-  constant PARAM_FC_DATA_CREDITS             : integer := 2 ;
-  constant PARAM_FC_VC                       : integer := 3 ;
+  constant PARAM_FC_VC                       : integer := 1 ;
+  constant PARAM_FC_HDR_CREDITS              : integer := 2 ;
+  constant PARAM_FC_DATA_CREDITS             : integer := 3 ;
 
   ------------------------------------------------------------
   -- Parameter offsets when accessing TS/OS RX events
@@ -539,7 +541,8 @@ package PcieInterfacePkg is
   -- Wait until clear and then set
   ------------------------------------------------------------
     signal TransRec : InOut AddressBusRecType ;
-    sy              : InOut PcieTestSyncType
+    sy              : InOut PcieTestSyncType ;
+    delay           : In    integer := 0
   ) ;
 
   ------------------------------------------------------------
@@ -1196,13 +1199,17 @@ package body PcieInterfacePkg is
   procedure PcieWaitAck (
   ------------------------------------------------------------
     signal  TransRec : InOut AddressBusRecType ;
-            sy       : InOut PcieTestSyncType
+            sy       : InOut PcieTestSyncType ;
+            delay    : In    integer := 0
   ) is
   begin
     while sy.Val loop
       WaitForClock(TransRec, 1) ;
     end loop ;
     wait for 0 ns; -- Wait for all updates to complete
+    if delay /= 0 then
+      WaitForClock(TransRec, delay) ;
+    end if ;
     sy.Sync ;
   end procedure PcieWaitAck;
 

@@ -52,28 +52,29 @@ architecture TestHarness of TbPcie is
   constant tperiod_Clk : time :=   4 ns ; -- 250MHz for GEN1
   constant tpd         : time := 100 ps ;
 
-  constant PCIE_ADDR_WIDTH   : integer := 64 ;
-  constant PCIE_DATA_WIDTH   : integer := 64 ;
+  constant PCIE_ADDR_WIDTH       : integer := 64 ;
+  constant PCIE_DATA_WIDTH       : integer := 64 ;
 
   -- Common configurations
-  constant EN_TLP_REQ_DIGEST : boolean := false ;
-  constant PIPE              : boolean := true ;
-  constant PCIE_LINK_WIDTH   : integer := 2 ; -- valid values: 1, 2, 4, 8 and 16
-  constant PCIE_LANE_WIDTH   : integer := IfElse(PIPE, 9, 10) ; -- 9 when PIPE else 10
-  
+  constant EN_TLP_REQ_DIGEST     : boolean := false ;
+  constant PIPE                  : boolean := true ;
+  constant PCIE_LINK_WIDTH       : integer := 2 ; -- valid values: 1, 2, 4, 8 and 16
+  constant PCIE_LANE_WIDTH       : integer := IfElse(PIPE, 9, 10) ; -- 9 when PIPE else 10
+
   -- Downstream (EP) device configuration
-  constant DS_NODE_NUM       : integer := 63 ;
-  constant DS_ENDPOINT       : boolean := true ;
-  constant DS_ENABLE_AUTO    : boolean := false ;
+  constant DS_NODE_NUM           : integer := 63 ;
+  constant DS_ENDPOINT           : boolean := true ;
+  constant DS_ENABLE_AUTO        : boolean := false ;
+  constant DS_DISABLE_SCRAMBLING : boolean := true ;
 
   -- Upstream (RC) device configuration
-  constant US_NODE_NUM       : integer := 62 ;
-  constant US_ENDPOINT       : boolean := false ;
-  constant US_ENABLE_AUTO    : boolean := false ;
+  constant US_NODE_NUM           : integer := 62 ;
+  constant US_ENDPOINT           : boolean := false ;
+  constant US_ENABLE_AUTO        : boolean := false ;
+  constant US_DISABLE_SCRAMBLING : boolean := true ;
 
-
-  signal Clk                 : std_logic := '1';
-  signal nReset              : std_logic := '0';
+  signal Clk                     : std_logic := '1';
+  signal nReset                  : std_logic := '0';
 
   signal UpstreamRec, DownstreamRec  : AddressBusRecType(
           Address      (PCIE_ADDR_WIDTH-1 downto 0),
@@ -125,12 +126,13 @@ begin
   Upstream_1 : PcieModel
   ------------------------------------------------------------
   generic map (
-    NODE_NUM          => US_NODE_NUM,
-    REQ_ID            => US_NODE_NUM,
-    EN_TLP_REQ_DIGEST => EN_TLP_REQ_DIGEST,
-    PIPE              => PIPE,
-    ENDPOINT          => US_ENDPOINT,
-    ENABLE_AUTO       => US_ENABLE_AUTO
+    NODE_NUM           => US_NODE_NUM,
+    REQ_ID             => US_NODE_NUM,
+    EN_TLP_REQ_DIGEST  => EN_TLP_REQ_DIGEST,
+    PIPE               => PIPE,
+    ENDPOINT           => US_ENDPOINT,
+    ENABLE_AUTO        => US_ENABLE_AUTO,
+    DISABLE_SCRAMBLING => US_DISABLE_SCRAMBLING
   )
   port map (
     -- Globals
@@ -324,12 +326,13 @@ end generate ;
   Downstream_1 : PcieModel
   ------------------------------------------------------------
   generic map (
-    NODE_NUM          => DS_NODE_NUM,
-    REQ_ID            => DS_NODE_NUM,
-    EN_TLP_REQ_DIGEST => EN_TLP_REQ_DIGEST,
-    PIPE              => PIPE,
-    ENDPOINT          => DS_ENDPOINT,
-    ENABLE_AUTO       => DS_ENABLE_AUTO
+    NODE_NUM           => DS_NODE_NUM,
+    REQ_ID             => DS_NODE_NUM,
+    EN_TLP_REQ_DIGEST  => EN_TLP_REQ_DIGEST,
+    PIPE               => PIPE,
+    ENDPOINT           => DS_ENDPOINT,
+    ENABLE_AUTO        => DS_ENABLE_AUTO,
+    DISABLE_SCRAMBLING => DS_DISABLE_SCRAMBLING
   )
   port map (
     -- Globals

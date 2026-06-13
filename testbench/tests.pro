@@ -6,6 +6,7 @@ MkVproc    vc
 
 ChangeWorkingDirectory ../testbench/TbPcie
 RunTest Tb_Pcie_Phy.vhd [CoSim]
+RunTest Tb_Pcie_Dll.vhd [CoSim]
 
 TestName   CoSim_Pcie
 simulate   Tb_PCIe [CoSim]
