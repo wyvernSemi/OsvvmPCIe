@@ -520,9 +520,9 @@ package PcieInterfacePkg is
     Id         : integer ;
     Linknum    : integer ;
     Lanenum    : integer ;
-    Nfts       : integer ;
-    Datarate   : integer ;
-    Control    : integer;
+    Nfts       : integer range 0 to 255;
+    Datarate   : integer range 0 to 255;
+    Control    : integer range 0 to 255;
 
   end record PcieTsRecType ;
 
@@ -1050,7 +1050,7 @@ package PcieInterfacePkg is
   -- Send Vendor DLL (with data)
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iData              : In    integer range 0 to 4095
+             iData              : In    integer range 0 to 16#1000000#
   ) ;
 
   ------------------------------------------------------------
@@ -1141,7 +1141,7 @@ package PcieInterfacePkg is
   -- last TS value received
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iLane              : In    integer ;
+             iLane              : In    integer range 0 to 15;
              oLastTs            : Out   PcieTsRecType
   ) ;
 
@@ -2265,7 +2265,7 @@ package body PcieInterfacePkg is
   -- Valid iLane values: 1, 2, 4, 8, 12 and 16
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iLane              : In    integer ;
+             iLane              : In    integer range 0 to 15 ;
              oLastTs            : Out   PcieTsRecType
   ) is
   begin
@@ -2389,7 +2389,7 @@ package body PcieInterfacePkg is
   -- Send Vendor DLL (with data)
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iData              : In    integer range 0 to 4095
+             iData              : In    integer range 0 to 16#1000000#
   ) is
   begin
 
