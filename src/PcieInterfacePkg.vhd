@@ -485,15 +485,15 @@ package PcieInterfacePkg is
   constant ENCODEDWIDTH                      : integer                       := 10 ;
 
   ------------------------------------------------------------
+  subtype TagType is integer range 0 to 256;
   -- Sub-type for setting tag of request TLP, or specifying
   -- model to auto-generate
   ------------------------------------------------------------
-  subtype TagType is integer range 0 to 256;
 
   ------------------------------------------------------------
+  type LinkType is array (natural range <>) of std_logic_vector ;
   -- Basic uni-directional PCIe link type
   ------------------------------------------------------------
-  type LinkType is array (natural range <>) of std_logic_vector ;
 
   ------------------------------------------------------------
   type PcieRecType is record
@@ -525,6 +525,11 @@ package PcieInterfacePkg is
     Control    : integer range 0 to 255;
 
   end record PcieTsRecType ;
+  
+  ------------------------------------------------------------
+  type PcieEventCountsType  is array (natural range 0 to 15) of integer ;
+  -- Received OS/TS event counts type
+  ------------------------------------------------------------
 
   ------------------------------------------------------------
   type PcieTestSyncType is protected
@@ -1123,7 +1128,8 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
              iTsOsType          : In    integer ;
-             oNumLanes          : Out   integer
+             oNumLanes          : Out   integer ;
+             oEventCounts       : Out   PcieEventCountsType
   ) ;
 
   ------------------------------------------------------------
@@ -2158,134 +2164,7 @@ package body PcieInterfacePkg is
      end case ;
 
   end procedure PcieDecodePciRegisters ;
-
-  ------------------------------------------------------------
-  procedure PciePhyOs (
-  -- Generate ordered set
-  --
-  -- Valid iOsType values :
-  --    OS_IDL, OS_EIE, OS_FTS, OS_SKP
-  ------------------------------------------------------------
-    signal   TransactionRec     : InOut AddressBusRecType ;
-             iOsType            : In    integer
-  ) is
-  begin
-
-    -- Put values in record
-    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
-    TransactionRec.Options       <= GEN_OS ;
-    TransactionRec.IntToModel    <= iOsType ;
-    TransactionRec.StatusMsgOn   <= false ;
-
-    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-
-  end procedure PciePhyOs ;
-
-  ------------------------------------------------------------
-  procedure PciePhyTs (
-  -- Generate Training Sequence
-  --
-  -- Valid iTsParams.Id values      : TS1_ID, TS2_ID
-  -- Valid iTsParams.Linknum values : TS_PAD, 0 to 255
-  -- Valid iTsParams.Lanenum values : TS_PAD, TS_SEQ
-  ------------------------------------------------------------
-    signal   TransactionRec     : InOut AddressBusRecType ;
-             iTsParams          : In    PcieTsRecType
-  ) is
-  begin
-    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
-    TransactionRec.Options       <= GEN_TS ;
-    TransactionRec.StatusMsgOn   <= false ;
-
-    Set(TransactionRec.Params, PARAM_TS_TYPE, iTsParams.Id) ;
-    Set(TransactionRec.Params, PARAM_LINK,    iTsParams.Linknum) ;
-    Set(TransactionRec.Params, PARAM_LANE,    iTsParams.Lanenum) ;
-    Set(TransactionRec.Params, PARAM_NFTS,    iTsParams.Nfts) ;
-    Set(TransactionRec.Params, PARAM_GEN,     iTsParams.Datarate) ;
-    Set(TransactionRec.Params, PARAM_CTL,     iTsParams.Control) ;
-
-    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-
-  end procedure PciePhyTs ;
-
-  ------------------------------------------------------------
-  procedure PciePhyGetOsTsEventCounts (
-  -- Read ordered set/training sequence event counts.
-  -- counts returned in FIFO with oNumLanes entries
-  --
-  -- Valid iTsOsType values :
-  --    TS1_ID, TS2_ID, OS_IDL, OS_EIE, OS_FTS,
-  --    OS_SKP, ELEC_IDLE
-  ------------------------------------------------------------
-    signal   TransactionRec     : InOut AddressBusRecType ;
-             iTsOsType          : In    integer ;
-             oNumLanes          : Out   integer
-  ) is
-  begin
-
-    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
-    TransactionRec.Options       <= GET_EVENT ;
-    TransactionRec.IntToModel    <= iTsOsType ;
-    TransactionRec.StatusMsgOn   <= false ;
-
-    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-
-    oNumLanes                    := TransactionRec.IntFromModel ;
-
-  end procedure PciePhyGetOsTsEventCounts ;
-
-  ------------------------------------------------------------
-  procedure PciePhyResetOsTsEventCounts (
-  -- Reset ordered set/training sequence event counts.
-  -- counts returned in FIFO
-  --
-  -- Valid iTsOsType values :
-  --    TS1_ID, TS2_ID, OS_IDL, OS_EIE, OS_FTS,
-  --    OS_SKP, ELEC_IDLE
-  ------------------------------------------------------------
-    signal   TransactionRec     : InOut AddressBusRecType ;
-             iTsOsType          : In    integer
-  ) is
-  begin
-
-    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
-    TransactionRec.Options       <= RST_EVENT ;
-    TransactionRec.IntToModel    <= iTsOsType ;
-    TransactionRec.StatusMsgOn   <= false ;
-
-    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-
-  end procedure PciePhyResetOsTsEventCounts ;
-
-  ------------------------------------------------------------
-  procedure PciePhyGetTs (
-  -- Returns a training sequence type (PcieTsRecType) which is the
-  -- last TS value received on specified lane
-  --
-  -- Valid iLane values: 1, 2, 4, 8, 12 and 16
-  ------------------------------------------------------------
-    signal   TransactionRec     : InOut AddressBusRecType ;
-             iLane              : In    integer range 0 to 15 ;
-             oLastTs            : Out   PcieTsRecType
-  ) is
-  begin
-
-    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
-    TransactionRec.Options       <= GET_LANE_TS ;
-    TransactionRec.IntToModel    <= iLane ;
-    TransactionRec.StatusMsgOn   <= false ;
-
-    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
-
-    oLastTs.Id                   := Get(TransactionRec.Params, PARAM_TS_TYPE);
-    oLastTs.Linknum              := Get(TransactionRec.Params, PARAM_LINK);
-    oLastTs.Lanenum              := Get(TransactionRec.Params, PARAM_LANE);
-    oLastTs.Nfts                 := Get(TransactionRec.Params, PARAM_NFTS);
-    oLastTs.Datarate             := Get(TransactionRec.Params, PARAM_GEN);
-    oLastTs.Control              := Get(TransactionRec.Params, PARAM_CTL);
-
-  end procedure PciePhyGetTs ;
-
+  
 
   ------------------------------------------------------------
   procedure PcieDllSendAck (
@@ -2486,6 +2365,141 @@ package body PcieInterfacePkg is
     oDllpVendData                :=  Get(TransactionRec.Params, PARAM_DLLP_VEND_DATA) ;
 
   end procedure PcieExtractDllpVendData;
+
+  ------------------------------------------------------------
+  procedure PciePhyOs (
+  -- Generate ordered set
+  --
+  -- Valid iOsType values :
+  --    OS_IDL, OS_EIE, OS_FTS, OS_SKP
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iOsType            : In    integer
+  ) is
+  begin
+
+    -- Put values in record
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GEN_OS ;
+    TransactionRec.IntToModel    <= iOsType ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PciePhyOs ;
+
+  ------------------------------------------------------------
+  procedure PciePhyTs (
+  -- Generate Training Sequence
+  --
+  -- Valid iTsParams.Id values      : TS1_ID, TS2_ID
+  -- Valid iTsParams.Linknum values : TS_PAD, 0 to 255
+  -- Valid iTsParams.Lanenum values : TS_PAD, TS_SEQ
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsParams          : In    PcieTsRecType
+  ) is
+  begin
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GEN_TS ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    Set(TransactionRec.Params, PARAM_TS_TYPE, iTsParams.Id) ;
+    Set(TransactionRec.Params, PARAM_LINK,    iTsParams.Linknum) ;
+    Set(TransactionRec.Params, PARAM_LANE,    iTsParams.Lanenum) ;
+    Set(TransactionRec.Params, PARAM_NFTS,    iTsParams.Nfts) ;
+    Set(TransactionRec.Params, PARAM_GEN,     iTsParams.Datarate) ;
+    Set(TransactionRec.Params, PARAM_CTL,     iTsParams.Control) ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PciePhyTs ;
+
+  ------------------------------------------------------------
+  procedure PciePhyGetOsTsEventCounts (
+  -- Read ordered set/training sequence event counts.
+  -- Counts returned in oEventCounts array with oNumLanes
+  -- entries
+  --
+  -- Valid iTsOsType values :
+  --    TS1_ID, TS2_ID, OS_IDL, OS_EIE, OS_FTS,
+  --    OS_SKP, ELEC_IDLE
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsOsType          : In    integer ;
+             oNumLanes          : Out   integer ;
+             oEventCounts       : Out   PcieEventCountsType
+  ) is
+    variable evcount            :       std_logic_vector(31 downto 0) ;           
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GET_EVENT ;
+    TransactionRec.IntToModel    <= iTsOsType ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+    oNumLanes                    := TransactionRec.IntFromModel ;
+    
+    for i in 0 to oNumLanes-1 loop
+      evcount         := Pop(TransactionRec.ReadBurstFifo) ;
+      oEventCounts(i) := to_integer(unsigned(evcount)) ;
+    end loop ;
+
+  end procedure PciePhyGetOsTsEventCounts ;
+
+  ------------------------------------------------------------
+  procedure PciePhyResetOsTsEventCounts (
+  -- Reset ordered set/training sequence event counts.
+  -- counts returned in FIFO
+  --
+  -- Valid iTsOsType values :
+  --    TS1_ID, TS2_ID, OS_IDL, OS_EIE, OS_FTS,
+  --    OS_SKP, ELEC_IDLE
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iTsOsType          : In    integer
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= RST_EVENT ;
+    TransactionRec.IntToModel    <= iTsOsType ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+  end procedure PciePhyResetOsTsEventCounts ;
+
+  ------------------------------------------------------------
+  procedure PciePhyGetTs (
+  -- Returns a training sequence type (PcieTsRecType) which is the
+  -- last TS value received on specified lane
+  --
+  -- Valid iLane values: 1, 2, 4, 8, 12 and 16
+  ------------------------------------------------------------
+    signal   TransactionRec     : InOut AddressBusRecType ;
+             iLane              : In    integer range 0 to 15 ;
+             oLastTs            : Out   PcieTsRecType
+  ) is
+  begin
+
+    TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
+    TransactionRec.Options       <= GET_LANE_TS ;
+    TransactionRec.IntToModel    <= iLane ;
+    TransactionRec.StatusMsgOn   <= false ;
+
+    RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
+
+    oLastTs.Id                   := Get(TransactionRec.Params, PARAM_TS_TYPE);
+    oLastTs.Linknum              := Get(TransactionRec.Params, PARAM_LINK);
+    oLastTs.Lanenum              := Get(TransactionRec.Params, PARAM_LANE);
+    oLastTs.Nfts                 := Get(TransactionRec.Params, PARAM_NFTS);
+    oLastTs.Datarate             := Get(TransactionRec.Params, PARAM_GEN);
+    oLastTs.Control              := Get(TransactionRec.Params, PARAM_CTL);
+
+  end procedure PciePhyGetTs ;
 
 end package body PcieInterfacePkg ;
 

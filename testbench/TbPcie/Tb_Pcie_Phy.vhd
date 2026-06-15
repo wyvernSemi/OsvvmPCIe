@@ -177,8 +177,7 @@ begin
     variable OpRV              : RandomPType ;
     variable WaitForClockRV    : RandomPType ;
     variable NumLanes          : integer ;
-    variable EventCountSlv     : std_logic_vector (31 downto 0) ;
-    variable EventCount        : integer ;
+    variable EventCountsVec    : PcieEventCountsType ;
     variable TsValues          : PcieTsRecType ;
   begin
 
@@ -198,21 +197,17 @@ begin
     PcieWaitSync(DownstreamRec, SyncTest) ;
 
     -- Check event counts for each active lane
-    PciePhyGetOsTsEventCounts(DownstreamRec, TS1_ID, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, TS1_ID, NumLanes, EventCountsVec) ;
     AffirmIfEqual(NumLanes, 2, "Number of lanes");
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 10, "TS1 event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 10, "TS1 event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Reset TS1 event counts  and check cleared
     PciePhyResetOsTsEventCounts(DownstreamRec, TS1_ID) ;
-    PciePhyGetOsTsEventCounts(DownstreamRec, TS1_ID, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, TS1_ID, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 0, "TS1 post-reset event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 0, "TS1 post-reset event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Fetch last TS for lane
@@ -230,21 +225,17 @@ begin
     PcieWaitSync(DownstreamRec, SyncTest) ;
 
     -- Check event counts for each active lane
-    PciePhyGetOsTsEventCounts(DownstreamRec, TS2_ID, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, TS2_ID, NumLanes, EventCountsVec) ;
     AffirmIfEqual(NumLanes, 2, "Number of lanes");
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 9, "TS2 event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 9, "TS2 event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Reset TS2 event counts and check cleared
     PciePhyResetOsTsEventCounts(DownstreamRec, TS2_ID) ;
-    PciePhyGetOsTsEventCounts(DownstreamRec, TS2_ID, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, TS2_ID, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 0, "TS2 post-reset event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 0, "TS2 post-reset event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Fetch last TS for lane
@@ -262,60 +253,48 @@ begin
     PcieWaitSync(DownstreamRec, SyncTest) ;
 
     -- Check event counts for each active lane
-    PciePhyGetOsTsEventCounts(DownstreamRec, OS_FTS, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_FTS, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 5, "FTS event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 5, "FTS event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Reset NFTS event counts and check cleared
     PciePhyResetOsTsEventCounts(DownstreamRec, OS_FTS) ;
-    PciePhyGetOsTsEventCounts(DownstreamRec, OS_FTS, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_FTS, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 0, "FTS post-reset event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 0, "FTS post-reset event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Wait for OS sent
     PcieWaitSync(DownstreamRec, SyncTest) ;
 
     -- Check event counts for each active lane
-    PciePhyGetOsTsEventCounts(DownstreamRec, OS_SKP, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_SKP, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 4, "SKP event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 4, "SKP event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Reset SKP event counts  and check cleared
     PciePhyResetOsTsEventCounts(DownstreamRec, OS_SKP) ;
-    PciePhyGetOsTsEventCounts(DownstreamRec, OS_SKP, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_SKP, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 0, "SKP post-reset event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 0, "SKP post-reset event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Wait for OS sent
     PcieWaitSync(DownstreamRec, SyncTest) ;
 
     -- Check event counts for each active lane
-    PciePhyGetOsTsEventCounts(DownstreamRec, OS_IDL, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_IDL, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 3, "IDL event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 3, "IDL event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- Reset IDL event counts and check cleared
     PciePhyResetOsTsEventCounts(DownstreamRec, OS_IDL) ;
-    PciePhyGetOsTsEventCounts(DownstreamRec, OS_IDL, NumLanes) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_IDL, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
-      Pop(DownstreamRec.ReadBurstFifo, EventCountSlv) ;
-      EventCount := to_integer(unsigned(EventCountSlv)) ;
-      AffirmIfEqual(EventCount, 0, "IDL post-reset event count for lane " & integer'image(i)) ;
+      AffirmIfEqual(EventCountsVec(i), 0, "IDL post-reset event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- =================================================================
