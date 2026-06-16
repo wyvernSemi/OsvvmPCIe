@@ -14,6 +14,7 @@
 --
 --  Revision History:
 --    Date      Version    Description
+--    06/2026   ????.??    Added support for DLLP and PHY traffic processing
 --    09/2025   2026.01    Initial revision
 --
 --
@@ -527,7 +528,7 @@ package PcieInterfacePkg is
   end record PcieTsRecType ;
   
   ------------------------------------------------------------
-  type PcieEventCountsType  is array (natural range 0 to 15) of integer ;
+  type PcieEventCountsType  is array (natural range 0 to MAXLINKWIDTH-1) of integer ;
   -- Received OS/TS event counts type
   ------------------------------------------------------------
 
@@ -1147,7 +1148,7 @@ package PcieInterfacePkg is
   -- last TS value received
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iLane              : In    integer range 0 to 15;
+             iLane              : In    integer range 0 to MAXLINKWIDTH-1;
              oLastTs            : Out   PcieTsRecType
   ) ;
 
@@ -2480,7 +2481,7 @@ package body PcieInterfacePkg is
   -- Valid iLane values: 1, 2, 4, 8, 12 and 16
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iLane              : In    integer range 0 to 15 ;
+             iLane              : In    integer range 0 to MAXLINKWIDTH-1 ;
              oLastTs            : Out   PcieTsRecType
   ) is
   begin
