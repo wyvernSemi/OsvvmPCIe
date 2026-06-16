@@ -155,6 +155,12 @@ begin
     for i in 1 to 3 loop
       PciePhyOs(UpstreamRec, OS_IDL) ;
     end loop ;
+    
+    PcieWaitAck(UpstreamRec, SyncTest) ;
+    
+    for i in 1 to 2 loop
+      PciePhyOs(UpstreamRec, OS_EIE) ;
+    end loop ;
 
     PcieWaitAck(UpstreamRec, SyncTest) ;
 
@@ -295,6 +301,22 @@ begin
     PciePhyGetOsTsEventCounts(DownstreamRec, OS_IDL, NumLanes, EventCountsVec) ;
     for i in 0 to NumLanes-1 loop
       AffirmIfEqual(EventCountsVec(i), 0, "IDL post-reset event count for lane " & integer'image(i)) ;
+    end loop ;
+    
+    -- Wait for OS sent
+    PcieWaitSync(DownstreamRec, SyncTest) ;
+
+    -- Check event counts for each active lane
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_EIE, NumLanes, EventCountsVec) ;
+    for i in 0 to NumLanes-1 loop
+      AffirmIfEqual(EventCountsVec(i), 2, "EIE event count for lane " & integer'image(i)) ;
+    end loop ;
+
+    -- Reset EIE event counts and check cleared
+    PciePhyResetOsTsEventCounts(DownstreamRec, OS_EIE) ;
+    PciePhyGetOsTsEventCounts(DownstreamRec, OS_EIE, NumLanes, EventCountsVec) ;
+    for i in 0 to NumLanes-1 loop
+      AffirmIfEqual(EventCountsVec(i), 0, "EIE post-reset event count for lane " & integer'image(i)) ;
     end loop ;
 
     -- =================================================================
