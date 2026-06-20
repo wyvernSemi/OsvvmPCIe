@@ -238,7 +238,7 @@ package PcieInterfacePkg is
   constant CONFIG_ENABLE_DISPLINK_COLOUR     : integer := 37 ;
 
   constant CONFIG_DISP_BCK_NODE_NUM          : integer := 38 ;
-  
+
   constant CONFIG_DONT_CARE                  : integer :=  -1 ;
 
   ------------------------------------------------------------
@@ -317,6 +317,7 @@ package PcieInterfacePkg is
   -- Parameter offsets when generating ordered sets
   ------------------------------------------------------------
   constant PARAM_OS_TYPE                     : integer := 0 ;
+  constant PARAM_OS_COUNT                    : integer := 1 ;
 
   ------------------------------------------------------------
   -- Parameter offsets when generating training sequences
@@ -327,6 +328,7 @@ package PcieInterfacePkg is
   constant PARAM_NFTS                        : integer := 3 ;
   constant PARAM_GEN                         : integer := 4 ;
   constant PARAM_CTL                         : integer := 5 ;
+  constant PARAM_TS_COUNT                    : integer := 6 ;
 
   ------------------------------------------------------------
   -- Parameters offsets when sending DLLP flow control packets
@@ -526,45 +528,11 @@ package PcieInterfacePkg is
     Control    : integer range 0 to 255;
 
   end record PcieTsRecType ;
-  
+
   ------------------------------------------------------------
   type PcieEventCountsType  is array (natural range 0 to MAXLINKWIDTH-1) of integer ;
   -- Received OS/TS event counts type
   ------------------------------------------------------------
-
-  ------------------------------------------------------------
-  type PcieTestSyncType is protected
-  -- Protected type for PCIe test synchronisation whilst still
-  -- generating output
-  ------------------------------------------------------------
-    procedure Sync;
-    procedure Ack;
-    impure function Val return boolean;
-  end protected PcieTestSyncType ;
-
-  ------------------------------------------------------------
-  procedure PcieWaitAck (
-  -- Wait until clear and then set
-  ------------------------------------------------------------
-    signal TransRec : InOut AddressBusRecType ;
-    sy              : InOut PcieTestSyncType ;
-    delay           : In    integer := 0
-  ) ;
-
-  ------------------------------------------------------------
-  procedure PcieSync (
-  -- Clear without wait
-  ------------------------------------------------------------
-    sy : InOut PcieTestSyncType
-  ) ;
-
-  ------------------------------------------------------------
-  procedure PcieWaitSync (
-  -- Wait until set and then clear
-  ------------------------------------------------------------
-    signal TransRec : InOut AddressBusRecType ;
-           sy       : InOut PcieTestSyncType
-  ) ;
 
   ------------------------------------------------------------
   function has_all_z  (
@@ -572,6 +540,22 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     vec                     : std_logic_vector
   ) return boolean ;
+
+  ------------------------------------------------------------
+  procedure PcieAckTransaction (
+  ------------------------------------------------------------
+    signal   Ack                : Out AckType
+  ) ;
+  ------------------------------------------------------------
+  procedure PcieTryWaitForTransaction (
+  --
+  ------------------------------------------------------------
+    signal   Clk                : In  std_logic ;
+    signal   Rdy                : In  RdyType ;
+    signal   Ack                : Out AckType ;
+             TransUnavail       : Out boolean ;
+    constant ClkActive          : In  std_logic := CLK_ACTIVE
+  ) ;
 
   ------------------------------------------------------------
   procedure PcieInitLink (
@@ -1111,7 +1095,8 @@ package PcieInterfacePkg is
   -- Generate ordered set
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iOsType            : In    integer
+             iOsType            : In    integer ;
+             iCount             : In    integer range 1 to 2**20 := 1
   ) ;
 
   ------------------------------------------------------------
@@ -1119,7 +1104,8 @@ package PcieInterfacePkg is
   -- Generate Training Sequence
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iTsParams          : In    PcieTsRecType
+             iTsParams          : In    PcieTsRecType ;
+             iCount             : In    integer range 1 to 2**20 := 1
   ) ;
 
   ------------------------------------------------------------
@@ -1152,7 +1138,6 @@ package PcieInterfacePkg is
              oLastTs            : Out   PcieTsRecType
   ) ;
 
-
 end package PcieInterfacePkg ;
 
 -- ***********************************************************
@@ -1160,30 +1145,6 @@ end package PcieInterfacePkg ;
 -- ***********************************************************
 
 package body PcieInterfacePkg is
-
-  ------------------------------------------------------------
-  type PcieTestSyncType is protected body
-  -- Define a protected type with shared variable to use to
-  -- sync test processes and still allow PCIe input extraction
-  ------------------------------------------------------------
-    variable Vsync : boolean ;
-
-    procedure Sync is
-    begin
-      Vsync := TRUE ;
-    end procedure Sync ;
-
-    procedure Ack is
-    begin
-      Vsync := FALSE ;
-    end procedure Ack ;
-
-    impure function Val return boolean is
-    begin
-      return Vsync ;
-    end function Val ;
-
-  end protected body PcieTestSyncType ;
 
   ------------------------------------------------------------
   function has_all_z (vec : std_logic_vector) return boolean is
@@ -1201,46 +1162,51 @@ package body PcieInterfacePkg is
     return zcount = vec'length ;
 
   end function has_all_z ;
-
+  
   ------------------------------------------------------------
-  procedure PcieWaitAck (
+  procedure PcieAckTransaction (
+  -- Acknowledge current request
   ------------------------------------------------------------
-    signal  TransRec : InOut AddressBusRecType ;
-            sy       : InOut PcieTestSyncType ;
-            delay    : In    integer := 0
+    signal   Ack                : Out AckType
   ) is
   begin
-    while sy.Val loop
-      WaitForClock(TransRec, 1) ;
-    end loop ;
-    wait for 0 ns; -- Wait for all updates to complete
-    if delay /= 0 then
-      WaitForClock(TransRec, delay) ;
+
+    Ack <= Increment(Ack) ;
+    
+    --Ensure Ack has propagated by moving to next delta cycle
+    wait for 0 ns ;
+
+  end procedure PcieAckTransaction ;
+  
+  ------------------------------------------------------------
+  procedure PcieTryWaitForTransaction (
+  -- Non-blocking wait for a new Transaction request, returning
+  -- with TransUnavail TRUE if no request, else return with
+  -- TransUnavail FALSE when new request ready.
+  ------------------------------------------------------------
+    signal   Clk                : In  std_logic ;
+    signal   Rdy                : In  RdyType ;
+    signal   Ack                : Out AckType ;
+             TransUnavail       : Out boolean ;
+    constant ClkActive          : In  std_logic := CLK_ACTIVE
+  ) is
+  begin
+
+    -- Allow any new request ready to propagate for this iteration.
+    wait for 0 ns ;
+    
+    TransUnavail := TRUE when Ack = Rdy else FALSE ;
+
+    if not TransUnavail then
+    
+      -- Align to clock if needed (not back-to-back transactions)
+      if not EdgeActive(Clk, ClkActive) then
+        wait until Clk ?= ClkActive ;
+      end if ;
+    
     end if ;
-    sy.Sync ;
-  end procedure PcieWaitAck;
 
-  ------------------------------------------------------------
-  procedure PcieSync (
-  ------------------------------------------------------------
-            sy : InOut PcieTestSyncType
-  ) is
-  begin
-    sy.Ack ;
-  end procedure PcieSync;
-
-  ------------------------------------------------------------
-  procedure PcieWaitSync (
-  ------------------------------------------------------------
-    signal  TransRec : InOut AddressBusRecType ;
-            sy       : InOut PcieTestSyncType
-  ) is
-  begin
-    while not sy.Val loop
-      WaitForClock(TransRec, 1) ;
-    end loop ;
-    sy.Ack ;
-  end procedure PcieWaitSync ;
+  end procedure PcieTryWaitForTransaction ;
 
   ------------------------------------------------------------
   procedure PcieInitLink (
@@ -2165,7 +2131,7 @@ package body PcieInterfacePkg is
      end case ;
 
   end procedure PcieDecodePciRegisters ;
-  
+
 
   ------------------------------------------------------------
   procedure PcieDllSendAck (
@@ -2375,15 +2341,18 @@ package body PcieInterfacePkg is
   --    OS_IDL, OS_EIE, OS_FTS, OS_SKP
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iOsType            : In    integer
+             iOsType            : In    integer ;
+             iCount             : In    integer range 1 to 2**20 := 1
   ) is
   begin
 
     -- Put values in record
     TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
     TransactionRec.Options       <= GEN_OS ;
-    TransactionRec.IntToModel    <= iOsType ;
     TransactionRec.StatusMsgOn   <= false ;
+    
+    Set(TransactionRec.Params, PARAM_OS_TYPE,  iOsType) ;
+    Set(TransactionRec.Params, PARAM_OS_COUNT, iCount) ;
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
@@ -2398,19 +2367,21 @@ package body PcieInterfacePkg is
   -- Valid iTsParams.Lanenum values : TS_PAD, TS_SEQ
   ------------------------------------------------------------
     signal   TransactionRec     : InOut AddressBusRecType ;
-             iTsParams          : In    PcieTsRecType
+             iTsParams          : In    PcieTsRecType ;
+             iCount             : In    integer range 1 to 2**20 := 1
   ) is
   begin
     TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
     TransactionRec.Options       <= GEN_TS ;
     TransactionRec.StatusMsgOn   <= false ;
 
-    Set(TransactionRec.Params, PARAM_TS_TYPE, iTsParams.Id) ;
-    Set(TransactionRec.Params, PARAM_LINK,    iTsParams.Linknum) ;
-    Set(TransactionRec.Params, PARAM_LANE,    iTsParams.Lanenum) ;
-    Set(TransactionRec.Params, PARAM_NFTS,    iTsParams.Nfts) ;
-    Set(TransactionRec.Params, PARAM_GEN,     iTsParams.Datarate) ;
-    Set(TransactionRec.Params, PARAM_CTL,     iTsParams.Control) ;
+    Set(TransactionRec.Params, PARAM_TS_TYPE,  iTsParams.Id) ;
+    Set(TransactionRec.Params, PARAM_LINK,     iTsParams.Linknum) ;
+    Set(TransactionRec.Params, PARAM_LANE,     iTsParams.Lanenum) ;
+    Set(TransactionRec.Params, PARAM_NFTS,     iTsParams.Nfts) ;
+    Set(TransactionRec.Params, PARAM_GEN,      iTsParams.Datarate) ;
+    Set(TransactionRec.Params, PARAM_CTL,      iTsParams.Control) ;
+    Set(TransactionRec.Params, PARAM_TS_COUNT, iCount) ;
 
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
@@ -2431,7 +2402,7 @@ package body PcieInterfacePkg is
              oNumLanes          : Out   integer ;
              oEventCounts       : Out   PcieEventCountsType
   ) is
-    variable evcount            :       std_logic_vector(31 downto 0) ;           
+    variable evcount            :       std_logic_vector(31 downto 0) ;
   begin
 
     TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
@@ -2442,7 +2413,7 @@ package body PcieInterfacePkg is
     RequestTransaction(Rdy => TransactionRec.Rdy, Ack => TransactionRec.Ack) ;
 
     oNumLanes                    := TransactionRec.IntFromModel ;
-    
+
     for i in 0 to oNumLanes-1 loop
       evcount         := Pop(TransactionRec.ReadBurstFifo) ;
       oEventCounts(i) := to_integer(unsigned(evcount)) ;

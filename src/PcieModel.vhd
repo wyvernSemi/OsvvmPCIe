@@ -72,7 +72,7 @@ port (
   -- Globals
   Clk         : in   std_logic ;
   nReset      : in   std_logic ;
-  
+
   ClkOut      : out  std_logic ;
   Gen2ClkSel  : out  std_logic := '0' ;
 
@@ -117,7 +117,7 @@ architecture behavioral of PcieModel is
   signal   LinkOutVec    : LinkType(0 to LINKWIDTH-1)(LANEWIDTH-1 downto 0) := (others => (others => '0')) ;
 
   signal   ClkDiv2       : std_logic                                        := '0' ;
-  
+
 begin
 
   ClockCounter : process(Clk)
@@ -155,16 +155,16 @@ begin
   ------------------------------------------------------------
   -- Clock control
   ------------------------------------------------------------
-  
+
   g_CLKMUX : if GEN2_CLK generate
-  
+
     p_CLKDIV2 : process (Clk)
     begin
-      if Clk'event and Clk = '1' then 
+      if Clk'event and Clk = '1' then
         ClkDiv2                 <= not ClkDiv2 ;
       end if ;
     end process p_CLKDIV2 ;
-    
+
     clkmux_i : clkmux
     port map
     (
@@ -174,13 +174,13 @@ begin
         clkout                   => ClkOut,
         sel                      => Gen2ClkSel
     );
-    
+
   else generate
-    
+
     ClkOut                      <= Clk ;
-    
+
   end generate ;
-  
+
   ------------------------------------------------------------
   --  Transaction Dispatcher
   ------------------------------------------------------------
@@ -210,6 +210,9 @@ begin
 
     variable RdData            : std_logic_vector (63 downto 0) := (others => '0') ;
     variable WrData            : std_logic_vector (63 downto 0) := (others => '0') ;
+
+    variable TransUnavail        : boolean ;
+    variable NoAck               : boolean ;
 
   begin
 
@@ -249,12 +252,12 @@ begin
         when EN_ECRC_ADDR          => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
         when INITPHY_ADDR          => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
         when ENABLE_AUTO_ADDR      => RdData := 64x"00000001" when ENABLE_AUTO     else 64x"00000000";
-        
-        when GEN2_CLK_ADDR         => 
+
+        when GEN2_CLK_ADDR         =>
             if WE then
               Gen2ClkSel <= '1' when (VPData mod 2) = 1 else '0' ;
             end if ;
-            
+
             RdData(0) := Gen2ClkSel;
             RdData(1) := '1' when GEN2_CLK else '0';
             RdData(63 downto 3) := (others => '0');
@@ -329,8 +332,19 @@ begin
         -- -----------------------------------------------------
 
         when GETNEXTTRANS =>
+        
+          PcieTryWaitForTransaction (
+               Clk          => ClkOut,
+               Rdy          => TransRec.Rdy,
+               Ack          => TransRec.Ack,
+               TransUnavail => TransUnavail
+            ) ;
 
-          RdData := SafeResize(std_logic_vector(to_unsigned(AddressBusOperationType'pos(TransRec.Operation), 32)), RdData'length) ;
+          if TransUnavail then
+            RdData := (others=> '1');
+          else
+            RdData := SafeResize(std_logic_vector(to_unsigned(AddressBusOperationType'pos(TransRec.Operation), 32)), RdData'length) ;
+          end if;
 
         when GETINTTOMODEL =>
 
@@ -436,15 +450,13 @@ begin
         when POPRDATA32 =>
 
           RdData(31 downto 0) := Pop(TransRec.ReadBurstFifo) ;
-          
+
         when ACKTRANS =>
 
           if WE then
-            WaitForTransaction(
-               Clk      => ClkOut,
-               Rdy      => TransRec.Rdy,
-               Ack      => TransRec.Ack
-            ) ;
+            
+            PcieAckTransaction(TransRec.Ack);
+
           end if ;
 
         -- -----------------------------------------------------

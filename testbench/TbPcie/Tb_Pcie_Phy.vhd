@@ -46,10 +46,11 @@ architecture CoSim_Phy of TestCtrl is
   type rd_req_array_t is array (natural range <>) of rd_req_t ;
 
   signal   TestDone        : integer_barrier := 1 ;
+  signal   TestSync        : integer_barrier := 1 ;
   signal   Initialised     : boolean         := FALSE ;
 
   -- Shared variable to sync between test processes
-  shared variable SyncTest : PcieTestSyncType ;
+  --shared variable SyncTest : PcieTestSyncType ;
 
 begin
 
@@ -66,7 +67,7 @@ begin
     SetLogEnable(PASSED, TRUE) ;  -- Enable PASSED logs
     SetLogEnable(INFO, TRUE) ;    -- Enable INFO logs
 
-    PcieSync(SyncTest) ; -- Initialise shared variable to a sync'd state
+    --PcieSync(SyncTest) ; -- Initialise shared variable to a sync'd state
 
     -- Wait for testbench initialization
     wait for 0 ns ;  wait for 0 ns ;
@@ -119,12 +120,10 @@ begin
     TsParams.Nfts           := 255 ;
     TsParams.Datarate       := PCIE_GEN1 ;
     TsParams.Control        := 16#0# ;
+    
+    PciePhyTs(UpstreamRec, TsParams, 10);
 
-    for i in 1 to 10 loop
-      PciePhyTs(UpstreamRec, TsParams);
-    end loop ;
-
-    PcieWaitAck(UpstreamRec, SyncTest) ; -- Wait will drop through on first call
+    WaitForBarrier(TestSync);
 
     -- Send nine TS2 training sequences
     TsParams.Id             := TS2_ID ;
@@ -134,35 +133,25 @@ begin
     TsParams.Datarate       := PCIE_GEN1 ;
     TsParams.Control        := 16#0# ;
 
-    for i in 1 to 9 loop
-      PciePhyTs(UpstreamRec, TsParams);
-    end loop ;
+    PciePhyTs(UpstreamRec, TsParams, 9);
 
-    PcieWaitAck(UpstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
-    for i in 1 to 5 loop
-      PciePhyOs(UpstreamRec, OS_FTS) ;
-    end loop ;
+    PciePhyOs(UpstreamRec, OS_FTS, 5) ;
 
-    PcieWaitAck(UpstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
-    for i in 1 to 4 loop
-      PciePhyOs(UpstreamRec, OS_SKP) ;
-    end loop ;
+    PciePhyOs(UpstreamRec, OS_SKP, 4) ;
 
-    PcieWaitAck(UpstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
-    for i in 1 to 3 loop
-      PciePhyOs(UpstreamRec, OS_IDL) ;
-    end loop ;
-    
-    PcieWaitAck(UpstreamRec, SyncTest) ;
-    
-    for i in 1 to 2 loop
-      PciePhyOs(UpstreamRec, OS_EIE) ;
-    end loop ;
+    PciePhyOs(UpstreamRec, OS_IDL, 3) ;
 
-    PcieWaitAck(UpstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
+
+    PciePhyOs(UpstreamRec, OS_EIE, 2) ;
+
+    WaitForBarrier(TestSync);
 
     -- =================================================================
     -- ==========================  E  N  D  ============================
@@ -200,7 +189,8 @@ begin
     -- =================================================================
 
     -- Wait until TS1 sent
-    PcieWaitSync(DownstreamRec, SyncTest) ;
+    --PcieWaitSync(DownstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
     -- Check event counts for each active lane
     PciePhyGetOsTsEventCounts(DownstreamRec, TS1_ID, NumLanes, EventCountsVec) ;
@@ -228,7 +218,8 @@ begin
     end loop ;
 
     -- Wait until TS2 sent
-    PcieWaitSync(DownstreamRec, SyncTest) ;
+    --PcieWaitSync(DownstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
     -- Check event counts for each active lane
     PciePhyGetOsTsEventCounts(DownstreamRec, TS2_ID, NumLanes, EventCountsVec) ;
@@ -256,7 +247,8 @@ begin
     end loop ;
 
     -- Wait for OS sent
-    PcieWaitSync(DownstreamRec, SyncTest) ;
+    --PcieWaitSync(DownstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
     -- Check event counts for each active lane
     PciePhyGetOsTsEventCounts(DownstreamRec, OS_FTS, NumLanes, EventCountsVec) ;
@@ -272,7 +264,8 @@ begin
     end loop ;
 
     -- Wait for OS sent
-    PcieWaitSync(DownstreamRec, SyncTest) ;
+    --PcieWaitSync(DownstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
     -- Check event counts for each active lane
     PciePhyGetOsTsEventCounts(DownstreamRec, OS_SKP, NumLanes, EventCountsVec) ;
@@ -288,7 +281,8 @@ begin
     end loop ;
 
     -- Wait for OS sent
-    PcieWaitSync(DownstreamRec, SyncTest) ;
+    --PcieWaitSync(DownstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
     -- Check event counts for each active lane
     PciePhyGetOsTsEventCounts(DownstreamRec, OS_IDL, NumLanes, EventCountsVec) ;
@@ -302,9 +296,10 @@ begin
     for i in 0 to NumLanes-1 loop
       AffirmIfEqual(EventCountsVec(i), 0, "IDL post-reset event count for lane " & integer'image(i)) ;
     end loop ;
-    
+
     -- Wait for OS sent
-    PcieWaitSync(DownstreamRec, SyncTest) ;
+    --PcieWaitSync(DownstreamRec, SyncTest) ;
+    WaitForBarrier(TestSync);
 
     -- Check event counts for each active lane
     PciePhyGetOsTsEventCounts(DownstreamRec, OS_EIE, NumLanes, EventCountsVec) ;

@@ -38,9 +38,6 @@ architecture CoSim_Dll of TestCtrl is
   signal   TestDone        : integer_barrier := 1 ;
   signal   Initialised     : boolean         := FALSE ;
 
-  -- Shared variable to sync between test processes
-  shared variable SyncTest : PcieTestSyncType ;
-
 begin
 
   ------------------------------------------------------------
@@ -55,8 +52,6 @@ begin
     -- Initialization of test
     SetLogEnable(PASSED, TRUE) ;  -- Enable PASSED logs
     SetLogEnable(INFO, TRUE) ;    -- Enable INFO logs
-
-    PcieSync(SyncTest) ; -- Initialise shared variable to a sync'd state
 
     -- Wait for testbench initialization
     wait for 0 ns ;  wait for 0 ns ;
