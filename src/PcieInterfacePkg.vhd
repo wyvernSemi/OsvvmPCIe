@@ -550,7 +550,7 @@ package PcieInterfacePkg is
   ------------------------------------------------------------
     signal   Clk                : In  std_logic ;
     signal   Rdy                : In  RdyType ;
-    signal   Ack                : Out AckType ;
+    signal   Ack                : In  AckType ;
              TransUnavail       : Out boolean ;
     constant ClkActive          : In  std_logic := CLK_ACTIVE
   ) ;
@@ -1180,11 +1180,11 @@ package body PcieInterfacePkg is
   -- with TransUnavail TRUE if no request, else return with
   -- TransUnavail FALSE when new request ready.
   ------------------------------------------------------------
-    signal   Clk                : In  std_logic ;
-    signal   Rdy                : In  RdyType ;
-    signal   Ack                : Out AckType ;
-             TransUnavail       : Out boolean ;
-    constant ClkActive          : In  std_logic := CLK_ACTIVE
+    signal   Clk                : In    std_logic ;
+    signal   Rdy                : In    RdyType ;
+    signal   Ack                : In    AckType ;
+             TransUnavail       : Out   boolean ;
+    constant ClkActive          : In    std_logic := CLK_ACTIVE
   ) is
   begin
 
