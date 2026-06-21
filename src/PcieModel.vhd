@@ -186,33 +186,23 @@ begin
   ------------------------------------------------------------
   TransactionDispatcher : process
 
-    variable VPData            : integer := 0 ;
-    variable VPDataHi          : integer := 0 ;
-    variable UnusedVPDataWidth : integer := 0 ;
-    variable VPAddr            : integer := 0 ;
-    variable UnusedVPAddrHi    : integer := 0 ;
-    variable UnusedVPAddrWidth : integer := 0 ;
-    variable VPOp              : integer := 0 ;
-    variable UnusedVPBurstSize : integer := 0 ;
-    variable UnusedVPTicks     : integer := 0 ;
-    variable VPDone            : integer := 0 ;
-    variable VPError           : integer := 0 ;
-    variable UnusedVPParam     : integer := 0 ;
-    variable UnusedVPStatus    : integer := 0 ;
-    variable UnusedVPCount     : integer := 0 ;
-    variable UnusedCount       : integer := 0 ;
-    variable UnusedIntReq      : integer := 0 ;
+    variable VPData            : integer                        := 0 ;
+    variable VPDataHi          : integer                        := 0 ;
+    variable VPAddr            : integer                        := 0 ;
+    variable VPOp              : integer                        := 0 ;
+    variable VPDone            : integer                        := 0 ;
+    variable VPError           : integer                        := 0 ;
 
-    variable Delta             : boolean               := false;
-    variable WE                : boolean               := false;
-    variable LinkOffset        : integer               := 0;
-    variable DataLoBits        : std_logic_vector (3 downto 0) := (others => '0') ;
+    variable Delta             : boolean                        := false;
+    variable WE                : boolean                        := false;
+    variable LinkOffset        : integer                        := 0;
+    variable DataLoBits        : std_logic_vector ( 3 downto 0) := (others => '0') ;
 
     variable RdData            : std_logic_vector (63 downto 0) := (others => '0') ;
     variable WrData            : std_logic_vector (63 downto 0) := (others => '0') ;
 
-    variable TransUnavail        : boolean ;
-    variable NoAck               : boolean ;
+    variable TransUnavail      : boolean ;
+    variable NoAck             : boolean ;
 
   begin
 
@@ -224,12 +214,8 @@ begin
       VPData   := to_integer(signed(RdData(31 downto  0))) ;
       VPDataHi := to_integer(signed(RdData(63 downto 32))) ;
 
-      -- Fetch the next transaction from the model
-      VTrans (NODE_NUM,     UnusedIntReq,      UnusedVPStatus,  UnusedVPCount, UnusedCount,
-              VPData,       VPDataHi,          UnusedVPDataWidth,
-              VPAddr,       UnusedVPAddrHi,    UnusedVPAddrWidth,
-              VPOp,         UnusedVPBurstSize, UnusedVPTicks,
-              VPDone,       VPError,           UnusedVPParam) ;
+      -- Fetch the next access from the PCIe model
+      PcieGetAccessFromModel (NODE_NUM, VPData, VPDataHi, VPAddr, VPOp, VPDone, VPError) ;
 
       Delta := AddressBusOperationType'val(VPOp) = READ_OP  or    -- treat all reads as asynchronous (delta-cycle) accesses
                AddressBusOperationType'val(VPOp) = ASYNC_WRITE ;
@@ -237,21 +223,22 @@ begin
       WE    := AddressBusOperationType'val(VPOp) = WRITE_OP or
                AddressBusOperationType'val(VPOp) = ASYNC_WRITE ;
 
+      -- Memory map the access to the VC state
       case VPAddr is
 
         -- -----------------------------------------------------
-        -- Process parameters
+        -- Process generics
         -- -----------------------------------------------------
 
-        when NODENUMADDR           => RdData := std_logic_vector(to_unsigned(NODE_NUM, RdData'length)) ;
+        when NODENUMADDR           => RdData := std_logic_vector(to_unsigned(NODE_NUM,  RdData'length)) ;
         when LANESADDR             => RdData := std_logic_vector(to_unsigned(LINKWIDTH, RdData'length)) ;
-        when EP_ADDR               => RdData := 64x"00000001" when ENDPOINT else 64x"00000000";
-        when REQID_ADDR            => RdData := std_logic_vector(to_unsigned(REQ_ID, RdData'length)) ;
-        when DISABLE_8B10B_ADDR    => RdData := 64x"00000001" when PIPE else 64x"00000000";
+        when REQID_ADDR            => RdData := std_logic_vector(to_unsigned(REQ_ID,    RdData'length)) ;
+        when EP_ADDR               => RdData := 64x"00000001" when ENDPOINT           else 64x"00000000";
+        when DISABLE_8B10B_ADDR    => RdData := 64x"00000001" when PIPE               else 64x"00000000";
         when DISABLE_SCRAMBLE_ADDR => RdData := 64x"00000001" when DISABLE_SCRAMBLING else 64x"00000000";
-        when EN_ECRC_ADDR          => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST else 64x"00000000";
-        when INITPHY_ADDR          => RdData := 64x"00000001" when ENABLE_INIT_PHY else 64x"00000000";
-        when ENABLE_AUTO_ADDR      => RdData := 64x"00000001" when ENABLE_AUTO     else 64x"00000000";
+        when EN_ECRC_ADDR          => RdData := 64x"00000001" when EN_TLP_REQ_DIGEST  else 64x"00000000";
+        when INITPHY_ADDR          => RdData := 64x"00000001" when ENABLE_INIT_PHY    else 64x"00000000";
+        when ENABLE_AUTO_ADDR      => RdData := 64x"00000001" when ENABLE_AUTO        else 64x"00000000";
 
         when GEN2_CLK_ADDR         =>
             if WE then
@@ -332,7 +319,7 @@ begin
         -- -----------------------------------------------------
 
         when GETNEXTTRANS =>
-        
+
           PcieTryWaitForTransaction (
                Clk          => ClkOut,
                Rdy          => TransRec.Rdy,
@@ -454,8 +441,8 @@ begin
         when ACKTRANS =>
 
           if WE then
-            
-            PcieAckTransaction(TransRec.Ack);
+
+            FinishTransaction (TransRec.Ack) ;
 
           end if ;
 
