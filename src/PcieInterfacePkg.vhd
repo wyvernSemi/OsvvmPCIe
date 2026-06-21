@@ -45,6 +45,9 @@ library osvvm ;
   context osvvm.OsvvmContext ;
   use osvvm.ScoreboardPkg_slv.all ;
 
+library osvvm_cosim ;
+  context osvvm_cosim.CoSimContext ;
+
 library osvvm_common ;
   context osvvm_common.OsvvmCommonContext ;
 
@@ -541,11 +544,6 @@ package PcieInterfacePkg is
     vec                     : std_logic_vector
   ) return boolean ;
 
-  ------------------------------------------------------------
-  procedure PcieAckTransaction (
-  ------------------------------------------------------------
-    signal   Ack                : Out AckType
-  ) ;
   ------------------------------------------------------------
   procedure PcieTryWaitForTransaction (
   --
@@ -1138,6 +1136,19 @@ package PcieInterfacePkg is
              oLastTs            : Out   PcieTsRecType
   ) ;
 
+  ------------------------------------------------------------
+  procedure PcieGetAccessFromModel (
+  ------------------------------------------------------------
+             node               : In    integer ;
+             VPData             : InOut integer ;
+             VPDataHi           : InOut integer ;
+             VPAddr             : InOut integer ;
+             VPOp               : Out   integer ;
+             VPDone             : Out   integer ;
+             VPError            : Out   integer
+
+  ) ;
+
 end package PcieInterfacePkg ;
 
 -- ***********************************************************
@@ -1162,22 +1173,7 @@ package body PcieInterfacePkg is
     return zcount = vec'length ;
 
   end function has_all_z ;
-  
-  ------------------------------------------------------------
-  procedure PcieAckTransaction (
-  -- Acknowledge current request
-  ------------------------------------------------------------
-    signal   Ack                : Out AckType
-  ) is
-  begin
 
-    Ack <= Increment(Ack) ;
-    
-    --Ensure Ack has propagated by moving to next delta cycle
-    wait for 0 ns ;
-
-  end procedure PcieAckTransaction ;
-  
   ------------------------------------------------------------
   procedure PcieTryWaitForTransaction (
   -- Non-blocking wait for a new Transaction request, returning
@@ -1194,19 +1190,51 @@ package body PcieInterfacePkg is
 
     -- Allow any new request ready to propagate for this iteration.
     wait for 0 ns ;
-    
+
     TransUnavail := TRUE when Ack = Rdy else FALSE ;
 
     if not TransUnavail then
-    
+
       -- Align to clock if needed (not back-to-back transactions)
       if not EdgeActive(Clk, ClkActive) then
         wait until Clk ?= ClkActive ;
       end if ;
-    
+
     end if ;
 
   end procedure PcieTryWaitForTransaction ;
+
+  ------------------------------------------------------------
+  procedure PcieGetAccessFromModel (
+  ------------------------------------------------------------
+             node               : In    integer ;
+             VPData             : InOut integer ;
+             VPDataHi           : InOut integer ;
+             VPAddr             : InOut integer ;
+             VPOp               : Out   integer ;
+             VPDone             : Out   integer ;
+             VPError            : Out   integer
+
+  ) is
+    variable UnusedVPDataWidth : integer := 0 ;
+    variable UnusedVPAddrHi    : integer := 0 ;
+    variable UnusedVPAddrWidth : integer := 0 ;
+    variable UnusedVPBurstSize : integer := 0 ;
+    variable UnusedVPTicks     : integer := 0 ;
+    variable UnusedVPParam     : integer := 0 ;
+    variable UnusedVPStatus    : integer := 0 ;
+    variable UnusedVPCount     : integer := 0 ;
+    variable UnusedCount       : integer := 0 ;
+    variable UnusedIntReq      : integer := 0 ;
+  begin
+    -- Fetch the next access from the model via the CoSim foreign procedure
+    VTrans (node,   UnusedIntReq,      UnusedVPStatus,  UnusedVPCount, UnusedCount,
+            VPData, VPDataHi,          UnusedVPDataWidth,
+            VPAddr, UnusedVPAddrHi,    UnusedVPAddrWidth,
+            VPOp,   UnusedVPBurstSize, UnusedVPTicks,
+            VPDone, VPError,           UnusedVPParam) ;
+
+  end procedure PcieGetAccessFromModel ;
 
   ------------------------------------------------------------
   procedure PcieInitLink (
@@ -2350,7 +2378,7 @@ package body PcieInterfacePkg is
     TransactionRec.Operation     <= EXTEND_DIRECTIVE_OP ;
     TransactionRec.Options       <= GEN_OS ;
     TransactionRec.StatusMsgOn   <= false ;
-    
+
     Set(TransactionRec.Params, PARAM_OS_TYPE,  iOsType) ;
     Set(TransactionRec.Params, PARAM_OS_COUNT, iCount) ;
 
