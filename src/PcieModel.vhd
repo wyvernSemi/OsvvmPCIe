@@ -13,7 +13,7 @@
 --
 --  Revision History:
 --    Date      Version    Description
---    06/2026   ????.??    Added support for DLLP and PHY traffic processing
+--    06/2026   2026.07    Added support for DLLP and PHY traffic processing
 --    07/2025   2026.01    Initial version
 --
 --

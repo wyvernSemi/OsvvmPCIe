@@ -2,11 +2,11 @@
 
 | Revision  |  Release Summary | 
 ------------|----------- 
-| ????.??   | PCIe VC extended to drive DLLP and PHY traffic from MIT |
+| 2026.07   | PCIe VC extended to drive DLLP and PHY traffic from MIT |
 | 2026.05   | Added test bench using 3rd party PCIe EP
 | 2026.01   | Initial release
 
-## ????.?? June 2026
+## 2026.07 June 2026
 - The PCIe VC now supports MIT commands to drive and receive DLL packets and PHY OS/TS traffic
 - New PCIe procedures for DLL/PHY traffic
 - Added new tests to verify and demonstrate the DLL and PHY features

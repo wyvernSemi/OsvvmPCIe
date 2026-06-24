@@ -13,7 +13,7 @@
 
 --  Revision History:
 --    Date      Version    Description
---    06/2026   ????.??    Added ability to set DISABLE_SCRAMBLING generic on PCIe VCs
+--    06/2026   2026.07    Added ability to set DISABLE_SCRAMBLING generic on PCIe VCs
 --    08/2025   2026.01    Initial revision
 --
 --
